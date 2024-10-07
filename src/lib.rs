@@ -1,5 +1,6 @@
 use geojson::GeoJson;
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 
 #[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 pub struct GeoPoint2d {
@@ -14,6 +15,7 @@ pub struct File {
     pub height: u16,
 }
 
+/// Wahl von sieben Präsidentinnen oder Präsidenten des Strafgerichts
 pub mod wahl_von_sieben_praesidentinnen_oder_praesidenten_des_strafgerichts {
     use super::*;
 
@@ -225,6 +227,7 @@ pub mod wahl_von_sieben_praesidentinnen_oder_praesidenten_des_strafgerichts {
     }
 }
 
+/// Coronavirus (Covid-19): Massentests an Schulen
 pub mod coronavirus_covid_19_massentests_an_schulen {
     use super::*;
 
@@ -322,6 +325,7 @@ pub mod coronavirus_covid_19_massentests_an_schulen {
     }
 }
 
+/// Smarte Strasse: Parkplatz-Zonen
 pub mod smarte_strasse_parkplatz_zonen {
     use super::*;
 
@@ -364,7 +368,6 @@ pub mod smarte_strasse_parkplatz_zonen {
         Id,
         Lat,
         Lon,
-        Coord,
         Adresse,
         Typ,
     }
@@ -374,7 +377,6 @@ pub mod smarte_strasse_parkplatz_zonen {
             Field::Id => "id".into(),
             Field::Lat => "lat".into(),
             Field::Lon => "lon".into(),
-            Field::Coord => "coord".into(),
             Field::Adresse => "adresse".into(),
             Field::Typ => "typ".into(),
         }
@@ -419,64 +421,7 @@ pub mod smarte_strasse_parkplatz_zonen {
     }
 }
 
-pub mod oeffentlicher_archivkatalog_in_rdf {
-    use super::*;
-
-    #[derive(Deserialize, Serialize, Debug, Clone)]
-    pub struct Record {}
-
-    #[derive(Deserialize, Serialize, Debug, Clone)]
-    pub struct Data {
-        pub total_count: u64,
-        pub results: Vec<Record>,
-    }
-
-    #[derive(Clone, Copy)]
-    pub enum Field {}
-
-    fn field_name(field: Field) -> String {
-        match field {}
-    }
-
-    #[derive(Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self("".into())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field_name(field)));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field_name(field)));
-            self
-        }
-    }
-
-    pub async fn get(
-        limit: u8,
-        offset: u64,
-        order: Order,
-    ) -> Result<Data, Box<dyn std::error::Error>> {
-        let limit = if limit > 100 { 100 } else { limit };
-        let url = format!("https://data.bs.ch/api/explore/v2.1/catalog/datasets/100177/records?limit={limit}&offset={offset}");
-        let url = reqwest::Url::parse_with_params(&url, &[("order_by", order.0)])?;
-        let response = reqwest::get(url).await?.text().await?;
-        let data: Data = serde_json::from_str(&response)?;
-        Ok(data)
-    }
-}
-
+/// Standorte Mess-Stationen Smart Climate Schallpegelmessungen
 pub mod standorte_mess_stationen_smart_climate_schallpegelmessungen {
     use super::*;
 
@@ -510,7 +455,6 @@ pub mod standorte_mess_stationen_smart_climate_schallpegelmessungen {
     pub enum Field {
         StationId,
         Eui,
-        GeoPoint2d,
         Latitude,
         Longitude,
     }
@@ -519,7 +463,6 @@ pub mod standorte_mess_stationen_smart_climate_schallpegelmessungen {
         match field {
             Field::StationId => "station_id".into(),
             Field::Eui => "eui".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Latitude => "latitude".into(),
             Field::Longitude => "longitude".into(),
         }
@@ -564,6 +507,7 @@ pub mod standorte_mess_stationen_smart_climate_schallpegelmessungen {
     }
 }
 
+/// Kennzahlen der Abstimmung vom 27. November 2022
 pub mod kennzahlen_der_abstimmung_vom_27_november_2022 {
     use super::*;
 
@@ -807,6 +751,7 @@ pub mod kennzahlen_der_abstimmung_vom_27_november_2022 {
     }
 }
 
+/// Staatsarchiv: Neuzugänge im öffentlichen Archivkatalog
 pub mod staatsarchiv_neuzugaenge_im_oeffentlichen_archivkatalog {
     use super::*;
 
@@ -934,6 +879,7 @@ pub mod staatsarchiv_neuzugaenge_im_oeffentlichen_archivkatalog {
     }
 }
 
+/// Resultate der Nationalratswahlen 2023 (aggregierte Daten)
 pub mod resultate_der_nationalratswahlen_2023_aggregierte_daten {
     use super::*;
 
@@ -1237,6 +1183,7 @@ pub mod resultate_der_nationalratswahlen_2023_aggregierte_daten {
     }
 }
 
+/// Einzelmessungen der Smiley-Geschwindigkeitsanzeigen
 pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
     use super::*;
 
@@ -1269,7 +1216,8 @@ pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
         /// Zeitpunkt Messung
         ///
         /// Zeitpunkt der Messung
-        pub messung_timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub messung_timestamp: Option<OffsetDateTime>,
         /// Messung Datum
         ///
         /// Datum der Messung
@@ -1301,19 +1249,23 @@ pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
         /// Start Vormessung
         ///
         /// Beginn der Vormessung (mit ausgeschalteter Anzeige)
-        pub start_vormessung: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub start_vormessung: Option<OffsetDateTime>,
         /// Start Betrieb
         ///
         /// Beginn des aktiven Betriebs
-        pub start_betrieb: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub start_betrieb: Option<OffsetDateTime>,
         /// Start Nachmessung
         ///
         /// Beginn der Nachmessung (mit ausgeschalteter Anzeige)
-        pub start_nachmessung: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub start_nachmessung: Option<OffsetDateTime>,
         /// Ende
         ///
         /// Ende des Messzyklus am Standort
-        pub ende: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub ende: Option<OffsetDateTime>,
         /// Messung Jahr
         ///
         /// Jahr der Messung
@@ -1351,7 +1303,6 @@ pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
         StartNachmessung,
         Ende,
         MessungJahr,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -1375,7 +1326,6 @@ pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
             Field::StartNachmessung => "start_nachmessung".into(),
             Field::Ende => "ende".into(),
             Field::MessungJahr => "messung_jahr".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -1418,6 +1368,7 @@ pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
     }
 }
 
+/// Kennzahlen der Abstimmung vom  28. November 2021
 pub mod kennzahlen_der_abstimmung_vom_28_november_2021 {
     use super::*;
 
@@ -1593,6 +1544,7 @@ pub mod kennzahlen_der_abstimmung_vom_28_november_2021 {
     }
 }
 
+/// Kennzahlen der Abstimmung vom  26. September 2021
 pub mod kennzahlen_der_abstimmung_vom_26_september_2021 {
     use super::*;
 
@@ -1768,6 +1720,7 @@ pub mod kennzahlen_der_abstimmung_vom_26_september_2021 {
     }
 }
 
+/// Kennzahlen der Abstimmung vom 15. Mai 2022
 pub mod kennzahlen_der_abstimmung_vom_15_mai_2022 {
     use super::*;
 
@@ -1947,6 +1900,7 @@ pub mod kennzahlen_der_abstimmung_vom_15_mai_2022 {
     }
 }
 
+/// Kennzahlen der Abstimmung vom 25. September 2022
 pub mod kennzahlen_der_abstimmung_vom_25_september_2022 {
     use super::*;
 
@@ -2126,6 +2080,7 @@ pub mod kennzahlen_der_abstimmung_vom_25_september_2022 {
     }
 }
 
+/// Abstimmung vom 26. November 2023 Details
 pub mod abstimmung_vom_26_november_2023_details {
     use super::*;
 
@@ -2293,6 +2248,7 @@ pub mod abstimmung_vom_26_november_2023_details {
     }
 }
 
+/// Abstimmung vom 25. September 2022 Details
 pub mod abstimmung_vom_25_september_2022_details {
     use super::*;
 
@@ -2458,6 +2414,7 @@ pub mod abstimmung_vom_25_september_2022_details {
     }
 }
 
+/// Kennzahlen der Abstimmung vom 18. Juni 2023
 pub mod kennzahlen_der_abstimmung_vom_18_juni_2023 {
     use super::*;
 
@@ -2645,6 +2602,7 @@ pub mod kennzahlen_der_abstimmung_vom_18_juni_2023 {
     }
 }
 
+/// Abstimmung vom 18. Juni 2023 Details
 pub mod abstimmung_vom_18_juni_2023_details {
     use super::*;
 
@@ -2812,6 +2770,7 @@ pub mod abstimmung_vom_18_juni_2023_details {
     }
 }
 
+/// Abstimmung 13. Juni 2021 Details
 pub mod abstimmung_13_juni_2021_details {
     use super::*;
 
@@ -3029,6 +2988,7 @@ pub mod abstimmung_13_juni_2021_details {
     }
 }
 
+/// Ordnungsbussen
 pub mod ordnungsbussen {
     use super::*;
 
@@ -3174,6 +3134,7 @@ pub mod ordnungsbussen {
     }
 }
 
+/// Resultate der Ersatzwahl Regierungspräsidium 3. März 2024
 pub mod resultate_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
     use super::*;
 
@@ -3449,6 +3410,7 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
     }
 }
 
+/// Resultate der Ersatzwahl Regierungsrat 7. April 2024 (2. Wahlgang)
 pub mod resultate_der_ersatzwahl_regierungsrat_7_april_2024_2_wahlgang {
     use super::*;
 
@@ -3726,6 +3688,7 @@ pub mod resultate_der_ersatzwahl_regierungsrat_7_april_2024_2_wahlgang {
     }
 }
 
+/// Regierungsrats- und Regierungspräsidiumswahl 2020
 pub mod regierungsrats_und_regierungspraesidiumswahl_2020 {
     use super::*;
 
@@ -4083,6 +4046,7 @@ pub mod regierungsrats_und_regierungspraesidiumswahl_2020 {
     }
 }
 
+/// Zuordnung von Parzellen auf Statistische Raumeinheiten
 pub mod zuordnung_von_parzellen_auf_statistische_raumeinheiten {
     use super::*;
 
@@ -4175,7 +4139,6 @@ pub mod zuordnung_von_parzellen_auf_statistische_raumeinheiten {
         Oid,
         PointX,
         PointY,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -4195,7 +4158,6 @@ pub mod zuordnung_von_parzellen_auf_statistische_raumeinheiten {
             Field::Oid => "oid".into(),
             Field::PointX => "point_x".into(),
             Field::PointY => "point_y".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -4238,6 +4200,7 @@ pub mod zuordnung_von_parzellen_auf_statistische_raumeinheiten {
     }
 }
 
+/// Kennzahlen der Abstimmung vom 29. November 2020
 pub mod kennzahlen_der_abstimmung_vom_29_november_2020 {
     use super::*;
 
@@ -4423,6 +4386,7 @@ pub mod kennzahlen_der_abstimmung_vom_29_november_2020 {
     }
 }
 
+/// Schülerprognose Riehen und Bettingen
 pub mod schuelerprognose_riehen_und_bettingen {
     use super::*;
 
@@ -4480,8 +4444,6 @@ pub mod schuelerprognose_riehen_und_bettingen {
         UnteresPrognoseintervall,
         OberesPrognoseintervall,
         Typ,
-        GeoShape,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -4494,8 +4456,6 @@ pub mod schuelerprognose_riehen_und_bettingen {
             Field::UnteresPrognoseintervall => "unteres_prognoseintervall".into(),
             Field::OberesPrognoseintervall => "oberes_prognoseintervall".into(),
             Field::Typ => "typ".into(),
-            Field::GeoShape => "geo_shape".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -4538,6 +4498,7 @@ pub mod schuelerprognose_riehen_und_bettingen {
     }
 }
 
+/// Kennzahlen der Abstimmung vom 13. Juni 2021
 pub mod kennzahlen_der_abstimmung_vom_13_juni_2021 {
     use super::*;
 
@@ -4763,6 +4724,7 @@ pub mod kennzahlen_der_abstimmung_vom_13_juni_2021 {
     }
 }
 
+/// Kantonale Abstimmungen
 pub mod kantonale_abstimmungen {
     use super::*;
 
@@ -4980,6 +4942,7 @@ pub mod kantonale_abstimmungen {
     }
 }
 
+/// Abstimmung 29. November 2020 Details
 pub mod abstimmung_29_november_2020_details {
     use super::*;
 
@@ -5139,6 +5102,7 @@ pub mod abstimmung_29_november_2020_details {
     }
 }
 
+/// Monatliche Ankünfte und Logiernächte
 pub mod monatliche_ankuenfte_und_logiernaechte {
     use super::*;
 
@@ -5234,6 +5198,7 @@ pub mod monatliche_ankuenfte_und_logiernaechte {
     }
 }
 
+/// Coronavirus (COVID-19): Ergänzte Fallzahlen ganze Schweiz
 pub mod coronavirus_covid_19_ergaenzte_fallzahlen_ganze_schweiz {
     use super::*;
 
@@ -5367,6 +5332,7 @@ pub mod coronavirus_covid_19_ergaenzte_fallzahlen_ganze_schweiz {
     }
 }
 
+/// Kennzahlen der Abstimmung vom 9. Juni 2024
 pub mod kennzahlen_der_abstimmung_vom_9_juni_2024 {
     use super::*;
 
@@ -5554,6 +5520,7 @@ pub mod kennzahlen_der_abstimmung_vom_9_juni_2024 {
     }
 }
 
+/// Kennzahlen der Abstimmung vom 27. September 2020
 pub mod kennzahlen_der_abstimmung_vom_27_september_2020 {
     use super::*;
 
@@ -5739,6 +5706,7 @@ pub mod kennzahlen_der_abstimmung_vom_27_september_2020 {
     }
 }
 
+/// Kandidierende der Ersatzwahl Regierungspräsidium 3. März 2024
 pub mod kandidierende_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
     use super::*;
 
@@ -5852,6 +5820,7 @@ pub mod kandidierende_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
     }
 }
 
+/// Resultate der Bürgergemeinderatswahlen 2023
 pub mod resultate_der_buergergemeinderatswahlen_2023 {
     use super::*;
 
@@ -6145,7 +6114,6 @@ pub mod resultate_der_buergergemeinderatswahlen_2023 {
         StimmenVeranderteWahlzettel,
         StimmenTotalAusWahlzettel,
         TotalDerGultigenWahlzettel,
-        Stimmbeteiligung,
         AnteilBrieflichWahlende,
     }
 
@@ -6217,7 +6185,6 @@ pub mod resultate_der_buergergemeinderatswahlen_2023 {
             Field::StimmenVeranderteWahlzettel => "stimmen_veranderte_wahlzettel".into(),
             Field::StimmenTotalAusWahlzettel => "stimmen_total_aus_wahlzettel".into(),
             Field::TotalDerGultigenWahlzettel => "total_der_gultigen_wahlzettel".into(),
-            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
             Field::AnteilBrieflichWahlende => "anteil_brieflich_wahlende".into(),
         }
     }
@@ -6261,6 +6228,7 @@ pub mod resultate_der_buergergemeinderatswahlen_2023 {
     }
 }
 
+/// Resultate der Ersatzwahl Regierungspräsidium 7. April 2024 (2. Wahlgang)
 pub mod resultate_der_ersatzwahl_regierungspraesidium_7_april_2024_2_wahlgang {
     use super::*;
 
@@ -6536,6 +6504,7 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_7_april_2024_2_wahlgang {
     }
 }
 
+/// Studierende der Universität Basel nach Geschlecht und Fakultät
 pub mod studierende_der_universitaet_basel_nach_geschlecht_und_fakultaet {
     use super::*;
 
@@ -6863,6 +6832,7 @@ pub mod studierende_der_universitaet_basel_nach_geschlecht_und_fakultaet {
     }
 }
 
+/// Coronavirus (Covid-19): Für Impfung angemeldete Personen nach Altersklasse
 pub mod coronavirus_covid_19_fuer_impfung_angemeldete_personen_nach_altersklasse {
     use super::*;
 
@@ -6954,6 +6924,7 @@ pub mod coronavirus_covid_19_fuer_impfung_angemeldete_personen_nach_altersklasse
     }
 }
 
+/// Coronavirus (Covid-19): Massentests in Betrieben
 pub mod coronavirus_covid_19_massentests_in_betrieben {
     use super::*;
 
@@ -7051,6 +7022,7 @@ pub mod coronavirus_covid_19_massentests_in_betrieben {
     }
 }
 
+/// Kennzahlen zu den Basler Wohnvierteln und Landgemeinden - langer Datensatz
 pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden_langer_datensatz {
     use super::*;
 
@@ -7162,6 +7134,7 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden_langer_datensatz
     }
 }
 
+/// Wasserstand Grundwasser
 pub mod wasserstand_grundwasser {
     use super::*;
 
@@ -7170,7 +7143,8 @@ pub mod wasserstand_grundwasser {
         /// Zeitstempel
         ///
         /// Zeitstempel der Messung in lokaler Zeit (Basel)
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// StationNr
         ///
         /// Katasternummer gemäss Bohrkataster, 10-stellig, prefixed mit 0
@@ -7260,7 +7234,6 @@ pub mod wasserstand_grundwasser {
         Sensornr,
         Sensname,
         Value,
-        GeoPoint2d,
         Xcoord,
         Ycoord,
         Topterrain,
@@ -7284,7 +7257,6 @@ pub mod wasserstand_grundwasser {
             Field::Sensornr => "sensornr".into(),
             Field::Sensname => "sensname".into(),
             Field::Value => "value".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Xcoord => "xcoord".into(),
             Field::Ycoord => "ycoord".into(),
             Field::Topterrain => "topterrain".into(),
@@ -7340,6 +7312,7 @@ pub mod wasserstand_grundwasser {
     }
 }
 
+/// Abstimmung vom 26. September 2021 Details
 pub mod abstimmung_vom_26_september_2021_details {
     use super::*;
 
@@ -7501,6 +7474,7 @@ pub mod abstimmung_vom_26_september_2021_details {
     }
 }
 
+/// Verkehrszähldaten Velos und Fussgänger
 pub mod verkehrszaehldaten_velos_und_fussgaenger {
     use super::*;
 
@@ -7521,11 +7495,13 @@ pub mod verkehrszaehldaten_velos_und_fussgaenger {
         /// DateTimeFrom
         ///
         /// Datum und Uhrzeit Messbeginn (in UTC)
-        pub datetimefrom: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datetimefrom: Option<OffsetDateTime>,
         /// DateTimeTo
         ///
         /// Datum und Uhrzeit Messende (in UTC)
-        pub datetimeto: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datetimeto: Option<OffsetDateTime>,
         /// DirectionName
         ///
         /// Richtung/Strassenseite
@@ -7626,7 +7602,6 @@ pub mod verkehrszaehldaten_velos_und_fussgaenger {
         Timeto,
         Dayofyear,
         ZstId,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -7653,7 +7628,6 @@ pub mod verkehrszaehldaten_velos_und_fussgaenger {
             Field::Timeto => "timeto".into(),
             Field::Dayofyear => "dayofyear".into(),
             Field::ZstId => "zst_id".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -7696,6 +7670,7 @@ pub mod verkehrszaehldaten_velos_und_fussgaenger {
     }
 }
 
+/// Bevölkerung nach Geschlecht, Heimat und Altersjahr ab 1945
 pub mod bevoelkerung_nach_geschlecht_heimat_und_altersjahr_ab_1945 {
     use super::*;
 
@@ -7785,6 +7760,7 @@ pub mod bevoelkerung_nach_geschlecht_heimat_und_altersjahr_ab_1945 {
     }
 }
 
+/// Coronavirus (COVID-19): Todesfälle Basel-Stadt nach Alter und Geschlecht
 pub mod coronavirus_covid_19_todesfaelle_basel_stadt_nach_alter_und_geschlecht {
     use super::*;
 
@@ -7904,6 +7880,7 @@ pub mod coronavirus_covid_19_todesfaelle_basel_stadt_nach_alter_und_geschlecht {
     }
 }
 
+/// Kandidierende der Regierungsratswahl 20. Oktober 2024
 pub mod kandidierende_der_regierungsratswahl_20_oktober_2024 {
     use super::*;
 
@@ -8017,6 +7994,7 @@ pub mod kandidierende_der_regierungsratswahl_20_oktober_2024 {
     }
 }
 
+/// Zeitreihe der Belegung der Elektroauto-Ladestationen der IWB
 pub mod zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
     use super::*;
 
@@ -8025,7 +8003,8 @@ pub mod zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
         /// Zeitstempel
         ///
         /// Datum und Uhrzeit
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Adresse
         ///
         /// Strasse und Hausnummer
@@ -8114,6 +8093,7 @@ pub mod zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
     }
 }
 
+/// Gebäudeeingänge (Gebäude- und Wohnungsregister GWR)
 pub mod gebaeudeeingaenge_gebaeude_und_wohnungsregister_gwr {
     use super::*;
 
@@ -8228,7 +8208,6 @@ pub mod gebaeudeeingaenge_gebaeude_und_wohnungsregister_gwr {
         Dplzname,
         Dkode,
         Dkodn,
-        EingangKoordinaten,
         Doffadr,
         DoffadrDecoded,
         Dexpdat,
@@ -8253,7 +8232,6 @@ pub mod gebaeudeeingaenge_gebaeude_und_wohnungsregister_gwr {
             Field::Dplzname => "dplzname".into(),
             Field::Dkode => "dkode".into(),
             Field::Dkodn => "dkodn".into(),
-            Field::EingangKoordinaten => "eingang_koordinaten".into(),
             Field::Doffadr => "doffadr".into(),
             Field::DoffadrDecoded => "doffadr_decoded".into(),
             Field::Dexpdat => "dexpdat".into(),
@@ -8299,6 +8277,7 @@ pub mod gebaeudeeingaenge_gebaeude_und_wohnungsregister_gwr {
     }
 }
 
+/// Wohnbevölkerung nach Postleitzahl seit 1979
 pub mod wohnbevoelkerung_nach_postleitzahl_seit_1979 {
     use super::*;
 
@@ -8378,6 +8357,7 @@ pub mod wohnbevoelkerung_nach_postleitzahl_seit_1979 {
     }
 }
 
+/// Vornamen der baselstädtischen Bevölkerung
 pub mod vornamen_der_baselstaedtischen_bevoelkerung {
     use super::*;
 
@@ -8459,6 +8439,7 @@ pub mod vornamen_der_baselstaedtischen_bevoelkerung {
     }
 }
 
+/// Effektiver und erwarteter täglicher Stromverbrauch
 pub mod effektiver_und_erwarteter_taeglicher_stromverbrauch {
     use super::*;
 
@@ -8562,6 +8543,7 @@ pub mod effektiver_und_erwarteter_taeglicher_stromverbrauch {
     }
 }
 
+/// Gemeinden
 pub mod gemeinden {
     use super::*;
 
@@ -8598,7 +8580,8 @@ pub mod gemeinden {
         /// R1_GUELTI1
         pub r1_guelti1: Option<String>,
         /// R1_GUELTI2
-        pub r1_guelti2: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub r1_guelti2: Option<OffsetDateTime>,
         /// Name
         pub name: Option<String>,
     }
@@ -8611,8 +8594,6 @@ pub mod gemeinden {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         Entstehung,
         Ortschaft,
@@ -8632,8 +8613,6 @@ pub mod gemeinden {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::Entstehung => "entstehung".into(),
             Field::Ortschaft => "ortschaft".into(),
@@ -8691,6 +8670,7 @@ pub mod gemeinden {
     }
 }
 
+/// Postleitzahlenkreise
 pub mod postleitzahlenkreise {
     use super::*;
 
@@ -8731,7 +8711,8 @@ pub mod postleitzahlenkreise {
         /// R1_GUELTI1
         pub r1_guelti1: Option<String>,
         /// R1_GUELTI2
-        pub r1_guelti2: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub r1_guelti2: Option<OffsetDateTime>,
         /// R2_OBJID
         pub r2_objid: Option<String>,
         /// R2_ENTSTEH
@@ -8754,8 +8735,6 @@ pub mod postleitzahlenkreise {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         Entstehung,
         Plz6Von,
@@ -8782,8 +8761,6 @@ pub mod postleitzahlenkreise {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::Entstehung => "entstehung".into(),
             Field::Plz6Von => "plz6_von".into(),
@@ -8848,6 +8825,7 @@ pub mod postleitzahlenkreise {
     }
 }
 
+/// Invasive Neophyten
 pub mod invasive_neophyten {
     use super::*;
 
@@ -8893,8 +8871,6 @@ pub mod invasive_neophyten {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         KartId,
         Flaeche,
@@ -8906,8 +8882,6 @@ pub mod invasive_neophyten {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::KartId => "kart_id".into(),
             Field::Flaeche => "flaeche".into(),
@@ -8957,6 +8931,7 @@ pub mod invasive_neophyten {
     }
 }
 
+/// Handelsregister: Firmen mit Rechtsform und Standort
 pub mod handelsregister_firmen_mit_rechtsform_und_standort {
     use super::*;
 
@@ -9035,7 +9010,6 @@ pub mod handelsregister_firmen_mit_rechtsform_und_standort {
         Plz,
         Locality,
         Address,
-        Coordinates,
         UrlCantonalRegister,
         TypeId,
         CompanyUri,
@@ -9053,7 +9027,6 @@ pub mod handelsregister_firmen_mit_rechtsform_und_standort {
             Field::Plz => "plz".into(),
             Field::Locality => "locality".into(),
             Field::Address => "address".into(),
-            Field::Coordinates => "coordinates".into(),
             Field::UrlCantonalRegister => "url_cantonal_register".into(),
             Field::TypeId => "type_id".into(),
             Field::CompanyUri => "company_uri".into(),
@@ -9100,6 +9073,7 @@ pub mod handelsregister_firmen_mit_rechtsform_und_standort {
     }
 }
 
+/// Velo-Einbahnstrassen und -Gefahrenstellen
 pub mod velo_einbahnstrassen_und_gefahrenstellen {
     use super::*;
 
@@ -9125,8 +9099,6 @@ pub mod velo_einbahnstrassen_und_gefahrenstellen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         Recnum,
         Art,
@@ -9134,8 +9106,6 @@ pub mod velo_einbahnstrassen_und_gefahrenstellen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::Recnum => "recnum".into(),
             Field::Art => "art".into(),
@@ -9181,6 +9151,7 @@ pub mod velo_einbahnstrassen_und_gefahrenstellen {
     }
 }
 
+/// Recyclingstationen
 pub mod recyclingstationen {
     use super::*;
 
@@ -9216,8 +9187,6 @@ pub mod recyclingstationen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdRs,
         Name,
         Status,
@@ -9230,8 +9199,6 @@ pub mod recyclingstationen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdRs => "id_rs".into(),
             Field::Name => "name".into(),
             Field::Status => "status".into(),
@@ -9282,6 +9249,7 @@ pub mod recyclingstationen {
     }
 }
 
+/// Sauberkeitsindex pro Quartal und Wohnviertel
 pub mod sauberkeitsindex_pro_quartal_und_wohnviertel {
     use super::*;
 
@@ -9322,8 +9290,6 @@ pub mod sauberkeitsindex_pro_quartal_und_wohnviertel {
         Quartalsnummer,
         QuartalBeginn,
         QuartalEnde,
-        GeoPoint2d,
-        GeoShape,
     }
 
     fn field_name(field: Field) -> String {
@@ -9335,8 +9301,6 @@ pub mod sauberkeitsindex_pro_quartal_und_wohnviertel {
             Field::Quartalsnummer => "quartalsnummer".into(),
             Field::QuartalBeginn => "quartal_beginn".into(),
             Field::QuartalEnde => "quartal_ende".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
         }
     }
 
@@ -9379,6 +9343,7 @@ pub mod sauberkeitsindex_pro_quartal_und_wohnviertel {
     }
 }
 
+/// Verkehrsreiche Strassen (50 km/h oder mehr)
 pub mod verkehrsreiche_strassen_50_km_h_oder_mehr {
     use super::*;
 
@@ -9408,8 +9373,6 @@ pub mod verkehrsreiche_strassen_50_km_h_oder_mehr {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         Attribute1,
         VeloplanT,
@@ -9419,8 +9382,6 @@ pub mod verkehrsreiche_strassen_50_km_h_oder_mehr {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::Attribute1 => "attribute1".into(),
             Field::VeloplanT => "veloplan_t".into(),
@@ -9468,6 +9429,7 @@ pub mod verkehrsreiche_strassen_50_km_h_oder_mehr {
     }
 }
 
+/// Steile Velo-Strecken
 pub mod steile_velo_strecken {
     use super::*;
 
@@ -9499,8 +9461,6 @@ pub mod steile_velo_strecken {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdSteig,
         Steigung,
         Winkel,
@@ -9508,8 +9468,6 @@ pub mod steile_velo_strecken {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdSteig => "id_steig".into(),
             Field::Steigung => "steigung".into(),
             Field::Winkel => "winkel".into(),
@@ -9555,6 +9513,7 @@ pub mod steile_velo_strecken {
     }
 }
 
+/// Empfohlene Schwimmbereiche im Rhein
 pub mod empfohlene_schwimmbereiche_im_rhein {
     use super::*;
 
@@ -9573,16 +9532,10 @@ pub mod empfohlene_schwimmbereiche_im_rhein {
     }
 
     #[derive(Clone, Copy)]
-    pub enum Field {
-        GeoPoint2d,
-        GeoShape,
-    }
+    pub enum Field {}
 
     fn field_name(field: Field) -> String {
-        match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
-        }
+        match field {}
     }
 
     #[derive(Clone, Default)]
@@ -9624,6 +9577,7 @@ pub mod empfohlene_schwimmbereiche_im_rhein {
     }
 }
 
+/// Quartiertreffpunkte
 pub mod quartiertreffpunkte {
     use super::*;
 
@@ -9661,8 +9615,6 @@ pub mod quartiertreffpunkte {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         QtId,
         Name,
         StrasseNr,
@@ -9676,8 +9628,6 @@ pub mod quartiertreffpunkte {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::QtId => "qt_id".into(),
             Field::Name => "name".into(),
             Field::StrasseNr => "strasse_nr".into(),
@@ -9729,6 +9679,7 @@ pub mod quartiertreffpunkte {
     }
 }
 
+/// Baustellen in Gewässernähe
 pub mod baustellen_in_gewaessernaehe {
     use super::*;
 
@@ -9846,6 +9797,7 @@ pub mod baustellen_in_gewaessernaehe {
     }
 }
 
+/// Basler Index der Konsumentenpreise
 pub mod basler_index_der_konsumentenpreise {
     use super::*;
 
@@ -10076,6 +10028,7 @@ pub mod basler_index_der_konsumentenpreise {
     }
 }
 
+/// Defibrillatoren
 pub mod defibrillatoren {
     use super::*;
 
@@ -10115,8 +10068,6 @@ pub mod defibrillatoren {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdDf,
         Standort,
         Strasse,
@@ -10131,8 +10082,6 @@ pub mod defibrillatoren {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdDf => "id_df".into(),
             Field::Standort => "standort".into(),
             Field::Strasse => "strasse".into(),
@@ -10185,6 +10134,7 @@ pub mod defibrillatoren {
     }
 }
 
+/// Politische Wahlkreise
 pub mod politische_wahlkreise {
     use super::*;
 
@@ -10210,8 +10160,6 @@ pub mod politische_wahlkreise {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         Text,
         Wahlkreis,
@@ -10219,8 +10167,6 @@ pub mod politische_wahlkreise {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::Text => "text".into(),
             Field::Wahlkreis => "wahlkreis".into(),
@@ -10266,6 +10212,7 @@ pub mod politische_wahlkreise {
     }
 }
 
+/// Grosser Rat: Politische Vorstösse
 pub mod grosser_rat_politische_vorstoesse {
     use super::*;
 
@@ -10399,6 +10346,7 @@ pub mod grosser_rat_politische_vorstoesse {
     }
 }
 
+/// Touristische Velorouten
 pub mod touristische_velorouten {
     use super::*;
 
@@ -10434,8 +10382,6 @@ pub mod touristische_velorouten {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         Objectid,
         Informatio,
@@ -10448,8 +10394,6 @@ pub mod touristische_velorouten {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::Objectid => "objectid".into(),
             Field::Informatio => "informatio".into(),
@@ -10500,6 +10444,7 @@ pub mod touristische_velorouten {
     }
 }
 
+/// Alltagsvelorouten
 pub mod alltagsvelorouten {
     use super::*;
 
@@ -10535,8 +10480,6 @@ pub mod alltagsvelorouten {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         Objectid,
         Informatio,
@@ -10549,8 +10492,6 @@ pub mod alltagsvelorouten {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::Objectid => "objectid".into(),
             Field::Informatio => "informatio".into(),
@@ -10601,6 +10542,7 @@ pub mod alltagsvelorouten {
     }
 }
 
+/// Bio-Klappen
 pub mod bio_klappen {
     use super::*;
 
@@ -10632,8 +10574,6 @@ pub mod bio_klappen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdBk,
         Name,
         Plz,
@@ -10644,8 +10584,6 @@ pub mod bio_klappen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdBk => "id_bk".into(),
             Field::Name => "name".into(),
             Field::Plz => "plz".into(),
@@ -10694,6 +10632,7 @@ pub mod bio_klappen {
     }
 }
 
+/// Statistische Raumeinheiten: Blöcke
 pub mod statistische_raumeinheiten_bloecke {
     use super::*;
 
@@ -10721,8 +10660,6 @@ pub mod statistische_raumeinheiten_bloecke {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         BloId,
         BloLabel,
         WovId,
@@ -10731,8 +10668,6 @@ pub mod statistische_raumeinheiten_bloecke {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::BloId => "blo_id".into(),
             Field::BloLabel => "blo_label".into(),
             Field::WovId => "wov_id".into(),
@@ -10779,6 +10714,7 @@ pub mod statistische_raumeinheiten_bloecke {
     }
 }
 
+/// Abstimmung 27. September 2020 Details
 pub mod abstimmung_27_september_2020_details {
     use super::*;
 
@@ -10942,6 +10878,7 @@ pub mod abstimmung_27_september_2020_details {
     }
 }
 
+/// Kantonaler Stromverbrauch
 pub mod kantonaler_stromverbrauch {
     use super::*;
 
@@ -10950,7 +10887,8 @@ pub mod kantonaler_stromverbrauch {
         /// Start der Messung
         ///
         /// Startzeitpunkt der Messperiode
-        pub timestamp_interval_start: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp_interval_start: Option<OffsetDateTime>,
         /// Start der Messung (Text)
         pub timestamp_interval_start_text: Option<String>,
         /// Stromverbrauch
@@ -11073,6 +11011,7 @@ pub mod kantonaler_stromverbrauch {
     }
 }
 
+/// BachApp: Infos - Allgemein
 pub mod bachapp_infos_allgemein {
     use super::*;
 
@@ -11192,6 +11131,7 @@ pub mod bachapp_infos_allgemein {
     }
 }
 
+/// Schulwegsicherheit: Strassenquerungen
 pub mod schulwegsicherheit_strassenquerungen {
     use super::*;
 
@@ -11247,8 +11187,6 @@ pub mod schulwegsicherheit_strassenquerungen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         Id,
         Strkat,
@@ -11262,8 +11200,6 @@ pub mod schulwegsicherheit_strassenquerungen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::Id => "id".into(),
             Field::Strkat => "strkat".into(),
@@ -11315,6 +11251,7 @@ pub mod schulwegsicherheit_strassenquerungen {
     }
 }
 
+/// Schulwegsicherheit: Fusswege
 pub mod schulwegsicherheit_fusswege {
     use super::*;
 
@@ -11355,8 +11292,6 @@ pub mod schulwegsicherheit_fusswege {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         Id,
         Typ,
@@ -11366,8 +11301,6 @@ pub mod schulwegsicherheit_fusswege {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::Id => "id".into(),
             Field::Typ => "typ".into(),
@@ -11415,6 +11348,7 @@ pub mod schulwegsicherheit_fusswege {
     }
 }
 
+/// Statistische Raumeinheiten: Blockseiten
 pub mod statistische_raumeinheiten_blockseiten {
     use super::*;
 
@@ -11448,8 +11382,6 @@ pub mod statistische_raumeinheiten_blockseiten {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         BlsId,
         BlsLabel,
         BlsName,
@@ -11461,8 +11393,6 @@ pub mod statistische_raumeinheiten_blockseiten {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::BlsId => "bls_id".into(),
             Field::BlsLabel => "bls_label".into(),
             Field::BlsName => "bls_name".into(),
@@ -11512,6 +11442,7 @@ pub mod statistische_raumeinheiten_blockseiten {
     }
 }
 
+/// Rheinüberwachungsstation: Umweltanalyse Schwebstoffe
 pub mod rheinueberwachungsstation_umweltanalyse_schwebstoffe {
     use super::*;
 
@@ -11625,7 +11556,6 @@ pub mod rheinueberwachungsstation_umweltanalyse_schwebstoffe {
     pub enum Field {
         Probentyp,
         Probenahmestelle,
-        GeoPoint2d,
         XCoord,
         YCoord,
         Probenahmedatum,
@@ -11653,7 +11583,6 @@ pub mod rheinueberwachungsstation_umweltanalyse_schwebstoffe {
         match field {
             Field::Probentyp => "probentyp".into(),
             Field::Probenahmestelle => "probenahmestelle".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::XCoord => "x_coord".into(),
             Field::YCoord => "y_coord".into(),
             Field::Probenahmedatum => "probenahmedatum".into(),
@@ -11717,6 +11646,7 @@ pub mod rheinueberwachungsstation_umweltanalyse_schwebstoffe {
     }
 }
 
+/// Kandidierende der Grossratswahlen nach Alter, Geschlecht und Liste seit 2020
 pub mod kandidierende_der_grossratswahlen_nach_alter_geschlecht_und_liste_seit_2020 {
     use super::*;
 
@@ -11828,6 +11758,7 @@ pub mod kandidierende_der_grossratswahlen_nach_alter_geschlecht_und_liste_seit_2
     }
 }
 
+/// Kandidierende der Grossratswahlen nach Geschlecht seit 1968
 pub mod kandidierende_der_grossratswahlen_nach_geschlecht_seit_1968 {
     use super::*;
 
@@ -11923,6 +11854,7 @@ pub mod kandidierende_der_grossratswahlen_nach_geschlecht_seit_1968 {
     }
 }
 
+/// Teilhaltestellen des öffentlichen Verkehrs
 pub mod teilhaltestellen_des_oeffentlichen_verkehrs {
     use super::*;
 
@@ -11996,8 +11928,6 @@ pub mod teilhaltestellen_des_oeffentlichen_verkehrs {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         ThstNr,
         HstNr,
         Haltestl,
@@ -12016,8 +11946,6 @@ pub mod teilhaltestellen_des_oeffentlichen_verkehrs {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::ThstNr => "thst_nr".into(),
             Field::HstNr => "hst_nr".into(),
             Field::Haltestl => "haltestl".into(),
@@ -12074,6 +12002,7 @@ pub mod teilhaltestellen_des_oeffentlichen_verkehrs {
     }
 }
 
+/// Liniennetz des öffentlichen Verkehrs
 pub mod liniennetz_des_oeffentlichen_verkehrs {
     use super::*;
 
@@ -12125,8 +12054,6 @@ pub mod liniennetz_des_oeffentlichen_verkehrs {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         LNr,
         Liniennmr,
         Strecke,
@@ -12139,8 +12066,6 @@ pub mod liniennetz_des_oeffentlichen_verkehrs {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::LNr => "l_nr".into(),
             Field::Liniennmr => "liniennmr".into(),
             Field::Strecke => "strecke".into(),
@@ -12191,6 +12116,7 @@ pub mod liniennetz_des_oeffentlichen_verkehrs {
     }
 }
 
+/// Haltestellen des öffentlichen Verkehrs
 pub mod haltestellen_des_oeffentlichen_verkehrs {
     use super::*;
 
@@ -12256,8 +12182,6 @@ pub mod haltestellen_des_oeffentlichen_verkehrs {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         HstNr,
         Name,
         Angezname,
@@ -12274,8 +12198,6 @@ pub mod haltestellen_des_oeffentlichen_verkehrs {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::HstNr => "hst_nr".into(),
             Field::Name => "name".into(),
             Field::Angezname => "angezname".into(),
@@ -12330,6 +12252,7 @@ pub mod haltestellen_des_oeffentlichen_verkehrs {
     }
 }
 
+/// Eheschliessungen nach Trauungsdatum
 pub mod eheschliessungen_nach_trauungsdatum {
     use super::*;
 
@@ -12475,6 +12398,7 @@ pub mod eheschliessungen_nach_trauungsdatum {
     }
 }
 
+/// Umweltanalyse Grundwasser
 pub mod umweltanalyse_grundwasser {
     use super::*;
 
@@ -12588,7 +12512,6 @@ pub mod umweltanalyse_grundwasser {
     pub enum Field {
         Probentyp,
         Probenahmestelle,
-        GeoPoint2d,
         XCoord,
         YCoord,
         Probenahmedatum,
@@ -12616,7 +12539,6 @@ pub mod umweltanalyse_grundwasser {
         match field {
             Field::Probentyp => "probentyp".into(),
             Field::Probenahmestelle => "probenahmestelle".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::XCoord => "x_coord".into(),
             Field::YCoord => "y_coord".into(),
             Field::Probenahmedatum => "probenahmedatum".into(),
@@ -12680,6 +12602,7 @@ pub mod umweltanalyse_grundwasser {
     }
 }
 
+/// Vornamen der Neugeborenen nach Geschlecht
 pub mod vornamen_der_neugeborenen_nach_geschlecht {
     use super::*;
 
@@ -12765,6 +12688,7 @@ pub mod vornamen_der_neugeborenen_nach_geschlecht {
     }
 }
 
+/// Gasverbrauch im Versorgungsgebiet der IWB
 pub mod gasverbrauch_im_versorgungsgebiet_der_iwb {
     use super::*;
 
@@ -12773,7 +12697,8 @@ pub mod gasverbrauch_im_versorgungsgebiet_der_iwb {
         /// Start der Messung
         ///
         /// Startzeitpunkt der Messperiode
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Gasverbrauch
         ///
         /// Gasverbrauch innerhalb des Stundenintervalls
@@ -12892,6 +12817,7 @@ pub mod gasverbrauch_im_versorgungsgebiet_der_iwb {
     }
 }
 
+/// Umweltanalyse Oberflächengewässer
 pub mod umweltanalyse_oberflaechengewaesser {
     use super::*;
 
@@ -13005,7 +12931,6 @@ pub mod umweltanalyse_oberflaechengewaesser {
     pub enum Field {
         Probentyp,
         Probenahmestelle,
-        GeoPoint2d,
         XCoord,
         YCoord,
         Probenahmedatum,
@@ -13033,7 +12958,6 @@ pub mod umweltanalyse_oberflaechengewaesser {
         match field {
             Field::Probentyp => "probentyp".into(),
             Field::Probenahmestelle => "probenahmestelle".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::XCoord => "x_coord".into(),
             Field::YCoord => "y_coord".into(),
             Field::Probenahmedatum => "probenahmedatum".into(),
@@ -13097,6 +13021,7 @@ pub mod umweltanalyse_oberflaechengewaesser {
     }
 }
 
+/// Grosser Rat: Vorgänge von Geschäften
 pub mod grosser_rat_vorgaenge_von_geschaeften {
     use super::*;
 
@@ -13230,6 +13155,7 @@ pub mod grosser_rat_vorgaenge_von_geschaeften {
     }
 }
 
+/// Coronavirus (Covid-19): Hospitalisierte in baselstädtischen Spitälern
 pub mod coronavirus_covid_19_hospitalisierte_in_baselstaedtischen_spitaelern {
     use super::*;
 
@@ -13345,6 +13271,7 @@ pub mod coronavirus_covid_19_hospitalisierte_in_baselstaedtischen_spitaelern {
     }
 }
 
+/// Grosser Rat: Interessensbindungen Ratsmitglieder
 pub mod grosser_rat_interessensbindungen_ratsmitglieder {
     use super::*;
 
@@ -13478,6 +13405,7 @@ pub mod grosser_rat_interessensbindungen_ratsmitglieder {
     }
 }
 
+/// Events in Gewässernähe
 pub mod events_in_gewaessernaehe {
     use super::*;
 
@@ -13601,6 +13529,7 @@ pub mod events_in_gewaessernaehe {
     }
 }
 
+/// Feuerstellen in Gewässernähe
 pub mod feuerstellen_in_gewaessernaehe {
     use super::*;
 
@@ -13624,15 +13553,11 @@ pub mod feuerstellen_in_gewaessernaehe {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Bezeichnung,
     }
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Bezeichnung => "bezeichnung".into(),
         }
     }
@@ -13676,6 +13601,7 @@ pub mod feuerstellen_in_gewaessernaehe {
     }
 }
 
+/// Coronavirus (Covid-19): Teststellen
 pub mod coronavirus_covid_19_teststellen {
     use super::*;
 
@@ -13775,8 +13701,6 @@ pub mod coronavirus_covid_19_teststellen {
     pub enum Field {
         IdTs,
         Institut,
-        GeoPoint2d,
-        GeoShape,
         Strasse,
         Hausnummer,
         Plz,
@@ -13801,8 +13725,6 @@ pub mod coronavirus_covid_19_teststellen {
         match field {
             Field::IdTs => "id_ts".into(),
             Field::Institut => "institut".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Strasse => "strasse".into(),
             Field::Hausnummer => "hausnummer".into(),
             Field::Plz => "plz".into(),
@@ -13863,6 +13785,7 @@ pub mod coronavirus_covid_19_teststellen {
     }
 }
 
+/// Sport- und Bewegungsanlagen
 pub mod sport_und_bewegungsanlagen {
     use super::*;
 
@@ -13939,8 +13862,6 @@ pub mod sport_und_bewegungsanlagen {
         Zustaendig,
         Bemerkung,
         Baselinfo,
-        GeoPoint2d,
-        GeoShape,
         MapLinks,
     }
 
@@ -13957,8 +13878,6 @@ pub mod sport_und_bewegungsanlagen {
             Field::Zustaendig => "zustaendig".into(),
             Field::Bemerkung => "bemerkung".into(),
             Field::Baselinfo => "baselinfo".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::MapLinks => "map_links".into(),
         }
     }
@@ -14002,6 +13921,7 @@ pub mod sport_und_bewegungsanlagen {
     }
 }
 
+/// Standorte der IWB Ladestationen für Elektroautos
 pub mod standorte_der_iwb_ladestationen_fuer_elektroautos {
     use super::*;
 
@@ -14033,22 +13953,18 @@ pub mod standorte_der_iwb_ladestationen_fuer_elektroautos {
     pub enum Field {
         Name,
         Description,
-        Geometry,
         Beschreibung,
         Art,
         Ort,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
         match field {
             Field::Name => "name".into(),
             Field::Description => "description".into(),
-            Field::Geometry => "geometry".into(),
             Field::Beschreibung => "beschreibung".into(),
             Field::Art => "art".into(),
             Field::Ort => "ort".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -14091,6 +14007,7 @@ pub mod standorte_der_iwb_ladestationen_fuer_elektroautos {
     }
 }
 
+/// Gebäude (Gebäude- und Wohnungsregister GWR)
 pub mod gebaeude_gebaeude_und_wohnungsregister_gwr {
     use super::*;
 
@@ -14554,6 +14471,7 @@ pub mod gebaeude_gebaeude_und_wohnungsregister_gwr {
     }
 }
 
+/// Kandidierende der Grossratswahl 20. Oktober 2024
 pub mod kandidierende_der_grossratswahl_20_oktober_2024 {
     use super::*;
 
@@ -14693,6 +14611,7 @@ pub mod kandidierende_der_grossratswahl_20_oktober_2024 {
     }
 }
 
+/// Luftqualität Station Basel-Binningen
 pub mod luftqualitaet_station_basel_binningen {
     use super::*;
 
@@ -14701,7 +14620,8 @@ pub mod luftqualitaet_station_basel_binningen {
         /// Datum/Zeit
         ///
         /// Zeitstempel in UTC
-        pub datum_zeit: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datum_zeit: Option<OffsetDateTime>,
         /// timestamp_text
         ///
         /// Zeitstempel als Text in Mitteleuropäischer Zeit ("Winterzeit")
@@ -14828,6 +14748,7 @@ pub mod luftqualitaet_station_basel_binningen {
     }
 }
 
+/// Gesundheitsversorgung (GSV): Spitalkennzahlen
 pub mod gesundheitsversorgung_gsv_spitalkennzahlen {
     use super::*;
 
@@ -15195,7 +15116,6 @@ pub mod gesundheitsversorgung_gsv_spitalkennzahlen {
         RehaLabor,
         RehaNeubildungen,
         RehaUebrige,
-        Geopunkt,
     }
 
     fn field_name(field: Field) -> String {
@@ -15274,7 +15194,6 @@ pub mod gesundheitsversorgung_gsv_spitalkennzahlen {
             Field::RehaLabor => "reha_labor".into(),
             Field::RehaNeubildungen => "reha_neubildungen".into(),
             Field::RehaUebrige => "reha_uebrige".into(),
-            Field::Geopunkt => "geopunkt".into(),
         }
     }
 
@@ -15317,6 +15236,7 @@ pub mod gesundheitsversorgung_gsv_spitalkennzahlen {
     }
 }
 
+/// Grillstellen in Gewässernähe
 pub mod grillstellen_in_gewaessernaehe {
     use super::*;
 
@@ -15404,6 +15324,7 @@ pub mod grillstellen_in_gewaessernaehe {
     }
 }
 
+/// Strassennamen
 pub mod strassennamen {
     use super::*;
 
@@ -15459,8 +15380,6 @@ pub mod strassennamen {
         Strname,
         KurzekEz,
         KurzekZz,
-        GeoShape,
-        GeoPoint2d,
         ErstErwae,
         AmtlichBe,
         Indextext,
@@ -15473,8 +15392,6 @@ pub mod strassennamen {
             Field::Strname => "strname".into(),
             Field::KurzekEz => "kurzek_ez".into(),
             Field::KurzekZz => "kurzek_zz".into(),
-            Field::GeoShape => "geo_shape".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::ErstErwae => "erst_erwae".into(),
             Field::AmtlichBe => "amtlich_be".into(),
             Field::Indextext => "indextext".into(),
@@ -15521,6 +15438,7 @@ pub mod strassennamen {
     }
 }
 
+/// Sanitäre Anlagen
 pub mod sanitaere_anlagen {
     use super::*;
 
@@ -15570,8 +15488,6 @@ pub mod sanitaere_anlagen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Bezeichnug,
         Strasse,
         Eurokey,
@@ -15588,8 +15504,6 @@ pub mod sanitaere_anlagen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Bezeichnug => "bezeichnug".into(),
             Field::Strasse => "strasse".into(),
             Field::Eurokey => "eurokey".into(),
@@ -15644,6 +15558,7 @@ pub mod sanitaere_anlagen {
     }
 }
 
+/// Tägliche Klimadaten der NBCN-Station Basel-Binningen
 pub mod taegliche_klimadaten_der_nbcn_station_basel_binningen {
     use super::*;
 
@@ -15776,6 +15691,7 @@ pub mod taegliche_klimadaten_der_nbcn_station_basel_binningen {
     }
 }
 
+/// Wahl der 100 Mitglieder des Grossen Rates vom 25.10.2020
 pub mod wahl_der_100_mitglieder_des_grossen_rates_vom_25_10_2020 {
     use super::*;
 
@@ -16251,6 +16167,7 @@ pub mod wahl_der_100_mitglieder_des_grossen_rates_vom_25_10_2020 {
     }
 }
 
+/// Grosser Rat: Geschäfte
 pub mod grosser_rat_geschaefte {
     use super::*;
 
@@ -16492,6 +16409,7 @@ pub mod grosser_rat_geschaefte {
     }
 }
 
+/// Coronavirus (COVID-19): Tests Basel-Stadt
 pub mod coronavirus_covid_19_tests_basel_stadt {
     use super::*;
 
@@ -16669,6 +16587,7 @@ pub mod coronavirus_covid_19_tests_basel_stadt {
     }
 }
 
+/// Veloabstellplätze
 pub mod veloabstellplaetze {
     use super::*;
 
@@ -16745,8 +16664,6 @@ pub mod veloabstellplaetze {
         Infos,
         Cargovelo,
         Bikeride,
-        GeoPoint2d,
-        GeoShape,
         MapLinks,
     }
 
@@ -16763,8 +16680,6 @@ pub mod veloabstellplaetze {
             Field::Infos => "infos".into(),
             Field::Cargovelo => "cargovelo".into(),
             Field::Bikeride => "bikeride".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::MapLinks => "map_links".into(),
         }
     }
@@ -16808,6 +16723,7 @@ pub mod veloabstellplaetze {
     }
 }
 
+/// Velopumpen
 pub mod velopumpen {
     use super::*;
 
@@ -16869,8 +16785,6 @@ pub mod velopumpen {
         Pumpe,
         Verfuegbar,
         Link,
-        GeoPoint2d,
-        GeoShape,
         MapLinks,
     }
 
@@ -16884,8 +16798,6 @@ pub mod velopumpen {
             Field::Pumpe => "pumpe".into(),
             Field::Verfuegbar => "verfuegbar".into(),
             Field::Link => "link".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::MapLinks => "map_links".into(),
         }
     }
@@ -16929,6 +16841,7 @@ pub mod velopumpen {
     }
 }
 
+/// Verkehrsberuhigte Zonen: Kernzone Verkehrskonzept Innenstadt
 pub mod verkehrsberuhigte_zonen_kernzone_verkehrskonzept_innenstadt {
     use super::*;
 
@@ -16968,8 +16881,6 @@ pub mod verkehrsberuhigte_zonen_kernzone_verkehrskonzept_innenstadt {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         Objectid,
         Name,
@@ -16979,8 +16890,6 @@ pub mod verkehrsberuhigte_zonen_kernzone_verkehrskonzept_innenstadt {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::Objectid => "objectid".into(),
             Field::Name => "name".into(),
@@ -17028,6 +16937,7 @@ pub mod verkehrsberuhigte_zonen_kernzone_verkehrskonzept_innenstadt {
     }
 }
 
+/// Strassen und Wege: Kantonsstrassen Riehen und Bettingen
 pub mod strassen_und_wege_kantonsstrassen_riehen_und_bettingen {
     use super::*;
 
@@ -17063,8 +16973,6 @@ pub mod strassen_und_wege_kantonsstrassen_riehen_und_bettingen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdKsrb,
         Gemeinde,
         Eigentum,
@@ -17073,8 +16981,6 @@ pub mod strassen_und_wege_kantonsstrassen_riehen_und_bettingen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdKsrb => "id_ksrb".into(),
             Field::Gemeinde => "gemeinde".into(),
             Field::Eigentum => "eigentum".into(),
@@ -17121,6 +17027,7 @@ pub mod strassen_und_wege_kantonsstrassen_riehen_und_bettingen {
     }
 }
 
+/// Nutzungsplan - Zonenplan Riehen:  Überlagernde Festlegungen
 pub mod nutzungsplan_zonenplan_riehen_ueberlagernde_festlegungen {
     use super::*;
 
@@ -17169,7 +17076,8 @@ pub mod nutzungsplan_zonenplan_riehen_ueberlagernde_festlegungen {
         /// Datum Status
         ///
         /// Datum Status
-        pub datumstat: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datumstat: Option<OffsetDateTime>,
         /// Geolink
         ///
         /// Geolink
@@ -17195,8 +17103,6 @@ pub mod nutzungsplan_zonenplan_riehen_ueberlagernde_festlegungen {
         Idueberfes,
         Festueber,
         Festuebtxt,
-        GeoPoint2d,
-        GeoShape,
         Verbindli,
         Schutzzwec,
         Rekurshaen,
@@ -17214,8 +17120,6 @@ pub mod nutzungsplan_zonenplan_riehen_ueberlagernde_festlegungen {
             Field::Idueberfes => "idueberfes".into(),
             Field::Festueber => "festueber".into(),
             Field::Festuebtxt => "festuebtxt".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Verbindli => "verbindli".into(),
             Field::Schutzzwec => "schutzzwec".into(),
             Field::Rekurshaen => "rekurshaen".into(),
@@ -17268,6 +17172,7 @@ pub mod nutzungsplan_zonenplan_riehen_ueberlagernde_festlegungen {
     }
 }
 
+/// Nutzungsplan - Zonenplan Bettingen:  Überlagernde Festlegungen
 pub mod nutzungsplan_zonenplan_bettingen_ueberlagernde_festlegungen {
     use super::*;
 
@@ -17308,7 +17213,8 @@ pub mod nutzungsplan_zonenplan_bettingen_ueberlagernde_festlegungen {
         /// Datum Status
         ///
         /// Datum Status
-        pub datumstat: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datumstat: Option<OffsetDateTime>,
         /// Geolink
         ///
         /// Geolink
@@ -17333,8 +17239,6 @@ pub mod nutzungsplan_zonenplan_bettingen_ueberlagernde_festlegungen {
     pub enum Field {
         Idueberfes,
         Festueber,
-        GeoPoint2d,
-        GeoShape,
         Verbindli,
         Rekurshaen,
         Bezeichnng,
@@ -17350,8 +17254,6 @@ pub mod nutzungsplan_zonenplan_bettingen_ueberlagernde_festlegungen {
         match field {
             Field::Idueberfes => "idueberfes".into(),
             Field::Festueber => "festueber".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Verbindli => "verbindli".into(),
             Field::Rekurshaen => "rekurshaen".into(),
             Field::Bezeichnng => "bezeichnng".into(),
@@ -17403,6 +17305,7 @@ pub mod nutzungsplan_zonenplan_bettingen_ueberlagernde_festlegungen {
     }
 }
 
+/// Verkehrsberuhigte Zonen: Fussgängerzone
 pub mod verkehrsberuhigte_zonen_fussgaengerzone {
     use super::*;
 
@@ -17446,8 +17349,6 @@ pub mod verkehrsberuhigte_zonen_fussgaengerzone {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdFussgae,
         Regime,
         Regimenr,
@@ -17458,8 +17359,6 @@ pub mod verkehrsberuhigte_zonen_fussgaengerzone {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdFussgae => "id_fussgae".into(),
             Field::Regime => "regime".into(),
             Field::Regimenr => "regimenr".into(),
@@ -17508,6 +17407,7 @@ pub mod verkehrsberuhigte_zonen_fussgaengerzone {
     }
 }
 
+/// Standorte der Smiley-Geschwindigkeitsanzeigen
 pub mod standorte_der_smiley_geschwindigkeitsanzeigen {
     use super::*;
 
@@ -17573,8 +17473,6 @@ pub mod standorte_der_smiley_geschwindigkeitsanzeigen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdSmiley,
         Idstandort,
         Strname,
@@ -17591,8 +17489,6 @@ pub mod standorte_der_smiley_geschwindigkeitsanzeigen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdSmiley => "id_smiley".into(),
             Field::Idstandort => "idstandort".into(),
             Field::Strname => "strname".into(),
@@ -17647,6 +17543,7 @@ pub mod standorte_der_smiley_geschwindigkeitsanzeigen {
     }
 }
 
+/// Strassen und Wege: Strassentypen und Wege
 pub mod strassen_und_wege_strassentypen_und_wege {
     use super::*;
 
@@ -17692,8 +17589,6 @@ pub mod strassen_und_wege_strassentypen_und_wege {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdStrweg,
         Strname,
         Snh,
@@ -17705,8 +17600,6 @@ pub mod strassen_und_wege_strassentypen_und_wege {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdStrweg => "id_strweg".into(),
             Field::Strname => "strname".into(),
             Field::Snh => "snh".into(),
@@ -17758,6 +17651,7 @@ pub mod strassen_und_wege_strassentypen_und_wege {
     }
 }
 
+/// Rheinüberwachungsstation: Umweltanalyse Wasserphase
 pub mod rheinueberwachungsstation_umweltanalyse_wasserphase {
     use super::*;
 
@@ -17872,7 +17766,6 @@ pub mod rheinueberwachungsstation_umweltanalyse_wasserphase {
     pub enum Field {
         Probentyp,
         Probenahmestelle,
-        GeoPoint2d,
         XCoord,
         YCoord,
         Probenahmedatum,
@@ -17900,7 +17793,6 @@ pub mod rheinueberwachungsstation_umweltanalyse_wasserphase {
         match field {
             Field::Probentyp => "probentyp".into(),
             Field::Probenahmestelle => "probenahmestelle".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::XCoord => "x_coord".into(),
             Field::YCoord => "y_coord".into(),
             Field::Probenahmedatum => "probenahmedatum".into(),
@@ -17964,6 +17856,7 @@ pub mod rheinueberwachungsstation_umweltanalyse_wasserphase {
     }
 }
 
+/// Überwachung Luftqualität Transformation Areal Rosental: Gemessene Überschreitungen der Interventionswerte
 pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_gemessene_ueberschreitungen_der_interventionswerte {
     use super::*;
 
@@ -18049,6 +17942,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_gemessene_ueber
     }
 }
 
+/// Schulstandorte (Gemeinde Basel)
 pub mod schulstandorte_gemeinde_basel {
     use super::*;
 
@@ -18116,8 +18010,6 @@ pub mod schulstandorte_gemeinde_basel {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Schulstand,
         Schultyp,
         Name,
@@ -18136,8 +18028,6 @@ pub mod schulstandorte_gemeinde_basel {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Schulstand => "schulstand".into(),
             Field::Schultyp => "schultyp".into(),
             Field::Name => "name".into(),
@@ -18194,6 +18084,7 @@ pub mod schulstandorte_gemeinde_basel {
     }
 }
 
+/// Gewässerschutzkarte: Gewässerschutzbereiche
 pub mod gewaesserschutzkarte_gewaesserschutzbereiche {
     use super::*;
 
@@ -18235,8 +18126,6 @@ pub mod gewaesserschutzkarte_gewaesserschutzbereiche {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Idgbereich,
         Typ,
         Kantypbez,
@@ -18247,8 +18136,6 @@ pub mod gewaesserschutzkarte_gewaesserschutzbereiche {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Idgbereich => "idgbereich".into(),
             Field::Typ => "typ".into(),
             Field::Kantypbez => "kantypbez".into(),
@@ -18297,6 +18184,7 @@ pub mod gewaesserschutzkarte_gewaesserschutzbereiche {
     }
 }
 
+/// Schulstandorte (Gemeinden Riehen und Bettingen)
 pub mod schulstandorte_gemeinden_riehen_und_bettingen {
     use super::*;
 
@@ -18344,8 +18232,6 @@ pub mod schulstandorte_gemeinden_riehen_und_bettingen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdSchule,
         Standort,
         Typ,
@@ -18364,8 +18250,6 @@ pub mod schulstandorte_gemeinden_riehen_und_bettingen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdSchule => "id_schule".into(),
             Field::Standort => "standort".into(),
             Field::Typ => "typ".into(),
@@ -18422,6 +18306,7 @@ pub mod schulstandorte_gemeinden_riehen_und_bettingen {
     }
 }
 
+/// Coronavirus (COVID-19): Fallzahlen Basel-Stadt
 pub mod coronavirus_covid_19_fallzahlen_basel_stadt {
     use super::*;
 
@@ -18430,7 +18315,8 @@ pub mod coronavirus_covid_19_fallzahlen_basel_stadt {
         /// Zeitstempel
         ///
         /// Datenstand
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Kanton
         pub abbreviation_canton_and_fl: Option<String>,
         /// Aktive Fälle (ehemals Isolierte)
@@ -18625,6 +18511,7 @@ pub mod coronavirus_covid_19_fallzahlen_basel_stadt {
     }
 }
 
+/// Gewässerschutzkarte: Grundwasserschutzzonen
 pub mod gewaesserschutzkarte_grundwasserschutzzonen {
     use super::*;
 
@@ -18667,7 +18554,8 @@ pub mod gewaesserschutzkarte_grundwasserschutzzonen {
         /// Datum_Status
         ///
         /// Datum des Statuswechsels
-        pub datumstat: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datumstat: Option<OffsetDateTime>,
         /// Geolink
         ///
         /// Eindeutige Verbindung zur Rechtsvorschrift
@@ -18686,8 +18574,6 @@ pub mod gewaesserschutzkarte_grundwasserschutzzonen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Idgwszone,
         Typ,
         Kantypbez,
@@ -18703,8 +18589,6 @@ pub mod gewaesserschutzkarte_grundwasserschutzzonen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Idgwszone => "idgwszone".into(),
             Field::Typ => "typ".into(),
             Field::Kantypbez => "kantypbez".into(),
@@ -18758,6 +18642,7 @@ pub mod gewaesserschutzkarte_grundwasserschutzzonen {
     }
 }
 
+/// Abfuhrzonen (Gemeinde Basel)
 pub mod abfuhrzonen_gemeinde_basel {
     use super::*;
 
@@ -18779,15 +18664,11 @@ pub mod abfuhrzonen_gemeinde_basel {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Zone,
     }
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Zone => "zone".into(),
         }
     }
@@ -18831,6 +18712,7 @@ pub mod abfuhrzonen_gemeinde_basel {
     }
 }
 
+/// Verbotszonen geteilte Mikromobilität: Sperr- und Parkverbotszonen
 pub mod verbotszonen_geteilte_mikromobilitaet_sperr_und_parkverbotszonen {
     use super::*;
 
@@ -18862,8 +18744,6 @@ pub mod verbotszonen_geteilte_mikromobilitaet_sperr_und_parkverbotszonen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdVerbot,
         Name,
         Regart,
@@ -18871,8 +18751,6 @@ pub mod verbotszonen_geteilte_mikromobilitaet_sperr_und_parkverbotszonen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdVerbot => "id_verbot".into(),
             Field::Name => "name".into(),
             Field::Regart => "regart".into(),
@@ -18918,6 +18796,7 @@ pub mod verbotszonen_geteilte_mikromobilitaet_sperr_und_parkverbotszonen {
     }
 }
 
+/// Feinstaubmessungen Naturhistorisches Museum Basel
 pub mod feinstaubmessungen_naturhistorisches_museum_basel {
     use super::*;
 
@@ -18926,7 +18805,8 @@ pub mod feinstaubmessungen_naturhistorisches_museum_basel {
         /// Zeitstempel
         ///
         /// Zeitstempel des Messbeginns
-        pub anfangszeit: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub anfangszeit: Option<OffsetDateTime>,
         /// PM2.5
         ///
         /// Feinstaub mit Partikelgrösse < 2.5 tausendstel Millimeter
@@ -18997,6 +18877,7 @@ pub mod feinstaubmessungen_naturhistorisches_museum_basel {
     }
 }
 
+/// Tigermückenbekämpfung: Bekämpfungszone
 pub mod tigermueckenbekaempfung_bekaempfungszone {
     use super::*;
 
@@ -19028,8 +18909,6 @@ pub mod tigermueckenbekaempfung_bekaempfungszone {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdBekam,
         Url,
         Merkblatt,
@@ -19037,8 +18916,6 @@ pub mod tigermueckenbekaempfung_bekaempfungszone {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdBekam => "id_bekam".into(),
             Field::Url => "url".into(),
             Field::Merkblatt => "merkblatt".into(),
@@ -19084,6 +18961,7 @@ pub mod tigermueckenbekaempfung_bekaempfungszone {
     }
 }
 
+/// Secondhand-Angebote / Wiederverwendungsstellen
 pub mod secondhand_angebote_wiederverwendungsstellen {
     use super::*;
 
@@ -19138,8 +19016,6 @@ pub mod secondhand_angebote_wiederverwendungsstellen {
         Ortschaft,
         Telefon,
         Link,
-        GeoPoint2d,
-        GeoShape,
         MapLinks,
     }
 
@@ -19154,8 +19030,6 @@ pub mod secondhand_angebote_wiederverwendungsstellen {
             Field::Ortschaft => "ortschaft".into(),
             Field::Telefon => "telefon".into(),
             Field::Link => "link".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::MapLinks => "map_links".into(),
         }
     }
@@ -19199,6 +19073,7 @@ pub mod secondhand_angebote_wiederverwendungsstellen {
     }
 }
 
+/// Kitas und Tagesheime
 pub mod kitas_und_tagesheime {
     use super::*;
 
@@ -19252,8 +19127,6 @@ pub mod kitas_und_tagesheime {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdTk,
         StdName,
         Strasse,
@@ -19267,8 +19140,6 @@ pub mod kitas_und_tagesheime {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdTk => "id_tk".into(),
             Field::StdName => "std_name".into(),
             Field::Strasse => "strasse".into(),
@@ -19320,6 +19191,7 @@ pub mod kitas_und_tagesheime {
     }
 }
 
+/// Grosser Rat: Live-Abstimmungsergebnisse
 pub mod grosser_rat_live_abstimmungsergebnisse {
     use super::*;
 
@@ -19440,11 +19312,13 @@ pub mod grosser_rat_live_abstimmungsergebnisse {
         /// Zeitstempel
         ///
         /// Datum und Uhrzeit
-        pub zeitstempel_text: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub zeitstempel_text: Option<OffsetDateTime>,
         /// Datenstand
         ///
         /// Datum und Uhrzeit des Datenexports
-        pub datenstand_text: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datenstand_text: Option<OffsetDateTime>,
         /// Erweiterte Abstimmungsnummer
         ///
         /// Besteht aus [Abstimmungsnummer]-[Datum]-[Uhrzeit]
@@ -19573,6 +19447,7 @@ pub mod grosser_rat_live_abstimmungsergebnisse {
     }
 }
 
+/// Vorhersagen Rhein: Wasserstand und Abfluss
 pub mod vorhersagen_rhein_wasserstand_und_abfluss {
     use super::*;
 
@@ -19581,7 +19456,8 @@ pub mod vorhersagen_rhein_wasserstand_und_abfluss {
         /// Zeitstempel
         ///
         /// Datum und Uhrzeit
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Wasserstand
         ///
         /// Pegelstand in Meter über Meer. Bei den ICON-Modellen handelt es ich um die hydrologische Vorhersage basierend auf der meteorologischen Kontrollvorhersage (Kontroll-Lauf oder control run).
@@ -19597,15 +19473,18 @@ pub mod vorhersagen_rhein_wasserstand_und_abfluss {
         /// Zeitstempel Ausgabe
         ///
         /// Datum und Uhrzeit der Veröffentlichung
-        pub ausgegeben_an: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub ausgegeben_an: Option<OffsetDateTime>,
         /// Zeitstempel Meteolauf
         ///
         /// Datum und Uhrzeit des Meteo-Laufs (der Zeitpunkt, zu dem die meteorologischen Vorhersagen erstellt wurden, die dann als Grundlage für das Modell zur Berechnung der hydrologischen Vorhersagen verwendet wird)
-        pub meteolauf: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub meteolauf: Option<OffsetDateTime>,
         /// Zeitstempel Gemessene Werte
         ///
         /// Datum und Uhrzeit, bis zu dem die Werte gemessen wurden
-        pub gemessene_werten_bis: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub gemessene_werten_bis: Option<OffsetDateTime>,
         /// Wasserstand Minimum
         ///
         /// Minimum (0%-Quantil) des Pegelstands in Meter über Meer
@@ -19736,6 +19615,7 @@ pub mod vorhersagen_rhein_wasserstand_und_abfluss {
     }
 }
 
+/// Überwachung Luftqualität Transformation Areal Rosental: Flüchtige Schadstoffe
 pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_fluechtige_schadstoffe {
     use super::*;
 
@@ -19869,6 +19749,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_fluechtige_scha
     }
 }
 
+/// Birs Temperatur, Wasserstand und Abfluss
 pub mod birs_temperatur_wasserstand_und_abfluss {
     use super::*;
 
@@ -19877,7 +19758,8 @@ pub mod birs_temperatur_wasserstand_und_abfluss {
         /// Zeitstempel
         ///
         /// Datum und Uhrzeit
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Abflussmenge
         ///
         /// Abfliessende Wassermenge in Kubikmetern pro Sekunde
@@ -19954,13 +19836,15 @@ pub mod birs_temperatur_wasserstand_und_abfluss {
     }
 }
 
+/// Smart Climate Feinstaubmessungen
 pub mod smart_climate_feinstaubmessungen {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Zeitstempel
-        pub zeitstempel: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub zeitstempel: Option<OffsetDateTime>,
         /// PM2.5
         ///
         /// Feinstaub mit Partikelgrösse < 2.5 tausendstel Millimeter
@@ -19986,7 +19870,6 @@ pub mod smart_climate_feinstaubmessungen {
         Zeitstempel,
         Pm25,
         Name,
-        GeoPoint2d,
         Id,
         Station,
     }
@@ -19996,7 +19879,6 @@ pub mod smart_climate_feinstaubmessungen {
             Field::Zeitstempel => "zeitstempel".into(),
             Field::Pm25 => "pm_2_5".into(),
             Field::Name => "name".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Id => "id".into(),
             Field::Station => "station".into(),
         }
@@ -20041,6 +19923,7 @@ pub mod smart_climate_feinstaubmessungen {
     }
 }
 
+/// Smart Climate Schallpegelmessungen
 pub mod smart_climate_schallpegelmessungen {
     use super::*;
 
@@ -20053,7 +19936,8 @@ pub mod smart_climate_schallpegelmessungen {
         /// Zeitstempel
         ///
         /// Datum und Uhrzeit der Messung
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Wert
         ///
         /// Gemessene Lautstärke in Dezibel
@@ -20083,7 +19967,6 @@ pub mod smart_climate_schallpegelmessungen {
         StationId,
         Timestamp,
         Value,
-        GeoPoint2d,
         Latitude,
         Longitude,
         Eui,
@@ -20094,7 +19977,6 @@ pub mod smart_climate_schallpegelmessungen {
             Field::StationId => "station_id".into(),
             Field::Timestamp => "timestamp".into(),
             Field::Value => "value".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Latitude => "latitude".into(),
             Field::Longitude => "longitude".into(),
             Field::Eui => "eui".into(),
@@ -20140,6 +20022,7 @@ pub mod smart_climate_schallpegelmessungen {
     }
 }
 
+/// Rhein Wasserstand Klingentalfähre
 pub mod rhein_wasserstand_klingentalfaehre {
     use super::*;
 
@@ -20148,7 +20031,8 @@ pub mod rhein_wasserstand_klingentalfaehre {
         /// Zeitstempel
         ///
         /// Datum und Uhrzeit
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Wasserstand
         ///
         /// Pegelstand in Metern über Meer
@@ -20213,6 +20097,7 @@ pub mod rhein_wasserstand_klingentalfaehre {
     }
 }
 
+/// Strassenverkehrsunfälle
 pub mod strassenverkehrsunfaelle {
     use super::*;
 
@@ -20276,8 +20161,6 @@ pub mod strassenverkehrsunfaelle {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdUnfall,
         Typ,
         Schwere,
@@ -20293,8 +20176,6 @@ pub mod strassenverkehrsunfaelle {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdUnfall => "id_unfall".into(),
             Field::Typ => "typ".into(),
             Field::Schwere => "schwere".into(),
@@ -20348,6 +20229,7 @@ pub mod strassenverkehrsunfaelle {
     }
 }
 
+/// Rheinmesswerte kontinuierlich
 pub mod rheinmesswerte_kontinuierlich {
     use super::*;
 
@@ -20356,7 +20238,8 @@ pub mod rheinmesswerte_kontinuierlich {
         /// Startzeitpunkt
         ///
         /// Start der Messung
-        pub startzeitpunkt: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub startzeitpunkt: Option<OffsetDateTime>,
         /// Start_text
         ///
         /// Start der Messung
@@ -20364,7 +20247,8 @@ pub mod rheinmesswerte_kontinuierlich {
         /// Endezeitpunkt
         ///
         /// Ende der Messung
-        pub endezeitpunkt: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub endezeitpunkt: Option<OffsetDateTime>,
         /// Ende_text
         ///
         /// Ende der Messung
@@ -20457,6 +20341,7 @@ pub mod rheinmesswerte_kontinuierlich {
     }
 }
 
+/// Solarkataster: Dachkanten
 pub mod solarkataster_dachkanten {
     use super::*;
 
@@ -20480,15 +20365,11 @@ pub mod solarkataster_dachkanten {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdDkante,
     }
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdDkante => "id_dkante".into(),
         }
     }
@@ -20532,6 +20413,7 @@ pub mod solarkataster_dachkanten {
     }
 }
 
+/// Smarte Strasse: Luftqualität des Vortages
 pub mod smarte_strasse_luftqualitaet_des_vortages {
     use super::*;
 
@@ -20540,7 +20422,8 @@ pub mod smarte_strasse_luftqualitaet_des_vortages {
         /// Zeitstempel
         ///
         /// Zeitstempel = Anfangszeit des 30 minütigen Messintervalls
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// G107 NO2
         ///
         /// Tagesmittelwert NO2 [µg/m3] - Sensor Gundeldingerstrasse 107
@@ -20661,6 +20544,7 @@ pub mod smarte_strasse_luftqualitaet_des_vortages {
     }
 }
 
+/// Coronavirus (Covid-19): Reproduktionszahl (Re)
 pub mod coronavirus_covid_19_reproduktionszahl_re {
     use super::*;
 
@@ -20782,6 +20666,7 @@ pub mod coronavirus_covid_19_reproduktionszahl_re {
     }
 }
 
+/// Smarte Strasse: Zu- und Wegfahrten, Parkplatzauslastung
 pub mod smarte_strasse_zu_und_wegfahrten_parkplatzauslastung {
     use super::*;
 
@@ -20790,11 +20675,13 @@ pub mod smarte_strasse_zu_und_wegfahrten_parkplatzauslastung {
         /// von
         ///
         /// Start der Messung
-        pub from: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub from: Option<OffsetDateTime>,
         /// bis
         ///
         /// Ende der Messung
-        pub to: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub to: Option<OffsetDateTime>,
         /// Typ
         ///
         /// Parklatztyp
@@ -20879,6 +20766,7 @@ pub mod smarte_strasse_zu_und_wegfahrten_parkplatzauslastung {
     }
 }
 
+/// Aktuelle Temperaturen der Gartenbäder
 pub mod aktuelle_temperaturen_der_gartenbaeder {
     use super::*;
 
@@ -20895,7 +20783,8 @@ pub mod aktuelle_temperaturen_der_gartenbaeder {
         /// Zeit
         ///
         /// Zeitpunkt, an dem die Daten gescraped wurden
-        pub zeitpunkt_job: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub zeitpunkt_job: Option<OffsetDateTime>,
         /// Koordinaten
         ///
         /// Punktkoordinate des Bads
@@ -20917,7 +20806,6 @@ pub mod aktuelle_temperaturen_der_gartenbaeder {
         Name,
         Temperatur,
         ZeitpunktJob,
-        Koordinaten,
         UrlSportanlage,
     }
 
@@ -20926,7 +20814,6 @@ pub mod aktuelle_temperaturen_der_gartenbaeder {
             Field::Name => "name".into(),
             Field::Temperatur => "temperatur".into(),
             Field::ZeitpunktJob => "zeitpunkt_job".into(),
-            Field::Koordinaten => "koordinaten".into(),
             Field::UrlSportanlage => "url_sportanlage".into(),
         }
     }
@@ -20970,13 +20857,15 @@ pub mod aktuelle_temperaturen_der_gartenbaeder {
     }
 }
 
+/// Luftqualität Station St. Johannplatz
 pub mod luftqualitaet_station_st_johannplatz {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum/Zeit
-        pub datum_zeit: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datum_zeit: Option<OffsetDateTime>,
         /// timestamp_text
         pub timestamp_text: Option<String>,
         /// PM10 (Stundenmittelwerte)
@@ -21007,7 +20896,6 @@ pub mod luftqualitaet_station_st_johannplatz {
         Pm25StundenmittelwerteUgM3,
         O3StundenmittelwerteUgM3,
         No2StundenmittelwerteUgM3,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -21018,7 +20906,6 @@ pub mod luftqualitaet_station_st_johannplatz {
             Field::Pm25StundenmittelwerteUgM3 => "pm2_5_stundenmittelwerte_ug_m3".into(),
             Field::O3StundenmittelwerteUgM3 => "o3_stundenmittelwerte_ug_m3".into(),
             Field::No2StundenmittelwerteUgM3 => "no2_stundenmittelwerte_ug_m3".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -21061,6 +20948,7 @@ pub mod luftqualitaet_station_st_johannplatz {
     }
 }
 
+/// Briefliche Stimmbeteiligung
 pub mod briefliche_stimmbeteiligung {
     use super::*;
 
@@ -21188,6 +21076,7 @@ pub mod briefliche_stimmbeteiligung {
     }
 }
 
+/// Smarte Strasse: Luftqualität
 pub mod smarte_strasse_luftqualitaet {
     use super::*;
 
@@ -21196,7 +21085,8 @@ pub mod smarte_strasse_luftqualitaet {
         /// Zeitstempel
         ///
         /// Zeitstempel = Anfangszeit des 30 minütigen Messintervalls
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// G107 NO2
         ///
         /// Halbstundenmittelwert NO2 [µg/m3] - Sensor Gundeldingerstrasse 107
@@ -21317,6 +21207,7 @@ pub mod smarte_strasse_luftqualitaet {
     }
 }
 
+/// Baustellen
 pub mod baustellen {
     use super::*;
 
@@ -21444,6 +21335,7 @@ pub mod baustellen {
     }
 }
 
+/// Smarte Strasse: Fahrzeugdurchfahrten
 pub mod smarte_strasse_fahrzeugdurchfahrten {
     use super::*;
 
@@ -21452,7 +21344,8 @@ pub mod smarte_strasse_fahrzeugdurchfahrten {
         /// Zeitstempel
         ///
         /// Datum und Uhrzeit bei Durchfahrt
-        pub localdatetime: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub localdatetime: Option<OffsetDateTime>,
         /// Fahrzeugklasse
         ///
         /// Klassifizierung des Fahrzeugs bei Durchfahrt
@@ -21527,6 +21420,7 @@ pub mod smarte_strasse_fahrzeugdurchfahrten {
     }
 }
 
+/// Standorte der öffentlichen Parkhäuser Basel
 pub mod standorte_der_oeffentlichen_parkhaeuser_basel {
     use super::*;
 
@@ -21557,7 +21451,8 @@ pub mod standorte_der_oeffentlichen_parkhaeuser_basel {
         /// coords.lng
         pub coords_lng: Option<f64>,
         /// published
-        pub published: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub published: Option<OffsetDateTime>,
     }
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -21576,7 +21471,6 @@ pub mod standorte_der_oeffentlichen_parkhaeuser_basel {
         Id2,
         Total,
         Link,
-        GeoPoint2d,
         CoordsLat,
         CoordsLng,
         Published,
@@ -21592,7 +21486,6 @@ pub mod standorte_der_oeffentlichen_parkhaeuser_basel {
             Field::Id2 => "id2".into(),
             Field::Total => "total".into(),
             Field::Link => "link".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::CoordsLat => "coords_lat".into(),
             Field::CoordsLng => "coords_lng".into(),
             Field::Published => "published".into(),
@@ -21638,13 +21531,15 @@ pub mod standorte_der_oeffentlichen_parkhaeuser_basel {
     }
 }
 
+/// Luftqualität Station Feldbergstrasse
 pub mod luftqualitaet_station_feldbergstrasse {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum/Zeit
-        pub datum_zeit: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datum_zeit: Option<OffsetDateTime>,
         /// timestamp_text
         pub timestamp_text: Option<String>,
         /// pm10_stundenmittelwerte_ug_m3
@@ -21670,7 +21565,6 @@ pub mod luftqualitaet_station_feldbergstrasse {
         Pm10StundenmittelwerteUgM3,
         Pm25StundenmittelwerteUgM3,
         No2StundenmittelwerteUgM3,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -21680,7 +21574,6 @@ pub mod luftqualitaet_station_feldbergstrasse {
             Field::Pm10StundenmittelwerteUgM3 => "pm10_stundenmittelwerte_ug_m3".into(),
             Field::Pm25StundenmittelwerteUgM3 => "pm2_5_stundenmittelwerte_ug_m3".into(),
             Field::No2StundenmittelwerteUgM3 => "no2_stundenmittelwerte_ug_m3".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -21723,13 +21616,15 @@ pub mod luftqualitaet_station_feldbergstrasse {
     }
 }
 
+/// Überwachung Luftqualität Transformation Areal Rosental: Online Sensor Feinstaub
 pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_online_sensor_feinstaub {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum/Zeit
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Station Name
         pub station: Option<String>,
         /// PM2.5
@@ -21798,6 +21693,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_online_sensor_f
     }
 }
 
+/// Zeitreihe der Temperaturen der Gartenbäder
 pub mod zeitreihe_der_temperaturen_der_gartenbaeder {
     use super::*;
 
@@ -21814,7 +21710,8 @@ pub mod zeitreihe_der_temperaturen_der_gartenbaeder {
         /// Zeit
         ///
         /// Zeitpunkt, an dem die Daten gescraped wurden
-        pub zeitpunkt_job: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub zeitpunkt_job: Option<OffsetDateTime>,
         /// Koordinaten
         ///
         /// Punktkoordinate des Bads
@@ -21832,7 +21729,6 @@ pub mod zeitreihe_der_temperaturen_der_gartenbaeder {
         Name,
         Temperatur,
         ZeitpunktJob,
-        Koordinaten,
     }
 
     fn field_name(field: Field) -> String {
@@ -21840,7 +21736,6 @@ pub mod zeitreihe_der_temperaturen_der_gartenbaeder {
             Field::Name => "name".into(),
             Field::Temperatur => "temperatur".into(),
             Field::ZeitpunktJob => "zeitpunkt_job".into(),
-            Field::Koordinaten => "koordinaten".into(),
         }
     }
 
@@ -21883,6 +21778,7 @@ pub mod zeitreihe_der_temperaturen_der_gartenbaeder {
     }
 }
 
+/// OGD Datensätze
 pub mod ogd_datensaetze {
     use super::*;
 
@@ -21907,11 +21803,14 @@ pub mod ogd_datensaetze {
         /// Timezone
         pub timezone: Option<String>,
         /// Modified
-        pub modified: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub modified: Option<OffsetDateTime>,
         /// Data processed
-        pub data_processed: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub data_processed: Option<OffsetDateTime>,
         /// Metadata processed
-        pub metadata_processed: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub metadata_processed: Option<OffsetDateTime>,
         /// Publisher
         pub publisher: Option<String>,
         /// Reference
@@ -21945,9 +21844,11 @@ pub mod ogd_datensaetze {
         /// Conforms to
         pub conforms_to: Option<String>,
         /// Temporal coverage start date
-        pub temporal_coverage_start_date: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub temporal_coverage_start_date: Option<OffsetDateTime>,
         /// Temporal coverage end date
-        pub temporal_coverage_end_date: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub temporal_coverage_end_date: Option<OffsetDateTime>,
         /// Rights
         pub rights: Option<String>,
         /// RML Mapping
@@ -22146,6 +22047,7 @@ pub mod ogd_datensaetze {
     }
 }
 
+/// Wahl eines Mitglieds des Gerichts für fürsorgerische Unterbringungen
 pub mod wahl_eines_mitglieds_des_gerichts_fuer_fuersorgerische_unterbringungen {
     use super::*;
 
@@ -22357,6 +22259,7 @@ pub mod wahl_eines_mitglieds_des_gerichts_fuer_fuersorgerische_unterbringungen {
     }
 }
 
+/// Standorte Mess-Stationen Smart Climate Feinstaubmessungen
 pub mod standorte_mess_stationen_smart_climate_feinstaubmessungen {
     use super::*;
 
@@ -22383,7 +22286,6 @@ pub mod standorte_mess_stationen_smart_climate_feinstaubmessungen {
         Name,
         Id,
         Titel,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -22391,7 +22293,6 @@ pub mod standorte_mess_stationen_smart_climate_feinstaubmessungen {
             Field::Name => "name".into(),
             Field::Id => "id".into(),
             Field::Titel => "titel".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -22434,6 +22335,7 @@ pub mod standorte_mess_stationen_smart_climate_feinstaubmessungen {
     }
 }
 
+/// Wahl von fünf Präsidentinnen oder Präsidenten des Appellationsgerichts
 pub mod wahl_von_fuenf_praesidentinnen_oder_praesidenten_des_appellationsgerichts {
     use super::*;
 
@@ -22645,6 +22547,7 @@ pub mod wahl_von_fuenf_praesidentinnen_oder_praesidenten_des_appellationsgericht
     }
 }
 
+/// Kandidierende der Regierungspräsidiumswahl 20. Oktober 2024
 pub mod kandidierende_der_regierungspraesidiumswahl_20_oktober_2024 {
     use super::*;
 
@@ -22758,6 +22661,7 @@ pub mod kandidierende_der_regierungspraesidiumswahl_20_oktober_2024 {
     }
 }
 
+/// Sammlung Europa
 pub mod sammlung_europa {
     use super::*;
 
@@ -22873,6 +22777,7 @@ pub mod sammlung_europa {
     }
 }
 
+/// Abstimmung vom 27. November 2022 Details
 pub mod abstimmung_vom_27_november_2022_details {
     use super::*;
 
@@ -23090,6 +22995,7 @@ pub mod abstimmung_vom_27_november_2022_details {
     }
 }
 
+/// Kandidaturen für Gerichtspräsidienwahlen
 pub mod kandidaturen_fuer_gerichtspraesidienwahlen {
     use super::*;
 
@@ -23221,6 +23127,7 @@ pub mod kandidaturen_fuer_gerichtspraesidienwahlen {
     }
 }
 
+/// Coronavirus (Covid-19): Tests nach Nachweismethode
 pub mod coronavirus_covid_19_tests_nach_nachweismethode {
     use super::*;
 
@@ -23354,6 +23261,7 @@ pub mod coronavirus_covid_19_tests_nach_nachweismethode {
     }
 }
 
+/// Abstimmung vom 28. November 2021 Details
 pub mod abstimmung_vom_28_november_2021_details {
     use super::*;
 
@@ -23515,6 +23423,7 @@ pub mod abstimmung_vom_28_november_2021_details {
     }
 }
 
+/// Abstimmung vom 15. Mai 2022 Details
 pub mod abstimmung_vom_15_mai_2022_details {
     use super::*;
 
@@ -23680,6 +23589,7 @@ pub mod abstimmung_vom_15_mai_2022_details {
     }
 }
 
+/// Kennzahlen der Abstimmung vom 3. März 2024
 pub mod kennzahlen_der_abstimmung_vom_3_maerz_2024 {
     use super::*;
 
@@ -23867,6 +23777,7 @@ pub mod kennzahlen_der_abstimmung_vom_3_maerz_2024 {
     }
 }
 
+/// Kennzahlen der Abstimmung vom 26. November 2023
 pub mod kennzahlen_der_abstimmung_vom_26_november_2023 {
     use super::*;
 
@@ -24054,6 +23965,7 @@ pub mod kennzahlen_der_abstimmung_vom_26_november_2023 {
     }
 }
 
+/// Kennzahlen der Abstimmung vom 7. März 2021
 pub mod kennzahlen_der_abstimmung_vom_7_maerz_2021 {
     use super::*;
 
@@ -24227,6 +24139,7 @@ pub mod kennzahlen_der_abstimmung_vom_7_maerz_2021 {
     }
 }
 
+/// Abstimmung vom 12. März 2023 Details
 pub mod abstimmung_vom_12_maerz_2023_details {
     use super::*;
 
@@ -24394,6 +24307,7 @@ pub mod abstimmung_vom_12_maerz_2023_details {
     }
 }
 
+/// Abstimmung 7. März 2021 Details
 pub mod abstimmung_7_maerz_2021_details {
     use super::*;
 
@@ -24553,6 +24467,7 @@ pub mod abstimmung_7_maerz_2021_details {
     }
 }
 
+/// Abstimmung vom 3. März 2024 Details
 pub mod abstimmung_vom_3_maerz_2024_details {
     use super::*;
 
@@ -24720,6 +24635,7 @@ pub mod abstimmung_vom_3_maerz_2024_details {
     }
 }
 
+/// Abstimmung vom 13. Februar 2022 Details
 pub mod abstimmung_vom_13_februar_2022_details {
     use super::*;
 
@@ -24885,6 +24801,7 @@ pub mod abstimmung_vom_13_februar_2022_details {
     }
 }
 
+/// Resultate der Nationalratswahlen 2023
 pub mod resultate_der_nationalratswahlen_2023 {
     use super::*;
 
@@ -25430,6 +25347,7 @@ pub mod resultate_der_nationalratswahlen_2023 {
     }
 }
 
+/// Smarte Strasse: Sensoren
 pub mod smarte_strasse_sensoren {
     use super::*;
 
@@ -25462,7 +25380,6 @@ pub mod smarte_strasse_sensoren {
         QrcNr,
         ZuDenMesswerten,
         Foto,
-        GeoPoint,
     }
 
     fn field_name(field: Field) -> String {
@@ -25472,7 +25389,6 @@ pub mod smarte_strasse_sensoren {
             Field::QrcNr => "qrc_nr".into(),
             Field::ZuDenMesswerten => "zu_den_messwerten".into(),
             Field::Foto => "foto".into(),
-            Field::GeoPoint => "geo_point".into(),
         }
     }
 
@@ -25515,6 +25431,7 @@ pub mod smarte_strasse_sensoren {
     }
 }
 
+/// Resultate der Ersatzwahl Regierungsrat 3. März 2024
 pub mod resultate_der_ersatzwahl_regierungsrat_3_maerz_2024 {
     use super::*;
 
@@ -25792,6 +25709,7 @@ pub mod resultate_der_ersatzwahl_regierungsrat_3_maerz_2024 {
     }
 }
 
+/// Grosser Rat: Gremien
 pub mod grosser_rat_gremien {
     use super::*;
 
@@ -25901,6 +25819,7 @@ pub mod grosser_rat_gremien {
     }
 }
 
+/// Kandidierende der Ersatzwahl Regierungsrat 3. März 2024
 pub mod kandidierende_der_ersatzwahl_regierungsrat_3_maerz_2024 {
     use super::*;
 
@@ -26014,6 +25933,7 @@ pub mod kandidierende_der_ersatzwahl_regierungsrat_3_maerz_2024 {
     }
 }
 
+/// Ein- und Ausfahrten öffentlicher Parkhäuser Basel
 pub mod ein_und_ausfahrten_oeffentlicher_parkhaeuser_basel {
     use super::*;
 
@@ -26022,7 +25942,8 @@ pub mod ein_und_ausfahrten_oeffentlicher_parkhaeuser_basel {
         /// Zeitstempel
         ///
         /// Start des Messintervalls von 1 h
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Parkhaus
         ///
         /// Name des Parkhauses
@@ -26105,6 +26026,7 @@ pub mod ein_und_ausfahrten_oeffentlicher_parkhaeuser_basel {
     }
 }
 
+/// Abstimmung vom 9. Juni 2024 Details
 pub mod abstimmung_vom_9_juni_2024_details {
     use super::*;
 
@@ -26272,6 +26194,7 @@ pub mod abstimmung_vom_9_juni_2024_details {
     }
 }
 
+/// Coronavirus (Covid-19): Massentests an Schulen der Sekundarstufe II
 pub mod coronavirus_covid_19_massentests_an_schulen_der_sekundarstufe_ii {
     use super::*;
 
@@ -26375,6 +26298,7 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_sekundarstufe_ii {
     }
 }
 
+/// Gesundheitsversorgung (GSV): Pflegeheimbewohnende
 pub mod gesundheitsversorgung_gsv_pflegeheimbewohnende {
     use super::*;
 
@@ -26520,6 +26444,7 @@ pub mod gesundheitsversorgung_gsv_pflegeheimbewohnende {
     }
 }
 
+/// Kennzahlen zu den Basler Wohnvierteln und Landgemeinden
 pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden {
     use super::*;
 
@@ -26711,6 +26636,7 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden {
     }
 }
 
+/// Grosser Rat: Sitzungskalender
 pub mod grosser_rat_sitzungskalender {
     use super::*;
 
@@ -26723,11 +26649,13 @@ pub mod grosser_rat_sitzungskalender {
         /// Start
         ///
         /// Datum und Uhrzeit, zu der die Sitzung beginnt
-        pub dtstart: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub dtstart: Option<OffsetDateTime>,
         /// Ende
         ///
         /// Datum und Uhrzeit, zu der die Sitzung endet
-        pub dtend: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub dtend: Option<OffsetDateTime>,
     }
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -26790,6 +26718,7 @@ pub mod grosser_rat_sitzungskalender {
     }
 }
 
+/// Coronavirus (Covid-19): Positiv getestete Minderjährige in 3-Jahresklassen
 pub mod coronavirus_covid_19_positiv_getestete_minderjaehrige_in_3_jahresklassen {
     use super::*;
 
@@ -26869,6 +26798,7 @@ pub mod coronavirus_covid_19_positiv_getestete_minderjaehrige_in_3_jahresklassen
     }
 }
 
+/// Kennzahlen der Abstimmung vom 12. März 2023
 pub mod kennzahlen_der_abstimmung_vom_12_maerz_2023 {
     use super::*;
 
@@ -27050,6 +26980,7 @@ pub mod kennzahlen_der_abstimmung_vom_12_maerz_2023 {
     }
 }
 
+/// Baumkronenbedeckung
 pub mod baumkronenbedeckung {
     use super::*;
 
@@ -27129,6 +27060,7 @@ pub mod baumkronenbedeckung {
     }
 }
 
+/// Nationalratswahlen 2023: Veränderte Wahlzettel
 pub mod nationalratswahlen_2023_veraenderte_wahlzettel {
     use super::*;
 
@@ -27282,6 +27214,7 @@ pub mod nationalratswahlen_2023_veraenderte_wahlzettel {
     }
 }
 
+/// Nationalratswahlen 2023: Kandidierende aus Basel-Stadt
 pub mod nationalratswahlen_2023_kandidierende_aus_basel_stadt {
     use super::*;
 
@@ -27437,6 +27370,7 @@ pub mod nationalratswahlen_2023_kandidierende_aus_basel_stadt {
     }
 }
 
+/// Ständeratswahlen 2023: Kandidierende aus Basel-Stadt
 pub mod staenderatswahlen_2023_kandidierende_aus_basel_stadt {
     use super::*;
 
@@ -27552,6 +27486,7 @@ pub mod staenderatswahlen_2023_kandidierende_aus_basel_stadt {
     }
 }
 
+/// Wahllokale Kanton Basel-Stadt
 pub mod wahllokale_kanton_basel_stadt {
     use super::*;
 
@@ -27637,6 +27572,7 @@ pub mod wahllokale_kanton_basel_stadt {
     }
 }
 
+/// Lebendgeborene seit 1901
 pub mod lebendgeborene_seit_1901 {
     use super::*;
 
@@ -27758,6 +27694,7 @@ pub mod lebendgeborene_seit_1901 {
     }
 }
 
+/// Perimeter der Schülerprognosen Basel-Stadt
 pub mod perimeter_der_schuelerprognosen_basel_stadt {
     use super::*;
 
@@ -27785,16 +27722,12 @@ pub mod perimeter_der_schuelerprognosen_basel_stadt {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Nummer,
         Zonen,
     }
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Nummer => "nummer".into(),
             Field::Zonen => "zonen".into(),
         }
@@ -27839,6 +27772,7 @@ pub mod perimeter_der_schuelerprognosen_basel_stadt {
     }
 }
 
+/// Geschwindigkeitsklassen motorisierter Individualverkehr
 pub mod geschwindigkeitsklassen_motorisierter_individualverkehr {
     use super::*;
 
@@ -27925,9 +27859,11 @@ pub mod geschwindigkeitsklassen_motorisierter_individualverkehr {
         /// Anzahl der Fahrzeuge im motorisierten Individualverkehr, die mit einer Geschwindigkeit von über 130km/h fahren.
         pub x130: Option<i64>,
         /// Messbeginn Zeitpunkt
-        pub datetimefrom: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datetimefrom: Option<OffsetDateTime>,
         /// Messende Zeitpunkt
-        pub datetimeto: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datetimeto: Option<OffsetDateTime>,
         /// Jahr
         pub year: Option<String>,
         /// Monat
@@ -28060,6 +27996,7 @@ pub mod geschwindigkeitsklassen_motorisierter_individualverkehr {
     }
 }
 
+/// Überwachung Luftqualität Transformation Areal Rosental: Baustellenbereich
 pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_baustellenbereich {
     use super::*;
 
@@ -28082,15 +28019,11 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_baustellenberei
     #[derive(Clone, Copy)]
     pub enum Field {
         N,
-        Geometry,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
         match field {
             Field::N => "n".into(),
-            Field::Geometry => "geometry".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -28133,6 +28066,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_baustellenberei
     }
 }
 
+/// Steuerstatistik Basel-Stadt: Kennzahlen seit 1991 nach Gemeinde und Wohnviertel
 pub mod steuerstatistik_basel_stadt_kennzahlen_seit_1991_nach_gemeinde_und_wohnviertel {
     use super::*;
 
@@ -28308,6 +28242,7 @@ pub mod steuerstatistik_basel_stadt_kennzahlen_seit_1991_nach_gemeinde_und_wohnv
     }
 }
 
+/// Eingebürgerte Ausländerinnen und Ausländer nach Geschlecht, Alter, Geburtsland und Staatsangehörigkeit bei Gesuchsstellung
 pub mod eingebuergerte_auslaenderinnen_und_auslaender_nach_geschlecht_alter_geburtsland_und_staatsangehoerigkeit_bei_gesuchsstellung {
     use super::*;
 
@@ -28411,6 +28346,7 @@ pub mod eingebuergerte_auslaenderinnen_und_auslaender_nach_geschlecht_alter_gebu
     }
 }
 
+/// Schutzsuchende im Kanton Basel-Stadt nach Geschlecht, Altersklasse, Staatsangehörigkeit, Zuzugs- und Wegzugsmonat
 pub mod schutzsuchende_im_kanton_basel_stadt_nach_geschlecht_altersklasse_staatsangehoerigkeit_zuzugs_und_wegzugsmonat {
     use super::*;
 
@@ -28560,6 +28496,7 @@ pub mod schutzsuchende_im_kanton_basel_stadt_nach_geschlecht_altersklasse_staats
     }
 }
 
+/// Überwachung Luftqualität Sanierung Areal Walkeweg
 pub mod ueberwachung_luftqualitaet_sanierung_areal_walkeweg {
     use super::*;
 
@@ -28624,7 +28561,6 @@ pub mod ueberwachung_luftqualitaet_sanierung_areal_walkeweg {
         Warnwert,
         Einheit,
         Messmethode,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -28638,7 +28574,6 @@ pub mod ueberwachung_luftqualitaet_sanierung_areal_walkeweg {
             Field::Warnwert => "warnwert".into(),
             Field::Einheit => "einheit".into(),
             Field::Messmethode => "messmethode".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -28681,6 +28616,7 @@ pub mod ueberwachung_luftqualitaet_sanierung_areal_walkeweg {
     }
 }
 
+/// Resultate der Ständeratswahlen 2023
 pub mod resultate_der_staenderatswahlen_2023 {
     use super::*;
 
@@ -28968,6 +28904,7 @@ pub mod resultate_der_staenderatswahlen_2023 {
     }
 }
 
+/// Coronavirus (Covid-19): Erweiterte Daten zu Impfungen nach Altersgruppe
 pub mod coronavirus_covid_19_erweiterte_daten_zu_impfungen_nach_altersgruppe {
     use super::*;
 
@@ -29077,6 +29014,7 @@ pub mod coronavirus_covid_19_erweiterte_daten_zu_impfungen_nach_altersgruppe {
     }
 }
 
+/// Coronavirus (Covid-19): Massentests an Schulen der Primar- und Sekundarstufe I
 pub mod coronavirus_covid_19_massentests_an_schulen_der_primar_und_sekundarstufe_i {
     use super::*;
 
@@ -29180,6 +29118,7 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_primar_und_sekundarstufe
     }
 }
 
+/// Gefahrenstufen für Hochwasser
 pub mod gefahrenstufen_fuer_hochwasser {
     use super::*;
 
@@ -29309,6 +29248,7 @@ pub mod gefahrenstufen_fuer_hochwasser {
     }
 }
 
+/// Resultate der Bürgergemeinderatswahlen 2023 auf Listenebene
 pub mod resultate_der_buergergemeinderatswahlen_2023_auf_listenebene {
     use super::*;
 
@@ -29592,6 +29532,7 @@ pub mod resultate_der_buergergemeinderatswahlen_2023_auf_listenebene {
     }
 }
 
+/// Coronavirus (Covid-19): Impfungen nach Altersgruppe
 pub mod coronavirus_covid_19_impfungen_nach_altersgruppe {
     use super::*;
 
@@ -29675,6 +29616,7 @@ pub mod coronavirus_covid_19_impfungen_nach_altersgruppe {
     }
 }
 
+/// Grosser Rat: Mitgliedschaften in Gremien
 pub mod grosser_rat_mitgliedschaften_in_gremien {
     use super::*;
 
@@ -29832,6 +29774,7 @@ pub mod grosser_rat_mitgliedschaften_in_gremien {
     }
 }
 
+/// Entwicklungszusammenarbeit: Unterstützte Projekte
 pub mod entwicklungszusammenarbeit_unterstuetzte_projekte {
     use super::*;
 
@@ -29941,6 +29884,7 @@ pub mod entwicklungszusammenarbeit_unterstuetzte_projekte {
     }
 }
 
+/// Resultate der Wahl eines zusätzl. Strafgerichtspräsidiums 18. August 2024
 pub mod resultate_der_wahl_eines_zusaetzl_strafgerichtspraesidiums_18_august_2024 {
     use super::*;
 
@@ -30216,6 +30160,7 @@ pub mod resultate_der_wahl_eines_zusaetzl_strafgerichtspraesidiums_18_august_202
     }
 }
 
+/// Coronavirus (Covid-19): Positiv getestete Personen nach Alter und Geschlecht
 pub mod coronavirus_covid_19_positiv_getestete_personen_nach_alter_und_geschlecht {
     use super::*;
 
@@ -30301,6 +30246,7 @@ pub mod coronavirus_covid_19_positiv_getestete_personen_nach_alter_und_geschlech
     }
 }
 
+/// Geschwindigkeitsmonitoring: Kennzahlen pro Mess-Standort
 pub mod geschwindigkeitsmonitoring_kennzahlen_pro_mess_standort {
     use super::*;
 
@@ -30419,11 +30365,9 @@ pub mod geschwindigkeitsmonitoring_kennzahlen_pro_mess_standort {
         V502,
         V852,
         UeQuote2,
-        TheGeom,
         LinkZuEinzelmessungen,
         MessbeginnJahr,
         DatasetId,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -30445,11 +30389,9 @@ pub mod geschwindigkeitsmonitoring_kennzahlen_pro_mess_standort {
             Field::V502 => "v50_2".into(),
             Field::V852 => "v85_2".into(),
             Field::UeQuote2 => "ue_quote_2".into(),
-            Field::TheGeom => "the_geom".into(),
             Field::LinkZuEinzelmessungen => "link_zu_einzelmessungen".into(),
             Field::MessbeginnJahr => "messbeginn_jahr".into(),
             Field::DatasetId => "dataset_id".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -30492,6 +30434,7 @@ pub mod geschwindigkeitsmonitoring_kennzahlen_pro_mess_standort {
     }
 }
 
+/// Witterung
 pub mod witterung {
     use super::*;
 
@@ -30691,6 +30634,7 @@ pub mod witterung {
     }
 }
 
+/// Smarte Strasse: Aufrufe der Microsites
 pub mod smarte_strasse_aufrufe_der_microsites {
     use super::*;
 
@@ -30745,7 +30689,6 @@ pub mod smarte_strasse_aufrufe_der_microsites {
         Nhits,
         Sensor,
         Microsite,
-        GeoPoint,
     }
 
     fn field_name(field: Field) -> String {
@@ -30757,7 +30700,6 @@ pub mod smarte_strasse_aufrufe_der_microsites {
             Field::Nhits => "nhits".into(),
             Field::Sensor => "sensor".into(),
             Field::Microsite => "microsite".into(),
-            Field::GeoPoint => "geo_point".into(),
         }
     }
 
@@ -30800,6 +30742,7 @@ pub mod smarte_strasse_aufrufe_der_microsites {
     }
 }
 
+/// Geschwindigkeitsmonitoring: Einzelmessungen bis 2020
 pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
     use super::*;
 
@@ -30808,7 +30751,8 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
         /// Timestamp
         ///
         /// Datum und Uhrzeit
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Messung-ID
         ///
         /// Laufnummer der Messung; eine Messung beinhaltet alle Fahrten eines Messgeräts an einem Standort
@@ -30913,7 +30857,6 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
         Zone,
         Ort,
         Richtung,
-        TheGeom,
         UeQuote,
         V50,
         V85,
@@ -30922,7 +30865,6 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
         Fzg,
         Fahrzeuglange,
         LinkZuMessung,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -30939,7 +30881,6 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
             Field::Zone => "zone".into(),
             Field::Ort => "ort".into(),
             Field::Richtung => "richtung".into(),
-            Field::TheGeom => "the_geom".into(),
             Field::UeQuote => "ue_quote".into(),
             Field::V50 => "v50".into(),
             Field::V85 => "v85".into(),
@@ -30948,7 +30889,6 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
             Field::Fzg => "fzg".into(),
             Field::Fahrzeuglange => "fahrzeuglange".into(),
             Field::LinkZuMessung => "link_zu_messung".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -30991,6 +30931,7 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
     }
 }
 
+/// Fahrgastzahlen BVB
 pub mod fahrgastzahlen_bvb {
     use super::*;
 
@@ -31082,6 +31023,7 @@ pub mod fahrgastzahlen_bvb {
     }
 }
 
+/// Bevölkerungsszenarien Basel-Stadt 2024-2045
 pub mod bevoelkerungsszenarien_basel_stadt_2024_2045 {
     use super::*;
 
@@ -31533,6 +31475,7 @@ pub mod bevoelkerungsszenarien_basel_stadt_2024_2045 {
     }
 }
 
+/// Geborene nach Geschlecht, Staatsangehörigkeit, Wohnviertel und Geburtsdatum
 pub mod geborene_nach_geschlecht_staatsangehoerigkeit_wohnviertel_und_geburtsdatum {
     use super::*;
 
@@ -31688,6 +31631,7 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_wohnviertel_und_geburtsdat
     }
 }
 
+/// Wohnungen (Gebäude- und Wohnungsregister GWR)
 pub mod wohnungen_gebaeude_und_wohnungsregister_gwr {
     use super::*;
 
@@ -31863,6 +31807,7 @@ pub mod wohnungen_gebaeude_und_wohnungsregister_gwr {
     }
 }
 
+/// Statistiken der Smiley-Geschwindigkeitsanzeigen
 pub mod statistiken_der_smiley_geschwindigkeitsanzeigen {
     use super::*;
 
@@ -31887,7 +31832,8 @@ pub mod statistiken_der_smiley_geschwindigkeitsanzeigen {
         /// Start Phase
         ///
         /// Beginn der jeweiligen Phase
-        pub messbeginn_phase: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub messbeginn_phase: Option<OffsetDateTime>,
         /// Median-Tempo
         ///
         /// Geschwindigkeit, bei welcher die Hälfte der Fahrzeuge schneller und die andere Hälfte langsamer fährt.
@@ -31942,7 +31888,6 @@ pub mod statistiken_der_smiley_geschwindigkeitsanzeigen {
         MessdauerH,
         Dtv,
         LinkEinzelmessungen,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -31959,7 +31904,6 @@ pub mod statistiken_der_smiley_geschwindigkeitsanzeigen {
             Field::MessdauerH => "messdauer_h".into(),
             Field::Dtv => "dtv".into(),
             Field::LinkEinzelmessungen => "link_einzelmessungen".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -32002,6 +31946,7 @@ pub mod statistiken_der_smiley_geschwindigkeitsanzeigen {
     }
 }
 
+/// Vorhersagen Birs: Wasserstand und Abfluss
 pub mod vorhersagen_birs_wasserstand_und_abfluss {
     use super::*;
 
@@ -32010,7 +31955,8 @@ pub mod vorhersagen_birs_wasserstand_und_abfluss {
         /// Zeitstempel
         ///
         /// Datum und Uhrzeit
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Wasserstand
         ///
         /// Pegelstand in Meter über Meer. Bei den ICON-Modellen handelt es ich um die hydrologische Vorhersage basierend auf der meteorologischen Kontrollvorhersage (Kontroll-Lauf oder control run).
@@ -32026,15 +31972,18 @@ pub mod vorhersagen_birs_wasserstand_und_abfluss {
         /// Zeitstempel Ausgabe
         ///
         /// Datum und Uhrzeit der Veröffentlichung
-        pub ausgegeben_an: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub ausgegeben_an: Option<OffsetDateTime>,
         /// Zeitstempel Meteolauf
         ///
         /// Datum und Uhrzeit des Meteo-Laufs (der Zeitpunkt, zu dem die meteorologischen Vorhersagen erstellt wurden, die dann als Grundlage für das Modell zur Berechnung der hydrologischen Vorhersagen verwendet wird)
-        pub meteolauf: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub meteolauf: Option<OffsetDateTime>,
         /// Zeitstempel Gemessene Werte
         ///
         /// Datum und Uhrzeit, bis zu dem die Werte gemessen wurden
-        pub gemessene_werten_bis: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub gemessene_werten_bis: Option<OffsetDateTime>,
         /// Wasserstand Minimum
         ///
         /// Minimum (0%-Quantil) des Pegelstands in Meter über Meer
@@ -32165,6 +32114,7 @@ pub mod vorhersagen_birs_wasserstand_und_abfluss {
     }
 }
 
+/// Effektiver und erwarteter täglicher Gasverbrauch
 pub mod effektiver_und_erwarteter_taeglicher_gasverbrauch {
     use super::*;
 
@@ -32268,6 +32218,7 @@ pub mod effektiver_und_erwarteter_taeglicher_gasverbrauch {
     }
 }
 
+/// Geborene nach Geschlecht, Staatsangehörigkeit und Geburtsmonat
 pub mod geborene_nach_geschlecht_staatsangehoerigkeit_und_geburtsmonat {
     use super::*;
 
@@ -32395,6 +32346,7 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_und_geburtsmonat {
     }
 }
 
+/// Wohnbevölkerung nach Geschlecht, Alter, Staatsangehörigkeit und Wohnviertel
 pub mod wohnbevoelkerung_nach_geschlecht_alter_staatsangehoerigkeit_und_wohnviertel {
     use super::*;
 
@@ -32516,6 +32468,7 @@ pub mod wohnbevoelkerung_nach_geschlecht_alter_staatsangehoerigkeit_und_wohnvier
     }
 }
 
+/// Wohnbevölkerung nach Geschlecht und Staatsangehörigkeit
 pub mod wohnbevoelkerung_nach_geschlecht_und_staatsangehoerigkeit {
     use super::*;
 
@@ -32605,6 +32558,7 @@ pub mod wohnbevoelkerung_nach_geschlecht_und_staatsangehoerigkeit {
     }
 }
 
+/// Kantonales Leistungsverzeichnis: Gebühren
 pub mod kantonales_leistungsverzeichnis_gebuehren {
     use super::*;
 
@@ -32714,6 +32668,7 @@ pub mod kantonales_leistungsverzeichnis_gebuehren {
     }
 }
 
+/// Treppen und Ausstiegsleitern an Gewässern
 pub mod treppen_und_ausstiegsleitern_an_gewaessern {
     use super::*;
 
@@ -32743,16 +32698,12 @@ pub mod treppen_und_ausstiegsleitern_an_gewaessern {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         TypBez,
         AusstiegMoeglich,
     }
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::TypBez => "typ_bez".into(),
             Field::AusstiegMoeglich => "ausstieg_moeglich".into(),
         }
@@ -32797,6 +32748,7 @@ pub mod treppen_und_ausstiegsleitern_an_gewaessern {
     }
 }
 
+/// Schülerprognose Basel
 pub mod schuelerprognose_basel {
     use super::*;
 
@@ -32856,8 +32808,6 @@ pub mod schuelerprognose_basel {
         UnteresPrognoseintervall,
         OberesPrognoseintervall,
         Typ,
-        GeoShape,
-        GeoPoint2d,
         PerimeterId,
     }
 
@@ -32871,8 +32821,6 @@ pub mod schuelerprognose_basel {
             Field::UnteresPrognoseintervall => "unteres_prognoseintervall".into(),
             Field::OberesPrognoseintervall => "oberes_prognoseintervall".into(),
             Field::Typ => "typ".into(),
-            Field::GeoShape => "geo_shape".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::PerimeterId => "perimeter_id".into(),
         }
     }
@@ -32916,6 +32864,7 @@ pub mod schuelerprognose_basel {
     }
 }
 
+/// Velo-Fahrverbote (allgemein oder temporär)
 pub mod velo_fahrverbote_allgemein_oder_temporaer {
     use super::*;
 
@@ -32941,8 +32890,6 @@ pub mod velo_fahrverbote_allgemein_oder_temporaer {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         IdVerbot,
         Geometry1,
@@ -32950,8 +32897,6 @@ pub mod velo_fahrverbote_allgemein_oder_temporaer {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::IdVerbot => "id_verbot".into(),
             Field::Geometry1 => "geometry1".into(),
@@ -32997,6 +32942,7 @@ pub mod velo_fahrverbote_allgemein_oder_temporaer {
     }
 }
 
+/// Elternberatung
 pub mod elternberatung {
     use super::*;
 
@@ -33050,8 +32996,6 @@ pub mod elternberatung {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdEl,
         StdName,
         StrasseNr,
@@ -33065,8 +33009,6 @@ pub mod elternberatung {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdEl => "id_el".into(),
             Field::StdName => "std_name".into(),
             Field::StrasseNr => "strasse_nr".into(),
@@ -33118,6 +33060,7 @@ pub mod elternberatung {
     }
 }
 
+/// Temperatur Grundwasser: Langjährige Statistiken
 pub mod temperatur_grundwasser_langjaehrige_statistiken {
     use super::*;
 
@@ -33196,11 +33139,13 @@ pub mod temperatur_grundwasser_langjaehrige_statistiken {
         /// stat_start_timestamp
         ///
         /// Zeitstempel der Messung in lokaler Zeit (Basel)
-        pub stat_start_timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub stat_start_timestamp: Option<OffsetDateTime>,
         /// stat_end_timestamp
         ///
         /// Zeitstempel der Messung in lokaler Zeit (Basel)
-        pub stat_end_timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub stat_end_timestamp: Option<OffsetDateTime>,
     }
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -33218,7 +33163,6 @@ pub mod temperatur_grundwasser_langjaehrige_statistiken {
         Sensname,
         Lat,
         Lon,
-        GeoPoint2d,
         Xcoord,
         Ycoord,
         Topterrain,
@@ -33242,7 +33186,6 @@ pub mod temperatur_grundwasser_langjaehrige_statistiken {
             Field::Sensname => "sensname".into(),
             Field::Lat => "lat".into(),
             Field::Lon => "lon".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Xcoord => "xcoord".into(),
             Field::Ycoord => "ycoord".into(),
             Field::Topterrain => "topterrain".into(),
@@ -33297,6 +33240,7 @@ pub mod temperatur_grundwasser_langjaehrige_statistiken {
     }
 }
 
+/// Kennzahlen der Abstimmung vom 13. Februar 2022
 pub mod kennzahlen_der_abstimmung_vom_13_februar_2022 {
     use super::*;
 
@@ -33476,6 +33420,7 @@ pub mod kennzahlen_der_abstimmung_vom_13_februar_2022 {
     }
 }
 
+/// Entsorgungsstellen
 pub mod entsorgungsstellen {
     use super::*;
 
@@ -33519,8 +33464,6 @@ pub mod entsorgungsstellen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdEntsorg,
         Kategorie,
         Name,
@@ -33537,8 +33480,6 @@ pub mod entsorgungsstellen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdEntsorg => "id_entsorg".into(),
             Field::Kategorie => "kategorie".into(),
             Field::Name => "name".into(),
@@ -33593,6 +33534,7 @@ pub mod entsorgungsstellen {
     }
 }
 
+/// Hundesignalisation: Orte mit Leinenpflicht oder Hundeverbot
 pub mod hundesignalisation_orte_mit_leinenpflicht_oder_hundeverbot {
     use super::*;
 
@@ -33617,11 +33559,13 @@ pub mod hundesignalisation_orte_mit_leinenpflicht_oder_hundeverbot {
         /// Datum von
         ///
         /// Startdatum der Einschränkung
-        pub datumvon: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datumvon: Option<OffsetDateTime>,
         /// Datum bis
         ///
         /// Enddatum der Einschränkung
-        pub datumbis: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datumbis: Option<OffsetDateTime>,
         /// Bemerkung
         ///
         /// Bemerkung zur Fläche
@@ -33636,8 +33580,6 @@ pub mod hundesignalisation_orte_mit_leinenpflicht_oder_hundeverbot {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Id,
         Einschraen,
         Einschrnr,
@@ -33648,8 +33590,6 @@ pub mod hundesignalisation_orte_mit_leinenpflicht_oder_hundeverbot {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Id => "id".into(),
             Field::Einschraen => "einschraen".into(),
             Field::Einschrnr => "einschrnr".into(),
@@ -33698,6 +33638,7 @@ pub mod hundesignalisation_orte_mit_leinenpflicht_oder_hundeverbot {
     }
 }
 
+/// Scheidungen nach Scheidungsdatum, Ehedauer sowie Alter und Staatsangehörigkeit der ehemaligen Ehepartner
 pub mod scheidungen_nach_scheidungsdatum_ehedauer_sowie_alter_und_staatsangehoerigkeit_der_ehemaligen_ehepartner {
     use super::*;
 
@@ -33833,6 +33774,7 @@ pub mod scheidungen_nach_scheidungsdatum_ehedauer_sowie_alter_und_staatsangehoer
     }
 }
 
+/// Buvetten in Gewässernähe
 pub mod buvetten_in_gewaessernaehe {
     use super::*;
 
@@ -33928,6 +33870,7 @@ pub mod buvetten_in_gewaessernaehe {
     }
 }
 
+/// Kinder- und Jugendangebote
 pub mod kinder_und_jugendangebote {
     use super::*;
 
@@ -33969,8 +33912,6 @@ pub mod kinder_und_jugendangebote {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdKj,
         KiAngebot,
         JuAngebot,
@@ -33986,8 +33927,6 @@ pub mod kinder_und_jugendangebote {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdKj => "id_kj".into(),
             Field::KiAngebot => "ki_angebot".into(),
             Field::JuAngebot => "ju_angebot".into(),
@@ -34041,6 +33980,7 @@ pub mod kinder_und_jugendangebote {
     }
 }
 
+/// Wohnbevölkerung nach Staatsangehörigkeit und Bezirk
 pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_bezirk {
     use super::*;
 
@@ -34109,8 +34049,6 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_bezirk {
         BezLabel,
         WovId,
         WovName,
-        GeoShape,
-        GeoPoint2d,
         Jahr,
         AnteilAl,
         AnteilBs,
@@ -34129,8 +34067,6 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_bezirk {
             Field::BezLabel => "bez_label".into(),
             Field::WovId => "wov_id".into(),
             Field::WovName => "wov_name".into(),
-            Field::GeoShape => "geo_shape".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Jahr => "jahr".into(),
             Field::AnteilAl => "anteil_al".into(),
             Field::AnteilBs => "anteil_bs".into(),
@@ -34182,6 +34118,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_bezirk {
     }
 }
 
+/// Coronavirus (COVID-19): Fallzahlen ganze Schweiz
 pub mod coronavirus_covid_19_fallzahlen_ganze_schweiz {
     use super::*;
 
@@ -34192,7 +34129,8 @@ pub mod coronavirus_covid_19_fallzahlen_ganze_schweiz {
         /// Last update
         ///
         /// the precise update time is not always known
-        pub update: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub update: Option<OffsetDateTime>,
         /// Canton
         pub name: Option<String>,
         /// Cumulative number of tests
@@ -34282,7 +34220,6 @@ pub mod coronavirus_covid_19_fallzahlen_ganze_schweiz {
         CurrentIsolated,
         CurrentQuarantined,
         Source,
-        GeoPoint2d,
         AbbreviationCantonAndFl,
         CurrentQuarantinedRiskareatravel,
         CurrentQuarantinedTotal,
@@ -34309,7 +34246,6 @@ pub mod coronavirus_covid_19_fallzahlen_ganze_schweiz {
             Field::CurrentIsolated => "current_isolated".into(),
             Field::CurrentQuarantined => "current_quarantined".into(),
             Field::Source => "source".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::AbbreviationCantonAndFl => "abbreviation_canton_and_fl".into(),
             Field::CurrentQuarantinedRiskareatravel => "current_quarantined_riskareatravel".into(),
             Field::CurrentQuarantinedTotal => "current_quarantined_total".into(),
@@ -34357,6 +34293,7 @@ pub mod coronavirus_covid_19_fallzahlen_ganze_schweiz {
     }
 }
 
+/// Statistische Raumeinheiten: Bezirke
 pub mod statistische_raumeinheiten_bezirke {
     use super::*;
 
@@ -34384,8 +34321,6 @@ pub mod statistische_raumeinheiten_bezirke {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         BezId,
         BezLabel,
         BezName,
@@ -34394,8 +34329,6 @@ pub mod statistische_raumeinheiten_bezirke {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::BezId => "bez_id".into(),
             Field::BezLabel => "bez_label".into(),
             Field::BezName => "bez_name".into(),
@@ -34442,6 +34375,7 @@ pub mod statistische_raumeinheiten_bezirke {
     }
 }
 
+/// Geschwindigkeitsmonitoring: Einzelmessungen von 2021 bis 2023
 pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
     use super::*;
 
@@ -34450,7 +34384,8 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
         /// Timestamp
         ///
         /// Datum und Uhrzeit
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Messung-ID
         ///
         /// Laufnummer der Messung; eine Messung beinhaltet alle Fahrten eines Messgeräts an einem Standort
@@ -34555,7 +34490,6 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
         Zone,
         Ort,
         Richtung,
-        TheGeom,
         UeQuote,
         V50,
         V85,
@@ -34564,7 +34498,6 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
         Fzg,
         Fahrzeuglange,
         LinkZuMessung,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -34581,7 +34514,6 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
             Field::Zone => "zone".into(),
             Field::Ort => "ort".into(),
             Field::Richtung => "richtung".into(),
-            Field::TheGeom => "the_geom".into(),
             Field::UeQuote => "ue_quote".into(),
             Field::V50 => "v50".into(),
             Field::V85 => "v85".into(),
@@ -34590,7 +34522,6 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
             Field::Fzg => "fzg".into(),
             Field::Fahrzeuglange => "fahrzeuglange".into(),
             Field::LinkZuMessung => "link_zu_messung".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -34633,6 +34564,7 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
     }
 }
 
+/// Fischereistatistik Basel-Stadt
 pub mod fischereistatistik_basel_stadt {
     use super::*;
 
@@ -34696,9 +34628,7 @@ pub mod fischereistatistik_basel_stadt {
         Lange,
         Kesslergrundel,
         Schwarzmundgrundel,
-        GeoShape,
         Laufnummer,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -34711,9 +34641,7 @@ pub mod fischereistatistik_basel_stadt {
             Field::Lange => "lange".into(),
             Field::Kesslergrundel => "kesslergrundel".into(),
             Field::Schwarzmundgrundel => "schwarzmundgrundel".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Laufnummer => "laufnummer".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -34756,6 +34684,7 @@ pub mod fischereistatistik_basel_stadt {
     }
 }
 
+/// Wohnbevölkerung nach Staatsangehörigkeit und Block
 pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_block {
     use super::*;
 
@@ -34827,8 +34756,6 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_block {
         BezName,
         WovId,
         WovName,
-        GeoShape,
-        GeoPoint2d,
         Jahr,
         AnteilAl,
         AnteilBs,
@@ -34848,8 +34775,6 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_block {
             Field::BezName => "bez_name".into(),
             Field::WovId => "wov_id".into(),
             Field::WovName => "wov_name".into(),
-            Field::GeoShape => "geo_shape".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Jahr => "jahr".into(),
             Field::AnteilAl => "anteil_al".into(),
             Field::AnteilBs => "anteil_bs".into(),
@@ -34901,6 +34826,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_block {
     }
 }
 
+/// Kantonsblatt
 pub mod kantonsblatt {
     use super::*;
 
@@ -35172,6 +35098,7 @@ pub mod kantonsblatt {
     }
 }
 
+/// Kunst im öffentlichen Raum
 pub mod kunst_im_oeffentlichen_raum {
     use super::*;
 
@@ -35233,8 +35160,6 @@ pub mod kunst_im_oeffentlichen_raum {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdInvnr,
         Gruppe,
         Fotonummer,
@@ -35245,13 +35170,10 @@ pub mod kunst_im_oeffentlichen_raum {
         Pdf,
         Rueckbau,
         MapLinks,
-        FotoDownloadlink,
     }
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdInvnr => "id_invnr".into(),
             Field::Gruppe => "gruppe".into(),
             Field::Fotonummer => "fotonummer".into(),
@@ -35262,7 +35184,6 @@ pub mod kunst_im_oeffentlichen_raum {
             Field::Pdf => "pdf".into(),
             Field::Rueckbau => "rueckbau".into(),
             Field::MapLinks => "map_links".into(),
-            Field::FotoDownloadlink => "foto_downloadlink".into(),
         }
     }
 
@@ -35305,6 +35226,7 @@ pub mod kunst_im_oeffentlichen_raum {
     }
 }
 
+/// Umfrage «digitale Mitwirkung» 2020
 pub mod umfrage_digitale_mitwirkung_2020 {
     use super::*;
 
@@ -35703,6 +35625,7 @@ pub mod umfrage_digitale_mitwirkung_2020 {
     }
 }
 
+/// Statistische Raumeinheiten: Wohnviertel
 pub mod statistische_raumeinheiten_wohnviertel {
     use super::*;
 
@@ -35730,8 +35653,6 @@ pub mod statistische_raumeinheiten_wohnviertel {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         WovId,
         WovLabel,
         WovName,
@@ -35740,8 +35661,6 @@ pub mod statistische_raumeinheiten_wohnviertel {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::WovId => "wov_id".into(),
             Field::WovLabel => "wov_label".into(),
             Field::WovName => "wov_name".into(),
@@ -35788,6 +35707,7 @@ pub mod statistische_raumeinheiten_wohnviertel {
     }
 }
 
+/// Wanderungen (Zuzug, Wegzug und Umzug) Kanton Basel-Stadt
 pub mod wanderungen_zuzug_wegzug_und_umzug_kanton_basel_stadt {
     use super::*;
 
@@ -35987,6 +35907,7 @@ pub mod wanderungen_zuzug_wegzug_und_umzug_kanton_basel_stadt {
     }
 }
 
+/// Kandidierende der Grossratswahlen nach Berufsgruppe seit 2020
 pub mod kandidierende_der_grossratswahlen_nach_berufsgruppe_seit_2020 {
     use super::*;
 
@@ -36070,6 +35991,7 @@ pub mod kandidierende_der_grossratswahlen_nach_berufsgruppe_seit_2020 {
     }
 }
 
+/// Nachnamen der baselstädtischen Bevölkerung
 pub mod nachnamen_der_baselstaedtischen_bevoelkerung {
     use super::*;
 
@@ -36149,6 +36071,7 @@ pub mod nachnamen_der_baselstaedtischen_bevoelkerung {
     }
 }
 
+/// Baumkataster: Fäll- und Baumersatzliste
 pub mod baumkataster_faell_und_baumersatzliste {
     use super::*;
 
@@ -36224,8 +36147,6 @@ pub mod baumkataster_faell_und_baumersatzliste {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         Baumnr,
         Art,
@@ -36244,8 +36165,6 @@ pub mod baumkataster_faell_und_baumersatzliste {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::Baumnr => "baumnr".into(),
             Field::Art => "art".into(),
@@ -36302,6 +36221,7 @@ pub mod baumkataster_faell_und_baumersatzliste {
     }
 }
 
+/// Leerstehende Wohnungen
 pub mod leerstehende_wohnungen {
     use super::*;
 
@@ -36541,8 +36461,6 @@ pub mod leerstehende_wohnungen {
         P32513500,
         PUnbekannt,
         P3501Max,
-        GeoShape,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -36591,8 +36509,6 @@ pub mod leerstehende_wohnungen {
             Field::P32513500 => "p_3251_3500".into(),
             Field::PUnbekannt => "p_unbekannt".into(),
             Field::P3501Max => "p_3501_max".into(),
-            Field::GeoShape => "geo_shape".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -36635,6 +36551,7 @@ pub mod leerstehende_wohnungen {
     }
 }
 
+/// Gesundheitsversorgung (GSV): Pflegeheime
 pub mod gesundheitsversorgung_gsv_pflegeheime {
     use super::*;
 
@@ -36702,7 +36619,6 @@ pub mod gesundheitsversorgung_gsv_pflegeheime {
         KostenPensionBetreuung,
         KvgPflegekosten,
         ErtraegeTaxeinnahmen,
-        Geopunkte,
     }
 
     fn field_name(field: Field) -> String {
@@ -36717,7 +36633,6 @@ pub mod gesundheitsversorgung_gsv_pflegeheime {
             Field::KostenPensionBetreuung => "kosten_pension_betreuung".into(),
             Field::KvgPflegekosten => "kvg_pflegekosten".into(),
             Field::ErtraegeTaxeinnahmen => "ertraege_taxeinnahmen".into(),
-            Field::Geopunkte => "geopunkte".into(),
         }
     }
 
@@ -36760,6 +36675,7 @@ pub mod gesundheitsversorgung_gsv_pflegeheime {
     }
 }
 
+/// Gestorbene nach Altersklasse, Geschlecht und Sterbedatum
 pub mod gestorbene_nach_altersklasse_geschlecht_und_sterbedatum {
     use super::*;
 
@@ -36893,6 +36809,7 @@ pub mod gestorbene_nach_altersklasse_geschlecht_und_sterbedatum {
     }
 }
 
+/// Grosser Rat: Dokumente
 pub mod grosser_rat_dokumente {
     use super::*;
 
@@ -37026,6 +36943,7 @@ pub mod grosser_rat_dokumente {
     }
 }
 
+/// Monatliche Sterberaten nach Geschlecht und Altersgruppe
 pub mod monatliche_sterberaten_nach_geschlecht_und_altersgruppe {
     use super::*;
 
@@ -37151,6 +37069,7 @@ pub mod monatliche_sterberaten_nach_geschlecht_und_altersgruppe {
     }
 }
 
+/// Baumkataster: Baumbestand
 pub mod baumkataster_baumbestand {
     use super::*;
 
@@ -37234,8 +37153,6 @@ pub mod baumkataster_baumbestand {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         Baumnr,
         Art,
@@ -37256,8 +37173,6 @@ pub mod baumkataster_baumbestand {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::Baumnr => "baumnr".into(),
             Field::Art => "art".into(),
@@ -37316,6 +37231,7 @@ pub mod baumkataster_baumbestand {
     }
 }
 
+/// Coronavirus (COVID-19): In Basel-Stadt verabreichte Impfungen
 pub mod coronavirus_covid_19_in_basel_stadt_verabreichte_impfungen {
     use super::*;
 
@@ -37655,6 +37571,7 @@ pub mod coronavirus_covid_19_in_basel_stadt_verabreichte_impfungen {
     }
 }
 
+/// Grosser Rat: Tagesordnungen und Traktandenlisten der Grossratssitzungen
 pub mod grosser_rat_tagesordnungen_und_traktandenlisten_der_grossratssitzungen {
     use super::*;
 
@@ -37667,7 +37584,8 @@ pub mod grosser_rat_tagesordnungen_und_traktandenlisten_der_grossratssitzungen {
         /// Versanddatum Tagesordnung
         ///
         /// Datum der Aufschaltung und Publikation der Tagesordnung
-        pub versand: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub versand: Option<OffsetDateTime>,
         /// Tag 1
         ///
         /// Datum der ersten Sitzung der Tagesordnung
@@ -37926,6 +37844,7 @@ pub mod grosser_rat_tagesordnungen_und_traktandenlisten_der_grossratssitzungen {
     }
 }
 
+/// Grosser Rat: Zuweisungen von Geschäften
 pub mod grosser_rat_zuweisungen_von_geschaeften {
     use super::*;
 
@@ -38107,6 +38026,7 @@ pub mod grosser_rat_zuweisungen_von_geschaeften {
     }
 }
 
+/// EuroAirport: Tägliche Flugbewegungen, Passagiere und Fracht
 pub mod euroairport_taegliche_flugbewegungen_passagiere_und_fracht {
     use super::*;
 
@@ -38196,6 +38116,7 @@ pub mod euroairport_taegliche_flugbewegungen_passagiere_und_fracht {
     }
 }
 
+/// Wohnbevölkerung nach Bezirk
 pub mod wohnbevoelkerung_nach_bezirk {
     use super::*;
 
@@ -38244,8 +38165,6 @@ pub mod wohnbevoelkerung_nach_bezirk {
         Anzahl,
         Jahr,
         Monat,
-        GeoShape,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -38259,8 +38178,6 @@ pub mod wohnbevoelkerung_nach_bezirk {
             Field::Anzahl => "anzahl".into(),
             Field::Jahr => "jahr".into(),
             Field::Monat => "monat".into(),
-            Field::GeoShape => "geo_shape".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -38303,6 +38220,7 @@ pub mod wohnbevoelkerung_nach_bezirk {
     }
 }
 
+/// Feinstaubmessungen auf BVB-Trams
 pub mod feinstaubmessungen_auf_bvb_trams {
     use super::*;
 
@@ -38311,7 +38229,8 @@ pub mod feinstaubmessungen_auf_bvb_trams {
         /// Datum und Zeit
         ///
         /// Datum und Zeit in UTC
-        pub time: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub time: Option<OffsetDateTime>,
         /// Sensoren-ID
         ///
         /// Identitätsnummer des Feinstaubsensors
@@ -38352,7 +38271,6 @@ pub mod feinstaubmessungen_auf_bvb_trams {
         Sensornr,
         Pm25,
         Pm10,
-        Column7,
         Longitude,
         Latitude,
     }
@@ -38363,7 +38281,6 @@ pub mod feinstaubmessungen_auf_bvb_trams {
             Field::Sensornr => "sensornr".into(),
             Field::Pm25 => "pm25".into(),
             Field::Pm10 => "pm10".into(),
-            Field::Column7 => "column_7".into(),
             Field::Longitude => "longitude".into(),
             Field::Latitude => "latitude".into(),
         }
@@ -38408,6 +38325,7 @@ pub mod feinstaubmessungen_auf_bvb_trams {
     }
 }
 
+/// BachApp: Extras
 pub mod bachapp_extras {
     use super::*;
 
@@ -38503,6 +38421,7 @@ pub mod bachapp_extras {
     }
 }
 
+/// Veranstaltungen mit potenziellem Einfluss auf Veloverkehr
 pub mod veranstaltungen_mit_potenziellem_einfluss_auf_veloverkehr {
     use super::*;
 
@@ -38656,7 +38575,6 @@ pub mod veranstaltungen_mit_potenziellem_einfluss_auf_veloverkehr {
         DatumVon,
         DatumBis,
         EingangIdBlockseite,
-        GeoPoint2d,
         GebaeudeKoordinateX,
         GebaeudeKoordinateY,
         StrasseNameKanton,
@@ -38691,7 +38609,6 @@ pub mod veranstaltungen_mit_potenziellem_einfluss_auf_veloverkehr {
             Field::DatumVon => "datum_von".into(),
             Field::DatumBis => "datum_bis".into(),
             Field::EingangIdBlockseite => "eingang_id_blockseite".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::GebaeudeKoordinateX => "gebaeude_koordinate_x".into(),
             Field::GebaeudeKoordinateY => "gebaeude_koordinate_y".into(),
             Field::StrasseNameKanton => "strasse_name_kanton".into(),
@@ -38750,6 +38667,7 @@ pub mod veranstaltungen_mit_potenziellem_einfluss_auf_veloverkehr {
     }
 }
 
+/// Gebäudeadressen und -informationen
 pub mod gebaeudeadressen_und_informationen {
     use super::*;
 
@@ -38829,8 +38747,6 @@ pub mod gebaeudeadressen_und_informationen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objid,
         Gebadrlauf,
         Geblaufnr,
@@ -38849,8 +38765,6 @@ pub mod gebaeudeadressen_und_informationen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objid => "objid".into(),
             Field::Gebadrlauf => "gebadrlauf".into(),
             Field::Geblaufnr => "geblaufnr".into(),
@@ -38907,6 +38821,7 @@ pub mod gebaeudeadressen_und_informationen {
     }
 }
 
+/// Parkflächen
 pub mod parkflaechen {
     use super::*;
 
@@ -39064,6 +38979,7 @@ pub mod parkflaechen {
     }
 }
 
+/// Geschwindigkeitsmonitoring: Einzelmessungen ab 2024
 pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
     use super::*;
 
@@ -39072,7 +38988,8 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
         /// Timestamp
         ///
         /// Datum und Uhrzeit
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Messung-ID
         ///
         /// Laufnummer der Messung; eine Messung beinhaltet alle Fahrten eines Messgeräts an einem Standort
@@ -39177,7 +39094,6 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
         Zone,
         Ort,
         Richtung,
-        TheGeom,
         UeQuote,
         V50,
         V85,
@@ -39186,7 +39102,6 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
         Fzg,
         Fahrzeuglange,
         LinkZuMessung,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -39203,7 +39118,6 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
             Field::Zone => "zone".into(),
             Field::Ort => "ort".into(),
             Field::Richtung => "richtung".into(),
-            Field::TheGeom => "the_geom".into(),
             Field::UeQuote => "ue_quote".into(),
             Field::V50 => "v50".into(),
             Field::V85 => "v85".into(),
@@ -39212,7 +39126,6 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
             Field::Fzg => "fzg".into(),
             Field::Fahrzeuglange => "fahrzeuglange".into(),
             Field::LinkZuMessung => "link_zu_messung".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -39255,6 +39168,7 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
     }
 }
 
+/// Abfuhrtermine
 pub mod abfuhrtermine {
     use super::*;
 
@@ -39299,8 +39213,6 @@ pub mod abfuhrtermine {
         Wochentag,
         Dayofweek,
         Zone,
-        GeoShape,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -39310,8 +39222,6 @@ pub mod abfuhrtermine {
             Field::Wochentag => "wochentag".into(),
             Field::Dayofweek => "dayofweek".into(),
             Field::Zone => "zone".into(),
-            Field::GeoShape => "geo_shape".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -39354,6 +39264,7 @@ pub mod abfuhrtermine {
     }
 }
 
+/// Liegenschaften: Parzellen
 pub mod liegenschaften_parzellen {
     use super::*;
 
@@ -39409,8 +39320,6 @@ pub mod liegenschaften_parzellen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         R1ArtTxt,
         Flaechenma,
         R1EgrisE,
@@ -39423,8 +39332,6 @@ pub mod liegenschaften_parzellen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::R1ArtTxt => "r1_art_txt".into(),
             Field::Flaechenma => "flaechenma".into(),
             Field::R1EgrisE => "r1_egris_e".into(),
@@ -39475,6 +39382,7 @@ pub mod liegenschaften_parzellen {
     }
 }
 
+/// Standorte der Zählstellen für Verkehrszähldaten
 pub mod standorte_der_zaehlstellen_fuer_verkehrszaehldaten {
     use super::*;
 
@@ -39509,7 +39417,8 @@ pub mod standorte_der_zaehlstellen_fuer_verkehrszaehldaten {
         /// EIGENTUM
         pub eigentum: Option<String>,
         /// BETRIEBNAH
-        pub betriebnah: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub betriebnah: Option<OffsetDateTime>,
         /// BETRIEBZUS
         pub betriebzus: Option<String>,
         /// LINK
@@ -39526,8 +39435,6 @@ pub mod standorte_der_zaehlstellen_fuer_verkehrszaehldaten {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdZst,
         Name,
         Gemeinde,
@@ -39548,8 +39455,6 @@ pub mod standorte_der_zaehlstellen_fuer_verkehrszaehldaten {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdZst => "id_zst".into(),
             Field::Name => "name".into(),
             Field::Gemeinde => "gemeinde".into(),
@@ -39608,6 +39513,7 @@ pub mod standorte_der_zaehlstellen_fuer_verkehrszaehldaten {
     }
 }
 
+/// Güteklassen öffentlicher Verkehr
 pub mod gueteklassen_oeffentlicher_verkehr {
     use super::*;
 
@@ -39631,16 +39537,12 @@ pub mod gueteklassen_oeffentlicher_verkehr {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Objectid,
         Oevgkl,
     }
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Objectid => "objectid".into(),
             Field::Oevgkl => "oevgkl".into(),
         }
@@ -39685,6 +39587,7 @@ pub mod gueteklassen_oeffentlicher_verkehr {
     }
 }
 
+/// Tägliche Logiernächte, verfügbare und belegte Zimmer
 pub mod taegliche_logiernaechte_verfuegbare_und_belegte_zimmer {
     use super::*;
 
@@ -39792,6 +39695,7 @@ pub mod taegliche_logiernaechte_verfuegbare_und_belegte_zimmer {
     }
 }
 
+/// Bade-, Trinkwasser- und Zierbrunnen in Basel
 pub mod bade_trinkwasser_und_zierbrunnen_in_basel {
     use super::*;
 
@@ -39821,20 +39725,14 @@ pub mod bade_trinkwasser_und_zierbrunnen_in_basel {
     pub enum Field {
         Name,
         Desc,
-        GxMediaLinks,
         PictureLink,
-        Geometry,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
         match field {
             Field::Name => "name".into(),
             Field::Desc => "desc".into(),
-            Field::GxMediaLinks => "gx_media_links".into(),
             Field::PictureLink => "picture_link".into(),
-            Field::Geometry => "geometry".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -39877,6 +39775,7 @@ pub mod bade_trinkwasser_und_zierbrunnen_in_basel {
     }
 }
 
+/// Coronavirus (Covid-19): Geimpfte Personen mit Wohnsitz in Basel-Stadt
 pub mod coronavirus_covid_19_geimpfte_personen_mit_wohnsitz_in_basel_stadt {
     use super::*;
 
@@ -40101,6 +40000,7 @@ Field::X39MindestensZweiteAuffrischimpfung => "39_mindestens_zweite_auffrischimp
     }
 }
 
+/// Wasserstand Grundwasser: Langjährige Statistiken
 pub mod wasserstand_grundwasser_langjaehrige_statistiken {
     use super::*;
 
@@ -40179,11 +40079,13 @@ pub mod wasserstand_grundwasser_langjaehrige_statistiken {
         /// stat_start_timestamp
         ///
         /// Zeitstempel der Messung in lokaler Zeit (Basel)
-        pub stat_start_timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub stat_start_timestamp: Option<OffsetDateTime>,
         /// stat_end_timestamp
         ///
         /// Zeitstempel der Messung in lokaler Zeit (Basel)
-        pub stat_end_timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub stat_end_timestamp: Option<OffsetDateTime>,
     }
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -40201,7 +40103,6 @@ pub mod wasserstand_grundwasser_langjaehrige_statistiken {
         Sensname,
         Lat,
         Lon,
-        GeoPoint2d,
         Xcoord,
         Ycoord,
         Topterrain,
@@ -40225,7 +40126,6 @@ pub mod wasserstand_grundwasser_langjaehrige_statistiken {
             Field::Sensname => "sensname".into(),
             Field::Lat => "lat".into(),
             Field::Lon => "lon".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Xcoord => "xcoord".into(),
             Field::Ycoord => "ycoord".into(),
             Field::Topterrain => "topterrain".into(),
@@ -40280,6 +40180,7 @@ pub mod wasserstand_grundwasser_langjaehrige_statistiken {
     }
 }
 
+/// Sauberkeitsindex pro Monat und Strassenabschnitt
 pub mod sauberkeitsindex_pro_monat_und_strassenabschnitt {
     use super::*;
 
@@ -40308,7 +40209,8 @@ pub mod sauberkeitsindex_pro_monat_und_strassenabschnitt {
         /// Letzte Messung
         ///
         /// Die letzte Messung des Sauberkeitsindexes des jeweiligen Strassenabschnitts.
-        pub letzte_messung: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub letzte_messung: Option<OffsetDateTime>,
         /// Geometry
         pub geometry: Option<GeoJson>,
         /// geo_point_2d
@@ -40329,8 +40231,6 @@ pub mod sauberkeitsindex_pro_monat_und_strassenabschnitt {
         Cci,
         AnzahlMessungen,
         LetzteMessung,
-        Geometry,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -40341,8 +40241,6 @@ pub mod sauberkeitsindex_pro_monat_und_strassenabschnitt {
             Field::Cci => "cci".into(),
             Field::AnzahlMessungen => "anzahl_messungen".into(),
             Field::LetzteMessung => "letzte_messung".into(),
-            Field::Geometry => "geometry".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -40385,6 +40283,7 @@ pub mod sauberkeitsindex_pro_monat_und_strassenabschnitt {
     }
 }
 
+/// Nutzungsplan - Zonenplan Stadt Basel:  Überlagernde Festlegungen
 pub mod nutzungsplan_zonenplan_stadt_basel_ueberlagernde_festlegungen {
     use super::*;
 
@@ -40429,7 +40328,8 @@ pub mod nutzungsplan_zonenplan_stadt_basel_ueberlagernde_festlegungen {
         /// Datum Status
         ///
         /// Datum Status
-        pub datumstat: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datumstat: Option<OffsetDateTime>,
         /// Geolink
         ///
         /// Geolink
@@ -40454,8 +40354,6 @@ pub mod nutzungsplan_zonenplan_stadt_basel_ueberlagernde_festlegungen {
     pub enum Field {
         Idueberfes,
         Festueber,
-        GeoPoint2d,
-        GeoShape,
         Verbindli,
         Schutzzwec,
         Rekurshaen,
@@ -40472,8 +40370,6 @@ pub mod nutzungsplan_zonenplan_stadt_basel_ueberlagernde_festlegungen {
         match field {
             Field::Idueberfes => "idueberfes".into(),
             Field::Festueber => "festueber".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Verbindli => "verbindli".into(),
             Field::Schutzzwec => "schutzzwec".into(),
             Field::Rekurshaen => "rekurshaen".into(),
@@ -40526,6 +40422,7 @@ pub mod nutzungsplan_zonenplan_stadt_basel_ueberlagernde_festlegungen {
     }
 }
 
+/// Bohrkataster
 pub mod bohrkataster {
     use super::*;
 
@@ -40666,10 +40563,8 @@ pub mod bohrkataster {
     #[derive(Clone, Copy)]
     pub enum Field {
         Art,
-        GeoPoint2d,
         Grundwasserdaten,
         Flurabstand,
-        GeoShape,
         IdBohrung,
         Geothermal,
         Catnum45,
@@ -40702,10 +40597,8 @@ pub mod bohrkataster {
     fn field_name(field: Field) -> String {
         match field {
             Field::Art => "art".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Grundwasserdaten => "grundwasserdaten".into(),
             Field::Flurabstand => "flurabstand".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdBohrung => "id_bohrung".into(),
             Field::Geothermal => "geothermal".into(),
             Field::Catnum45 => "catnum45".into(),
@@ -40775,6 +40668,7 @@ pub mod bohrkataster {
     }
 }
 
+/// Wohnbevölkerung nach Staatsangehörigkeit und Gemeinde
 pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_gemeinde {
     use super::*;
 
@@ -40834,8 +40728,6 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_gemeinde {
     pub enum Field {
         Gemeindename,
         Gemeinde,
-        GeoPoint2d,
-        GeoShape,
         Jahr,
         AnteilAl,
         AnteilBs,
@@ -40851,8 +40743,6 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_gemeinde {
         match field {
             Field::Gemeindename => "gemeindename".into(),
             Field::Gemeinde => "gemeinde".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Jahr => "jahr".into(),
             Field::AnteilAl => "anteil_al".into(),
             Field::AnteilBs => "anteil_bs".into(),
@@ -40904,6 +40794,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_gemeinde {
     }
 }
 
+/// Unfallschwerpunkte
 pub mod unfallschwerpunkte {
     use super::*;
 
@@ -40963,8 +40854,6 @@ pub mod unfallschwerpunkte {
         Anlagetyp,
         Lichtsign,
         Ortschaft,
-        GeoPoint2d,
-        GeoShape,
     }
 
     fn field_name(field: Field) -> String {
@@ -40977,8 +40866,6 @@ pub mod unfallschwerpunkte {
             Field::Anlagetyp => "anlagetyp".into(),
             Field::Lichtsign => "lichtsign".into(),
             Field::Ortschaft => "ortschaft".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
         }
     }
 
@@ -41021,6 +40908,7 @@ pub mod unfallschwerpunkte {
     }
 }
 
+/// Allmendbewilligungen
 pub mod allmendbewilligungen {
     use super::*;
 
@@ -41140,8 +41028,6 @@ pub mod allmendbewilligungen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Begehrenid,
         Lokalitaid,
         Belegungid,
@@ -41173,8 +41059,6 @@ pub mod allmendbewilligungen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Begehrenid => "begehrenid".into(),
             Field::Lokalitaid => "lokalitaid".into(),
             Field::Belegungid => "belegungid".into(),
@@ -41244,6 +41128,7 @@ pub mod allmendbewilligungen {
     }
 }
 
+/// Coronavirus (Covid-19): Fallzahlen und Inzidenzen Basel-Stadt
 pub mod coronavirus_covid_19_fallzahlen_und_inzidenzen_basel_stadt {
     use super::*;
 
@@ -41449,6 +41334,7 @@ pub mod coronavirus_covid_19_fallzahlen_und_inzidenzen_basel_stadt {
     }
 }
 
+/// Smarte Strasse: Verkehrslärm
 pub mod smarte_strasse_verkehrslaerm {
     use super::*;
 
@@ -41457,7 +41343,8 @@ pub mod smarte_strasse_verkehrslaerm {
         /// Zeitstempel
         ///
         /// Datum und Uhrzeit der Messung
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Mittelungspegel
         ///
         /// Gemittelter Schalldruckpegel in dB(A) über 5 Minuten
@@ -41700,6 +41587,7 @@ pub mod smarte_strasse_verkehrslaerm {
     }
 }
 
+/// Smarte Strasse: Geschwindigkeitsmessungen
 pub mod smarte_strasse_geschwindigkeitsmessungen {
     use super::*;
 
@@ -41708,11 +41596,13 @@ pub mod smarte_strasse_geschwindigkeitsmessungen {
         /// Startzeit
         ///
         /// Startzeit des Messintervalls
-        pub localdatetime_interval_start: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub localdatetime_interval_start: Option<OffsetDateTime>,
         /// Stoppzeit
         ///
         /// Stoppzeit des Messintervalls
-        pub localdatetime_interval_end: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub localdatetime_interval_end: Option<OffsetDateTime>,
         /// Geschwindigkeit
         ///
         /// Geschwindigkeit bei Durchfahrt in km/h
@@ -41811,6 +41701,7 @@ pub mod smarte_strasse_geschwindigkeitsmessungen {
     }
 }
 
+/// Verkehrszähldaten motorisierter Individualverkehr
 pub mod verkehrszaehldaten_motorisierter_individualverkehr {
     use super::*;
 
@@ -41831,11 +41722,13 @@ pub mod verkehrszaehldaten_motorisierter_individualverkehr {
         /// DateTimeFrom
         ///
         /// Datum und Uhrzeit Messbeginn (in UTC)
-        pub datetimefrom: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datetimefrom: Option<OffsetDateTime>,
         /// DateTimeTo
         ///
         /// Datum und Uhrzeit Messende (in UTC)
-        pub datetimeto: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datetimeto: Option<OffsetDateTime>,
         /// DirectionName
         ///
         /// Richtung/Strassenseite
@@ -41989,7 +41882,6 @@ pub mod verkehrszaehldaten_motorisierter_individualverkehr {
         Timeto,
         Dayofyear,
         ZstId,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -42027,7 +41919,6 @@ pub mod verkehrszaehldaten_motorisierter_individualverkehr {
             Field::Timeto => "timeto".into(),
             Field::Dayofyear => "dayofyear".into(),
             Field::ZstId => "zst_id".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -42070,6 +41961,7 @@ pub mod verkehrszaehldaten_motorisierter_individualverkehr {
     }
 }
 
+/// Strassen und Wege: Durchgangsstrassen
 pub mod strassen_und_wege_durchgangsstrassen {
     use super::*;
 
@@ -42109,8 +42001,6 @@ pub mod strassen_und_wege_durchgangsstrassen {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdDgstr,
         Strassennr,
         Strtyp,
@@ -42120,8 +42010,6 @@ pub mod strassen_und_wege_durchgangsstrassen {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdDgstr => "id_dgstr".into(),
             Field::Strassennr => "strassennr".into(),
             Field::Strtyp => "strtyp".into(),
@@ -42169,6 +42057,7 @@ pub mod strassen_und_wege_durchgangsstrassen {
     }
 }
 
+/// Coronavirus (COVID-19): SARS-CoV-2 im Abwasser und positiv auf SARS-CoV-2 getestete Personen
 pub mod coronavirus_covid_19_sars_cov_2_im_abwasser_und_positiv_auf_sars_cov_2_getestete_personen {
     use super::*;
 
@@ -42250,6 +42139,7 @@ pub mod coronavirus_covid_19_sars_cov_2_im_abwasser_und_positiv_auf_sars_cov_2_g
     }
 }
 
+/// Verkehrsberuhigte Zonen: Tempo 30 - Zone
 pub mod verkehrsberuhigte_zonen_tempo_30_zone {
     use super::*;
 
@@ -42293,8 +42183,6 @@ pub mod verkehrsberuhigte_zonen_tempo_30_zone {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdTempo30,
         Regime,
         Regimenr,
@@ -42305,8 +42193,6 @@ pub mod verkehrsberuhigte_zonen_tempo_30_zone {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdTempo30 => "id_tempo30".into(),
             Field::Regime => "regime".into(),
             Field::Regimenr => "regimenr".into(),
@@ -42355,6 +42241,7 @@ pub mod verkehrsberuhigte_zonen_tempo_30_zone {
     }
 }
 
+/// Verkehrsberuhigte Zonen: Begegnungszone
 pub mod verkehrsberuhigte_zonen_begegnungszone {
     use super::*;
 
@@ -42400,8 +42287,6 @@ pub mod verkehrsberuhigte_zonen_begegnungszone {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         IdBegegnu,
         Regime,
         Regimenr,
@@ -42413,8 +42298,6 @@ pub mod verkehrsberuhigte_zonen_begegnungszone {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::IdBegegnu => "id_begegnu".into(),
             Field::Regime => "regime".into(),
             Field::Regimenr => "regimenr".into(),
@@ -42464,6 +42347,7 @@ pub mod verkehrsberuhigte_zonen_begegnungszone {
     }
 }
 
+/// BachApp: Am Fluss
 pub mod bachapp_am_fluss {
     use super::*;
 
@@ -42583,6 +42467,7 @@ pub mod bachapp_am_fluss {
     }
 }
 
+/// Lohntabelle des Kantons Basel-Stadt
 pub mod lohntabelle_des_kantons_basel_stadt {
     use super::*;
 
@@ -42698,6 +42583,7 @@ pub mod lohntabelle_des_kantons_basel_stadt {
     }
 }
 
+/// Basel Info: Interessante Orte (POI)
 pub mod basel_info_interessante_orte_poi {
     use super::*;
 
@@ -42739,8 +42625,6 @@ pub mod basel_info_interessante_orte_poi {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Tid,
         Name,
         Subkatgeo,
@@ -42756,8 +42640,6 @@ pub mod basel_info_interessante_orte_poi {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Tid => "tid".into(),
             Field::Name => "name".into(),
             Field::Subkatgeo => "subkatgeo".into(),
@@ -42811,6 +42693,7 @@ pub mod basel_info_interessante_orte_poi {
     }
 }
 
+/// Smarte Strasse: Luftqualität Vergleichsmessungen
 pub mod smarte_strasse_luftqualitaet_vergleichsmessungen {
     use super::*;
 
@@ -42819,7 +42702,8 @@ pub mod smarte_strasse_luftqualitaet_vergleichsmessungen {
         /// Zeitstempel
         ///
         /// Zeitstempel = Anfangszeit des 30 minütigen Messintervalls
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// A2 Hard NO2
         ///
         /// Halbstundenmittelwert NO2 [µg/m3] - Sensor A2 Hard
@@ -42940,6 +42824,7 @@ pub mod smarte_strasse_luftqualitaet_vergleichsmessungen {
     }
 }
 
+/// Flächen der Schulstandorte (Gemeinde Basel)
 pub mod flaechen_der_schulstandorte_gemeinde_basel {
     use super::*;
 
@@ -42987,8 +42872,6 @@ pub mod flaechen_der_schulstandorte_gemeinde_basel {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Schulstand,
         Schultyp,
         Strasse,
@@ -43000,8 +42883,6 @@ pub mod flaechen_der_schulstandorte_gemeinde_basel {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Schulstand => "schulstand".into(),
             Field::Schultyp => "schultyp".into(),
             Field::Strasse => "strasse".into(),
@@ -43051,6 +42932,7 @@ pub mod flaechen_der_schulstandorte_gemeinde_basel {
     }
 }
 
+/// Rheintrübung kontinuierlich
 pub mod rheintruebung_kontinuierlich {
     use super::*;
 
@@ -43059,11 +42941,13 @@ pub mod rheintruebung_kontinuierlich {
         /// Start
         ///
         /// Start der Messung
-        pub startzeitpunkt: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub startzeitpunkt: Option<OffsetDateTime>,
         /// Ende
         ///
         /// Ende der Messung
-        pub endezeitpunkt: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub endezeitpunkt: Option<OffsetDateTime>,
         /// Trübung [FNU]
         ///
         /// Stundenmittelwert der Trübung gemessen in FNU ("Formazin Nephelometric Unit", was auf Deutsch "Nephelometrische Formazin-Einheit" bedeutet)
@@ -43130,15 +43014,18 @@ pub mod rheintruebung_kontinuierlich {
     }
 }
 
+/// Luftqualität Station Chrischona
 pub mod luftqualitaet_station_chrischona {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum/Zeit
-        pub datum_zeit: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub datum_zeit: Option<OffsetDateTime>,
         /// timestamp_text
-        pub timestamp_text: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp_text: Option<OffsetDateTime>,
         /// o3_stundenmittelwerte_ug_m3
         pub o3_stundenmittelwerte_ug_m3: Option<f64>,
         /// geo_point_2d
@@ -43156,7 +43043,6 @@ pub mod luftqualitaet_station_chrischona {
         DatumZeit,
         TimestampText,
         O3StundenmittelwerteUgM3,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -43164,7 +43050,6 @@ pub mod luftqualitaet_station_chrischona {
             Field::DatumZeit => "datum_zeit".into(),
             Field::TimestampText => "timestamp_text".into(),
             Field::O3StundenmittelwerteUgM3 => "o3_stundenmittelwerte_ug_m3".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -43207,6 +43092,7 @@ pub mod luftqualitaet_station_chrischona {
     }
 }
 
+/// Grosser Rat: Ratsmitgliedschaften
 pub mod grosser_rat_ratsmitgliedschaften {
     use super::*;
 
@@ -43412,6 +43298,7 @@ pub mod grosser_rat_ratsmitgliedschaften {
     }
 }
 
+/// Wohnbevölkerung nach Staatsangehörigkeit und Wohnviertel
 pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_wohnviertel {
     use super::*;
 
@@ -43476,8 +43363,6 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_wohnviertel {
         WovName,
         Wohnviertel,
         WovLabel,
-        GeoShape,
-        GeoPoint2d,
         Jahr,
         AnteilAl,
         AnteilBs,
@@ -43495,8 +43380,6 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_wohnviertel {
             Field::WovName => "wov_name".into(),
             Field::Wohnviertel => "wohnviertel".into(),
             Field::WovLabel => "wov_label".into(),
-            Field::GeoShape => "geo_shape".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Jahr => "jahr".into(),
             Field::AnteilAl => "anteil_al".into(),
             Field::AnteilBs => "anteil_bs".into(),
@@ -43549,6 +43432,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_wohnviertel {
     }
 }
 
+/// Einzugsgebiet der ARA Basel
 pub mod einzugsgebiet_der_ara_basel {
     use super::*;
 
@@ -43570,15 +43454,11 @@ pub mod einzugsgebiet_der_ara_basel {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Name,
     }
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Name => "name".into(),
         }
     }
@@ -43622,6 +43502,7 @@ pub mod einzugsgebiet_der_ara_basel {
     }
 }
 
+/// Fischereiverbotszonen Rhein
 pub mod fischereiverbotszonen_rhein {
     use super::*;
 
@@ -43649,16 +43530,12 @@ pub mod fischereiverbotszonen_rhein {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Id,
         Beschreibung,
     }
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Id => "id".into(),
             Field::Beschreibung => "beschreibung".into(),
         }
@@ -43703,6 +43580,7 @@ pub mod fischereiverbotszonen_rhein {
     }
 }
 
+/// Rhein Wasserstand, Pegel und Abfluss
 pub mod rhein_wasserstand_pegel_und_abfluss {
     use super::*;
 
@@ -43711,7 +43589,8 @@ pub mod rhein_wasserstand_pegel_und_abfluss {
         /// Zeitstempel
         ///
         /// Datum und Uhrzeit
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Abflussmenge
         ///
         /// Abfliessende Wassermenge in Kubikmetern pro Sekunde
@@ -43788,6 +43667,7 @@ pub mod rhein_wasserstand_pegel_und_abfluss {
     }
 }
 
+/// Rohdaten-Zeitreihe der Belegung der Elektroauto-Ladestationen der IWB
 pub mod rohdaten_zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
     use super::*;
 
@@ -43818,7 +43698,8 @@ pub mod rohdaten_zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
         /// Zeitstempel
         ///
         /// Datum und Uhrzeit
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
     }
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -43889,6 +43770,7 @@ pub mod rohdaten_zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
     }
 }
 
+/// Kandidierende der Grossratswahlen 2024 nach Häufigkeit der Kandidatur seit 2008
 pub mod kandidierende_der_grossratswahlen_2024_nach_haeufigkeit_der_kandidatur_seit_2008 {
     use super::*;
 
@@ -43974,6 +43856,7 @@ pub mod kandidierende_der_grossratswahlen_2024_nach_haeufigkeit_der_kandidatur_s
     }
 }
 
+/// Kennzahlen der Abstimmungen
 pub mod kennzahlen_der_abstimmungen {
     use super::*;
 
@@ -44227,6 +44110,7 @@ pub mod kennzahlen_der_abstimmungen {
     }
 }
 
+/// Durchschnittlicher Tagesverkehr (basierend auf dem Geschwindigkeitsmonitoring der Kantonspolizei)
 pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonitoring_der_kantonspolizei {
     use super::*;
 
@@ -44259,11 +44143,13 @@ pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonito
         /// Anfangszeit
         ///
         /// Anfangszeit der Messung
-        pub min_timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub min_timestamp: Option<OffsetDateTime>,
         /// Endzeit
         ///
         /// Endzeit der Messung
-        pub max_timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub max_timestamp: Option<OffsetDateTime>,
         /// Messdauer (Stunden)
         ///
         /// Messdauer in Stunden
@@ -44342,7 +44228,6 @@ pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonito
         Strasse,
         StrasseNr,
         Ort,
-        TheGeom,
         ExtraordinaryTrafficRouting,
         MinTimestamp,
         MaxTimestamp,
@@ -44361,7 +44246,6 @@ pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonito
         LinkZuEinzelmessungen,
         MinTimestampText,
         MaxTimestampText,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -44370,7 +44254,6 @@ pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonito
             Field::Strasse => "strasse".into(),
             Field::StrasseNr => "strasse_nr".into(),
             Field::Ort => "ort".into(),
-            Field::TheGeom => "the_geom".into(),
             Field::ExtraordinaryTrafficRouting => "extraordinary_traffic_routing".into(),
             Field::MinTimestamp => "min_timestamp".into(),
             Field::MaxTimestamp => "max_timestamp".into(),
@@ -44389,7 +44272,6 @@ pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonito
             Field::LinkZuEinzelmessungen => "link_zu_einzelmessungen".into(),
             Field::MinTimestampText => "min_timestamp_text".into(),
             Field::MaxTimestampText => "max_timestamp_text".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -44432,6 +44314,7 @@ pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonito
     }
 }
 
+/// Wiese Wasserstand und Abfluss
 pub mod wiese_wasserstand_und_abfluss {
     use super::*;
 
@@ -44440,7 +44323,8 @@ pub mod wiese_wasserstand_und_abfluss {
         /// Zeitstempel
         ///
         /// Datum und Uhrzeit
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Abflussmenge
         ///
         /// Abfliessende Wassermenge in Kubikmetern pro Sekunde
@@ -44511,6 +44395,7 @@ pub mod wiese_wasserstand_und_abfluss {
     }
 }
 
+/// Smarte Strasse: Parkplatzbelegung
 pub mod smarte_strasse_parkplatzbelegung {
     use super::*;
 
@@ -44519,7 +44404,8 @@ pub mod smarte_strasse_parkplatzbelegung {
         /// Zeitstempel
         ///
         /// Zeitstempel
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Blau: Total Parkplätze
         ///
         /// Total Anzahl erfasster blauer Parkplätze
@@ -44618,6 +44504,7 @@ pub mod smarte_strasse_parkplatzbelegung {
     }
 }
 
+/// Temperatur Grundwasser
 pub mod temperatur_grundwasser {
     use super::*;
 
@@ -44626,7 +44513,8 @@ pub mod temperatur_grundwasser {
         /// timestamp
         ///
         /// Zeitstempel der Messung in lokaler Zeit (Basel)
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// StationNr
         ///
         /// Katasternummer gemäss Bohrkataster, 10-stellig, prefixed mit 0
@@ -44716,7 +44604,6 @@ pub mod temperatur_grundwasser {
         Sensornr,
         Sensname,
         Value,
-        GeoPoint2d,
         Xcoord,
         Ycoord,
         Topterrain,
@@ -44740,7 +44627,6 @@ pub mod temperatur_grundwasser {
             Field::Sensornr => "sensornr".into(),
             Field::Sensname => "sensname".into(),
             Field::Value => "value".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Xcoord => "xcoord".into(),
             Field::Ycoord => "ycoord".into(),
             Field::Topterrain => "topterrain".into(),
@@ -44796,6 +44682,7 @@ pub mod temperatur_grundwasser {
     }
 }
 
+/// Belegung der Elektroauto-Ladestationen der IWB
 pub mod belegung_der_elektroauto_ladestationen_der_iwb {
     use super::*;
 
@@ -44816,7 +44703,8 @@ pub mod belegung_der_elektroauto_ladestationen_der_iwb {
         /// status
         pub status: Option<String>,
         /// timestamp
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
     }
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -44830,7 +44718,6 @@ pub mod belegung_der_elektroauto_ladestationen_der_iwb {
         Addresse,
         Power,
         Location,
-        GeoPoint2d,
         Parkingfield,
         Totalparkings,
         Status,
@@ -44842,7 +44729,6 @@ pub mod belegung_der_elektroauto_ladestationen_der_iwb {
             Field::Addresse => "addresse".into(),
             Field::Power => "power".into(),
             Field::Location => "location".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Parkingfield => "parkingfield".into(),
             Field::Totalparkings => "totalparkings".into(),
             Field::Status => "status".into(),
@@ -44889,6 +44775,7 @@ pub mod belegung_der_elektroauto_ladestationen_der_iwb {
     }
 }
 
+/// Abstimmungen Details
 pub mod abstimmungen_details {
     use super::*;
 
@@ -45126,6 +45013,7 @@ pub mod abstimmungen_details {
     }
 }
 
+/// Temperatur Wiese
 pub mod temperatur_wiese {
     use super::*;
 
@@ -45134,7 +45022,8 @@ pub mod temperatur_wiese {
         /// Zeitstempel
         ///
         /// Datum und Uhrzeit
-        pub timestamp_text: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp_text: Option<OffsetDateTime>,
         /// Temperatur
         ///
         /// Temperatur in Grad Celsius
@@ -45199,6 +45088,7 @@ pub mod temperatur_wiese {
     }
 }
 
+/// Wetterstation Rosental Mitte
 pub mod wetterstation_rosental_mitte {
     use super::*;
 
@@ -45207,7 +45097,8 @@ pub mod wetterstation_rosental_mitte {
         /// Zeitstempel
         ///
         /// Zeitstempel
-        pub timestamp: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub timestamp: Option<OffsetDateTime>,
         /// Niederschlag
         ///
         /// Total der Niederschläge innerhalb der letzten Stunde
@@ -45302,6 +45193,7 @@ pub mod wetterstation_rosental_mitte {
     }
 }
 
+/// Überwachung Luftqualität Transformation Areal Rosental: Standorte
 pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_standorte {
     use super::*;
 
@@ -45328,7 +45220,6 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_standorte {
         Name,
         XCoord,
         YCoord,
-        GeoPoint2d,
     }
 
     fn field_name(field: Field) -> String {
@@ -45336,7 +45227,6 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_standorte {
             Field::Name => "name".into(),
             Field::XCoord => "x_coord".into(),
             Field::YCoord => "y_coord".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
         }
     }
 
@@ -45379,6 +45269,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_standorte {
     }
 }
 
+/// Abwassermonitoring: Influenza und RSV
 pub mod abwassermonitoring_influenza_und_rsv {
     use super::*;
 
@@ -45580,6 +45471,7 @@ pub mod abwassermonitoring_influenza_und_rsv {
     }
 }
 
+/// Wilde Abfall-Deponien
 pub mod wilde_abfall_deponien {
     use super::*;
 
@@ -45592,7 +45484,8 @@ pub mod wilde_abfall_deponien {
         /// Zeitpunkt der Meldung
         ///
         ///
-        pub bearbeitungszeit_meldung: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub bearbeitungszeit_meldung: Option<OffsetDateTime>,
         /// Abfallkategorie
         ///
         /// Kategorisierung; AUE steht für das Amt für Umwelt und Energie.
@@ -45634,7 +45527,6 @@ pub mod wilde_abfall_deponien {
         Id,
         BearbeitungszeitMeldung,
         Abfallkategorie,
-        GeoPoint2d,
         WovName,
         BezName,
         WovIdBez,
@@ -45648,7 +45540,6 @@ pub mod wilde_abfall_deponien {
             Field::Id => "id".into(),
             Field::BearbeitungszeitMeldung => "bearbeitungszeit_meldung".into(),
             Field::Abfallkategorie => "abfallkategorie".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::WovName => "wov_name".into(),
             Field::BezName => "bez_name".into(),
             Field::WovIdBez => "wov_id_bez".into(),
@@ -45697,6 +45588,7 @@ pub mod wilde_abfall_deponien {
     }
 }
 
+/// Smarte Strasse: Elektroauto-Ladestationen
 pub mod smarte_strasse_elektroauto_ladestationen {
     use super::*;
 
@@ -45705,11 +45597,13 @@ pub mod smarte_strasse_elektroauto_ladestationen {
         /// Start Time
         ///
         /// Start Zeitpunkt des Ladevorgangs
-        pub starttime: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub starttime: Option<OffsetDateTime>,
         /// Stop Time
         ///
         /// Ende des Ladevorgangs
-        pub stoptime: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub stoptime: Option<OffsetDateTime>,
         /// Duration min
         ///
         /// Ladedauer in Minuten
@@ -45770,7 +45664,6 @@ pub mod smarte_strasse_elektroauto_ladestationen {
         StationLocationCoordinatesLat,
         StationLocationCoordinatesLng,
         StationConnectortype,
-        StationLocation,
         Starttimetext,
         Stoptimetext,
         TimeMeasured,
@@ -45788,7 +45681,6 @@ pub mod smarte_strasse_elektroauto_ladestationen {
             Field::StationLocationCoordinatesLat => "station_location_coordinates_lat".into(),
             Field::StationLocationCoordinatesLng => "station_location_coordinates_lng".into(),
             Field::StationConnectortype => "station_connectortype".into(),
-            Field::StationLocation => "station_location".into(),
             Field::Starttimetext => "starttimetext".into(),
             Field::Stoptimetext => "stoptimetext".into(),
             Field::TimeMeasured => "time_measured".into(),
@@ -45834,6 +45726,7 @@ pub mod smarte_strasse_elektroauto_ladestationen {
     }
 }
 
+/// Zeitreihe der Belegung öffentlicher Parkhäuser Basel
 pub mod zeitreihe_der_belegung_oeffentlicher_parkhaeuser_basel {
     use super::*;
 
@@ -45842,7 +45735,8 @@ pub mod zeitreihe_der_belegung_oeffentlicher_parkhaeuser_basel {
         /// Publikationszeit
         ///
         /// Datum und Uhrzeit der Publikation des Wertes
-        pub published: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub published: Option<OffsetDateTime>,
         /// Anzahl frei
         ///
         /// Anzahl freie Parkplätze
@@ -45905,7 +45799,6 @@ pub mod zeitreihe_der_belegung_oeffentlicher_parkhaeuser_basel {
         Name,
         Address,
         Link,
-        GeoPoint2d,
         Description,
     }
 
@@ -45921,7 +45814,6 @@ pub mod zeitreihe_der_belegung_oeffentlicher_parkhaeuser_basel {
             Field::Name => "name".into(),
             Field::Address => "address".into(),
             Field::Link => "link".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Description => "description".into(),
         }
     }
@@ -45965,6 +45857,7 @@ pub mod zeitreihe_der_belegung_oeffentlicher_parkhaeuser_basel {
     }
 }
 
+/// Solarkataster: Solarpotenzial
 pub mod solarkataster_solarpotenzial {
     use super::*;
 
@@ -46048,8 +45941,6 @@ pub mod solarkataster_solarpotenzial {
 
     #[derive(Clone, Copy)]
     pub enum Field {
-        GeoPoint2d,
-        GeoShape,
         Idgebaeude,
         Gebaeudenr,
         PvBestEi,
@@ -46070,8 +45961,6 @@ pub mod solarkataster_solarpotenzial {
 
     fn field_name(field: Field) -> String {
         match field {
-            Field::GeoPoint2d => "geo_point_2d".into(),
-            Field::GeoShape => "geo_shape".into(),
             Field::Idgebaeude => "idgebaeude".into(),
             Field::Gebaeudenr => "gebaeudenr".into(),
             Field::PvBestEi => "pv_best_ei".into(),
@@ -46130,6 +46019,7 @@ pub mod solarkataster_solarpotenzial {
     }
 }
 
+/// Standorte Mess-Stationen Smart Climate Luftklima
 pub mod standorte_mess_stationen_smart_climate_luftklima {
     use super::*;
 
@@ -46146,11 +46036,13 @@ pub mod standorte_mess_stationen_smart_climate_luftklima {
         /// Werte seit
         ///
         /// Älteste Aufzeichnung von Wetterdaten durch diese Station
-        pub dates_min_date: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub dates_min_date: Option<OffsetDateTime>,
         /// Werte bis
         ///
         /// Neuste Aufzeichnung von Wetterdaten durch diese Station
-        pub dates_max_date: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub dates_max_date: Option<OffsetDateTime>,
         /// Koordinaten
         ///
         /// Automatisch plausibilisierte Koordinaten
@@ -46177,7 +46069,6 @@ pub mod standorte_mess_stationen_smart_climate_luftklima {
         NameCustom,
         DatesMinDate,
         DatesMaxDate,
-        Coords,
         Lon,
         Lat,
         StadtklimaBaselLink,
@@ -46189,7 +46080,6 @@ pub mod standorte_mess_stationen_smart_climate_luftklima {
             Field::NameCustom => "name_custom".into(),
             Field::DatesMinDate => "dates_min_date".into(),
             Field::DatesMaxDate => "dates_max_date".into(),
-            Field::Coords => "coords".into(),
             Field::Lon => "lon".into(),
             Field::Lat => "lat".into(),
             Field::StadtklimaBaselLink => "stadtklima_basel_link".into(),
@@ -46235,6 +46125,7 @@ pub mod standorte_mess_stationen_smart_climate_luftklima {
     }
 }
 
+/// Smart Climate Luftklima
 pub mod smart_climate_luftklima {
     use super::*;
 
@@ -46251,7 +46142,8 @@ pub mod smart_climate_luftklima {
         /// Zeitstempel
         ///
         /// Datum und Zeit der Messung
-        pub dates_max_date: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub dates_max_date: Option<OffsetDateTime>,
         /// Lufttemperatur
         pub meta_airtemp: Option<f64>,
         /// Regen in 1 h
@@ -46293,7 +46185,6 @@ pub mod smart_climate_luftklima {
         MetaRain1hVal,
         MetaRain24hSum,
         MetaRain48hSum,
-        Coords,
         StadtklimaBaselLink,
         UnixTimestamp,
     }
@@ -46307,7 +46198,6 @@ pub mod smart_climate_luftklima {
             Field::MetaRain1hVal => "meta_rain_1h_val".into(),
             Field::MetaRain24hSum => "meta_rain24h_sum".into(),
             Field::MetaRain48hSum => "meta_rain48h_sum".into(),
-            Field::Coords => "coords".into(),
             Field::StadtklimaBaselLink => "stadtklima_basel_link".into(),
             Field::UnixTimestamp => "unix_timestamp".into(),
         }
@@ -46352,6 +46242,7 @@ pub mod smart_climate_luftklima {
     }
 }
 
+/// Überwachung Luftqualität Transformation Areal Rosental: Staubgebundene Schadstoffe
 pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_staubgebundene_schadstoffe {
     use super::*;
 
@@ -46503,6 +46394,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_staubgebundene_
     }
 }
 
+/// Aktuelle Belegung der öffentlichen Parkhäuser Basel
 pub mod aktuelle_belegung_der_oeffentlichen_parkhaeuser_basel {
     use super::*;
 
@@ -46515,7 +46407,8 @@ pub mod aktuelle_belegung_der_oeffentlichen_parkhaeuser_basel {
         /// Publikationszeit
         ///
         /// Datum und Uhrzeit der Publikation des Wertes
-        pub published: Option<String>,
+        #[serde(with = "time::serde::iso8601::option")]
+        pub published: Option<OffsetDateTime>,
         /// Anzahl frei
         ///
         /// Anzahl freie Parkplätze
@@ -46570,7 +46463,6 @@ pub mod aktuelle_belegung_der_oeffentlichen_parkhaeuser_basel {
         Auslastung,
         AuslastungProzent,
         Link,
-        GeoPoint2d,
         Description,
         Name,
         Id2,
@@ -46586,7 +46478,6 @@ pub mod aktuelle_belegung_der_oeffentlichen_parkhaeuser_basel {
             Field::Auslastung => "auslastung".into(),
             Field::AuslastungProzent => "auslastung_prozent".into(),
             Field::Link => "link".into(),
-            Field::GeoPoint2d => "geo_point_2d".into(),
             Field::Description => "description".into(),
             Field::Name => "name".into(),
             Field::Id2 => "id2".into(),
