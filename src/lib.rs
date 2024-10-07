@@ -127,6 +127,65 @@ pub mod wahl_von_sieben_praesidentinnen_oder_praesidenten_des_strafgerichts {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahlTitel,
+        Wahlgang,
+        ResultatsTyp,
+        Datum,
+        AnzSitze,
+        KandidatNr,
+        NameGanz,
+        Name,
+        Vorname,
+        Gemeinde,
+        Stimmen,
+        Vereinzelte,
+        Gewaehlt,
+        Stimmrechtsausweise,
+        Eingelegte,
+        Leere,
+        Ungueltige,
+        Gueltige,
+        AnzBriefliche,
+        StimmberTotal,
+        StimmberMaen,
+        StimmberFraue,
+        AbsolutesMehr,
+        Stimmbeteiligung,
+        AntBrieflich,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahlTitel => "wahl_titel".into(),
+            Field::Wahlgang => "wahlgang".into(),
+            Field::ResultatsTyp => "resultats_typ".into(),
+            Field::Datum => "datum".into(),
+            Field::AnzSitze => "anz_sitze".into(),
+            Field::KandidatNr => "kandidat_nr".into(),
+            Field::NameGanz => "name_ganz".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Gemeinde => "gemeinde".into(),
+            Field::Stimmen => "stimmen".into(),
+            Field::Vereinzelte => "vereinzelte".into(),
+            Field::Gewaehlt => "gewaehlt".into(),
+            Field::Stimmrechtsausweise => "stimmrechtsausweise".into(),
+            Field::Eingelegte => "eingelegte".into(),
+            Field::Leere => "leere".into(),
+            Field::Ungueltige => "ungueltige".into(),
+            Field::Gueltige => "gueltige".into(),
+            Field::AnzBriefliche => "anz_briefliche".into(),
+            Field::StimmberTotal => "stimmber_total".into(),
+            Field::StimmberMaen => "stimmber_maen".into(),
+            Field::StimmberFraue => "stimmber_fraue".into(),
+            Field::AbsolutesMehr => "absolutes_mehr".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::AntBrieflich => "ant_brieflich".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -135,19 +194,19 @@ pub mod wahl_von_sieben_praesidentinnen_oder_praesidenten_des_strafgerichts {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -203,6 +262,27 @@ pub mod coronavirus_covid_19_massentests_an_schulen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Firstdayofweek,
+        Weekofyear,
+        Result,
+        Count,
+        Counttotal,
+        Positivityratepercent,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Firstdayofweek => "firstdayofweek".into(),
+            Field::Weekofyear => "weekofyear".into(),
+            Field::Result => "result".into(),
+            Field::Count => "count".into(),
+            Field::Counttotal => "counttotal".into(),
+            Field::Positivityratepercent => "positivityratepercent".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -211,19 +291,19 @@ pub mod coronavirus_covid_19_massentests_an_schulen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -279,6 +359,27 @@ pub mod smarte_strasse_parkplatz_zonen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Id,
+        Lat,
+        Lon,
+        Coord,
+        Adresse,
+        Typ,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Id => "id".into(),
+            Field::Lat => "lat".into(),
+            Field::Lon => "lon".into(),
+            Field::Coord => "coord".into(),
+            Field::Adresse => "adresse".into(),
+            Field::Typ => "typ".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -287,19 +388,19 @@ pub mod smarte_strasse_parkplatz_zonen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -330,6 +431,13 @@ pub mod oeffentlicher_archivkatalog_in_rdf {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {}
+
+    fn field_name(field: Field) -> String {
+        match field {}
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -338,19 +446,19 @@ pub mod oeffentlicher_archivkatalog_in_rdf {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -398,6 +506,25 @@ pub mod standorte_mess_stationen_smart_climate_schallpegelmessungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        StationId,
+        Eui,
+        GeoPoint2d,
+        Latitude,
+        Longitude,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::StationId => "station_id".into(),
+            Field::Eui => "eui".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Latitude => "latitude".into(),
+            Field::Longitude => "longitude".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -406,19 +533,19 @@ pub mod standorte_mess_stationen_smart_climate_schallpegelmessungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -568,6 +695,79 @@ pub mod kennzahlen_der_abstimmung_vom_27_november_2022 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        InitOgaAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        StimmberAnz,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstTyp,
+        GegeJaAnz,
+        GegeNeinAnz,
+        GegeOgaAnz,
+        StiInitiativeAnz,
+        StiGegenvorschlagAnz,
+        StiOgaAnz,
+        GegeAnteilJaStimmen,
+        StiAnteilInitStimmen,
+        AbstIdTitel,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+        AnzElektrProAbstArt,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::InitOgaAnz => "init_oga_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::StimmberAnz => "stimmber_anz".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::GegeJaAnz => "gege_ja_anz".into(),
+            Field::GegeNeinAnz => "gege_nein_anz".into(),
+            Field::GegeOgaAnz => "gege_oga_anz".into(),
+            Field::StiInitiativeAnz => "sti_initiative_anz".into(),
+            Field::StiGegenvorschlagAnz => "sti_gegenvorschlag_anz".into(),
+            Field::StiOgaAnz => "sti_oga_anz".into(),
+            Field::GegeAnteilJaStimmen => "gege_anteil_ja_stimmen".into(),
+            Field::StiAnteilInitStimmen => "sti_anteil_init_stimmen".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+            Field::AnzElektrProAbstArt => "anz_elektr_pro_abst_art".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -576,19 +776,19 @@ pub mod kennzahlen_der_abstimmung_vom_27_november_2022 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -664,6 +864,37 @@ pub mod staatsarchiv_neuzugaenge_im_oeffentlichen_archivkatalog {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        Abteilung,
+        UnterabteilungSubtyp,
+        Signatur,
+        AblieferndeStelle,
+        BetreffBeschreibung,
+        Zeitraum,
+        UmfangLfm,
+        UmfangBand,
+        UmfangStuck,
+        UmfangMb,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::Abteilung => "abteilung".into(),
+            Field::UnterabteilungSubtyp => "unterabteilung_subtyp".into(),
+            Field::Signatur => "signatur".into(),
+            Field::AblieferndeStelle => "abliefernde_stelle".into(),
+            Field::BetreffBeschreibung => "betreff_beschreibung".into(),
+            Field::Zeitraum => "zeitraum".into(),
+            Field::UmfangLfm => "umfang_lfm".into(),
+            Field::UmfangBand => "umfang_band".into(),
+            Field::UmfangStuck => "umfang_stuck".into(),
+            Field::UmfangMb => "umfang_mb".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -672,19 +903,19 @@ pub mod staatsarchiv_neuzugaenge_im_oeffentlichen_archivkatalog {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -868,6 +1099,105 @@ pub mod resultate_der_nationalratswahlen_2023_aggregierte_daten {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahlbezeichnung,
+        Amtsdauer,
+        Wahltermin,
+        AnzahlSitze,
+        WahlkreisNr,
+        WahlkreisCode,
+        Wahlkreisbezeichnung,
+        StimmberechtigteManner,
+        StimmberechtigteFrauen,
+        Stimmberechtigte,
+        StimmberechtigteAuslandschweizer,
+        Wahlzettel,
+        BrieflicheStimmabgaben,
+        UngestempelteWahlzettel,
+        UngultigeWahlzettel,
+        LeereWahlzettel,
+        UnveranderteWahlzettel,
+        VeranderteWahlzettelMitBezeichnung,
+        VeranderteWahlzettelOhneBezeichnung,
+        LeereStimmen,
+        ListenNr,
+        ParteiId,
+        Parteikurzbezeichnung,
+        Parteibezeichnung,
+        HlvNr,
+        HlvBezeichnung,
+        UlvNr,
+        UlvBezeichnung,
+        AnzahlSitzeListe,
+        UnveranderteWahlzettelListe,
+        VeranderteWahlzettelListe,
+        KandidatenstimmenUnveranderteWahlzettel,
+        ZusatzstimmenUnveranderteWahlzettel,
+        KandidatenstimmenVeranderteWahlzettel,
+        ZusatzstimmenVeranderteWahlzettel,
+        Kandidatenstimmen,
+        Zusatzstimmen,
+        Parteistimmen,
+        AnteilAnSummeIn,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahlbezeichnung => "wahlbezeichnung".into(),
+            Field::Amtsdauer => "amtsdauer".into(),
+            Field::Wahltermin => "wahltermin".into(),
+            Field::AnzahlSitze => "anzahl_sitze".into(),
+            Field::WahlkreisNr => "wahlkreis_nr".into(),
+            Field::WahlkreisCode => "wahlkreis_code".into(),
+            Field::Wahlkreisbezeichnung => "wahlkreisbezeichnung".into(),
+            Field::StimmberechtigteManner => "stimmberechtigte_manner".into(),
+            Field::StimmberechtigteFrauen => "stimmberechtigte_frauen".into(),
+            Field::Stimmberechtigte => "stimmberechtigte".into(),
+            Field::StimmberechtigteAuslandschweizer => "stimmberechtigte_auslandschweizer".into(),
+            Field::Wahlzettel => "wahlzettel".into(),
+            Field::BrieflicheStimmabgaben => "briefliche_stimmabgaben".into(),
+            Field::UngestempelteWahlzettel => "ungestempelte_wahlzettel".into(),
+            Field::UngultigeWahlzettel => "ungultige_wahlzettel".into(),
+            Field::LeereWahlzettel => "leere_wahlzettel".into(),
+            Field::UnveranderteWahlzettel => "unveranderte_wahlzettel".into(),
+            Field::VeranderteWahlzettelMitBezeichnung => {
+                "veranderte_wahlzettel_mit_bezeichnung".into()
+            }
+            Field::VeranderteWahlzettelOhneBezeichnung => {
+                "veranderte_wahlzettel_ohne_bezeichnung".into()
+            }
+            Field::LeereStimmen => "leere_stimmen".into(),
+            Field::ListenNr => "listen_nr".into(),
+            Field::ParteiId => "partei_id".into(),
+            Field::Parteikurzbezeichnung => "parteikurzbezeichnung".into(),
+            Field::Parteibezeichnung => "parteibezeichnung".into(),
+            Field::HlvNr => "hlv_nr".into(),
+            Field::HlvBezeichnung => "hlv_bezeichnung".into(),
+            Field::UlvNr => "ulv_nr".into(),
+            Field::UlvBezeichnung => "ulv_bezeichnung".into(),
+            Field::AnzahlSitzeListe => "anzahl_sitze_liste".into(),
+            Field::UnveranderteWahlzettelListe => "unveranderte_wahlzettel_liste".into(),
+            Field::VeranderteWahlzettelListe => "veranderte_wahlzettel_liste".into(),
+            Field::KandidatenstimmenUnveranderteWahlzettel => {
+                "kandidatenstimmen_unveranderte_wahlzettel".into()
+            }
+            Field::ZusatzstimmenUnveranderteWahlzettel => {
+                "zusatzstimmen_unveranderte_wahlzettel".into()
+            }
+            Field::KandidatenstimmenVeranderteWahlzettel => {
+                "kandidatenstimmen_veranderte_wahlzettel".into()
+            }
+            Field::ZusatzstimmenVeranderteWahlzettel => {
+                "zusatzstimmen_veranderte_wahlzettel".into()
+            }
+            Field::Kandidatenstimmen => "kandidatenstimmen".into(),
+            Field::Zusatzstimmen => "zusatzstimmen".into(),
+            Field::Parteistimmen => "parteistimmen".into(),
+            Field::AnteilAnSummeIn => "anteil_an_summe_in".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -876,19 +1206,19 @@ pub mod resultate_der_nationalratswahlen_2023_aggregierte_daten {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -1000,6 +1330,55 @@ pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Zyklus,
+        Phase,
+        IdStandort,
+        Strassenname,
+        Ort,
+        OrtAbkuerzung,
+        MessungTimestamp,
+        MessungDatum,
+        MessungZeit,
+        VEinfahrt,
+        VAusfahrt,
+        VDelta,
+        Geschwindigkeit,
+        Halterung,
+        StartVormessung,
+        StartBetrieb,
+        StartNachmessung,
+        Ende,
+        MessungJahr,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Zyklus => "zyklus".into(),
+            Field::Phase => "phase".into(),
+            Field::IdStandort => "id_standort".into(),
+            Field::Strassenname => "strassenname".into(),
+            Field::Ort => "ort".into(),
+            Field::OrtAbkuerzung => "ort_abkuerzung".into(),
+            Field::MessungTimestamp => "messung_timestamp".into(),
+            Field::MessungDatum => "messung_datum".into(),
+            Field::MessungZeit => "messung_zeit".into(),
+            Field::VEinfahrt => "v_einfahrt".into(),
+            Field::VAusfahrt => "v_ausfahrt".into(),
+            Field::VDelta => "v_delta".into(),
+            Field::Geschwindigkeit => "geschwindigkeit".into(),
+            Field::Halterung => "halterung".into(),
+            Field::StartVormessung => "start_vormessung".into(),
+            Field::StartBetrieb => "start_betrieb".into(),
+            Field::StartNachmessung => "start_nachmessung".into(),
+            Field::Ende => "ende".into(),
+            Field::MessungJahr => "messung_jahr".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -1008,19 +1387,19 @@ pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -1126,6 +1505,55 @@ pub mod kennzahlen_der_abstimmung_vom_28_november_2021 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstIdTitel,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -1134,19 +1562,19 @@ pub mod kennzahlen_der_abstimmung_vom_28_november_2021 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -1252,6 +1680,55 @@ pub mod kennzahlen_der_abstimmung_vom_26_september_2021 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstIdTitel,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -1260,19 +1737,19 @@ pub mod kennzahlen_der_abstimmung_vom_26_september_2021 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -1380,6 +1857,57 @@ pub mod kennzahlen_der_abstimmung_vom_15_mai_2022 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstTyp,
+        AbstIdTitel,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -1388,19 +1916,19 @@ pub mod kennzahlen_der_abstimmung_vom_15_mai_2022 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -1508,6 +2036,57 @@ pub mod kennzahlen_der_abstimmung_vom_25_september_2022 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstTyp,
+        AbstIdTitel,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -1516,19 +2095,19 @@ pub mod kennzahlen_der_abstimmung_vom_25_september_2022 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -1628,6 +2207,53 @@ pub mod abstimmung_vom_26_november_2023_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        AbstTyp,
+        AbstIdTitel,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -1636,19 +2262,19 @@ pub mod abstimmung_vom_26_november_2023_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -1746,6 +2372,53 @@ pub mod abstimmung_vom_25_september_2022_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        AbstTyp,
+        AbstIdTitel,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -1754,19 +2427,19 @@ pub mod abstimmung_vom_25_september_2022_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -1880,6 +2553,59 @@ pub mod kennzahlen_der_abstimmung_vom_18_juni_2023 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstTyp,
+        AbstIdTitel,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+        AnzElektrProAbstArt,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+            Field::AnzElektrProAbstArt => "anz_elektr_pro_abst_art".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -1888,19 +2614,19 @@ pub mod kennzahlen_der_abstimmung_vom_18_juni_2023 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -2000,6 +2726,53 @@ pub mod abstimmung_vom_18_juni_2023_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        AbstTyp,
+        AbstIdTitel,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -2008,19 +2781,19 @@ pub mod abstimmung_vom_18_juni_2023_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -2152,6 +2925,71 @@ pub mod abstimmung_13_juni_2021_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        InitOgaAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        AbstTyp,
+        GegeJaAnz,
+        GegeNeinAnz,
+        GegeOgaAnz,
+        StiInitiativeAnz,
+        StiGegenvorschlagAnz,
+        StiOgaAnz,
+        GegeAnteilJaStimmen,
+        StiAnteilInitStimmen,
+        AbstIdTitel,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::InitOgaAnz => "init_oga_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::GegeJaAnz => "gege_ja_anz".into(),
+            Field::GegeNeinAnz => "gege_nein_anz".into(),
+            Field::GegeOgaAnz => "gege_oga_anz".into(),
+            Field::StiInitiativeAnz => "sti_initiative_anz".into(),
+            Field::StiGegenvorschlagAnz => "sti_gegenvorschlag_anz".into(),
+            Field::StiOgaAnz => "sti_oga_anz".into(),
+            Field::GegeAnteilJaStimmen => "gege_anteil_ja_stimmen".into(),
+            Field::StiAnteilInitStimmen => "sti_anteil_init_stimmen".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -2160,19 +2998,19 @@ pub mod abstimmung_13_juni_2021_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -2260,6 +3098,43 @@ pub mod ordnungsbussen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Laufnummer,
+        KategorieBezeichnung,
+        Wochentag,
+        Ubertretungswochentagnummer,
+        Ubertretungswochentag,
+        Ubertretungsmonat,
+        Ubertretungsjahr,
+        GkLimite,
+        UOrtPlz,
+        UOrtOrt,
+        BussenBetrag,
+        Buzi,
+        BuziZus,
+        BuziText,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Laufnummer => "laufnummer".into(),
+            Field::KategorieBezeichnung => "kategorie_bezeichnung".into(),
+            Field::Wochentag => "wochentag".into(),
+            Field::Ubertretungswochentagnummer => "ubertretungswochentagnummer".into(),
+            Field::Ubertretungswochentag => "ubertretungswochentag".into(),
+            Field::Ubertretungsmonat => "ubertretungsmonat".into(),
+            Field::Ubertretungsjahr => "ubertretungsjahr".into(),
+            Field::GkLimite => "gk_limite".into(),
+            Field::UOrtPlz => "u_ort_plz".into(),
+            Field::UOrtOrt => "u_ort_ort".into(),
+            Field::BussenBetrag => "bussen_betrag".into(),
+            Field::Buzi => "buzi".into(),
+            Field::BuziZus => "buzi_zus".into(),
+            Field::BuziText => "buzi_text".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -2268,19 +3143,19 @@ pub mod ordnungsbussen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -2454,6 +3329,87 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahlbezeichnung,
+        Amtsdauer,
+        Wahltermin,
+        AnzahlSitze,
+        WahlkreisNr,
+        WahlkreisCode,
+        BezeichnungWahlkreis,
+        StimmberechtigteManner,
+        StimmberechtigteFrauen,
+        Stimmberechtigte,
+        StimmberechtigteAuslandschweizer,
+        Wahlzettel,
+        BrieflicheStimmabgaben,
+        UngultigeWahlzettel,
+        LeereWahlzettel,
+        LeereStimmen,
+        UngultigeStimmen,
+        VereinzelteStimmen,
+        KandidatenNr,
+        PersonenId,
+        Bisher,
+        Gewahlt,
+        GanzerName,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Anrede,
+        Beruf,
+        Heimatort,
+        Stimmen,
+        TotalGultigeWahlzettel,
+        Stimmbeteiligung,
+        AnteilBrieflichWahlende,
+        AbsolutesMehr,
+        Vereinzelte,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahlbezeichnung => "wahlbezeichnung".into(),
+            Field::Amtsdauer => "amtsdauer".into(),
+            Field::Wahltermin => "wahltermin".into(),
+            Field::AnzahlSitze => "anzahl_sitze".into(),
+            Field::WahlkreisNr => "wahlkreis_nr".into(),
+            Field::WahlkreisCode => "wahlkreis_code".into(),
+            Field::BezeichnungWahlkreis => "bezeichnung_wahlkreis".into(),
+            Field::StimmberechtigteManner => "stimmberechtigte_manner".into(),
+            Field::StimmberechtigteFrauen => "stimmberechtigte_frauen".into(),
+            Field::Stimmberechtigte => "stimmberechtigte".into(),
+            Field::StimmberechtigteAuslandschweizer => "stimmberechtigte_auslandschweizer".into(),
+            Field::Wahlzettel => "wahlzettel".into(),
+            Field::BrieflicheStimmabgaben => "briefliche_stimmabgaben".into(),
+            Field::UngultigeWahlzettel => "ungultige_wahlzettel".into(),
+            Field::LeereWahlzettel => "leere_wahlzettel".into(),
+            Field::LeereStimmen => "leere_stimmen".into(),
+            Field::UngultigeStimmen => "ungultige_stimmen".into(),
+            Field::VereinzelteStimmen => "vereinzelte_stimmen".into(),
+            Field::KandidatenNr => "kandidaten_nr".into(),
+            Field::PersonenId => "personen_id".into(),
+            Field::Bisher => "bisher".into(),
+            Field::Gewahlt => "gewahlt".into(),
+            Field::GanzerName => "ganzer_name".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Anrede => "anrede".into(),
+            Field::Beruf => "beruf".into(),
+            Field::Heimatort => "heimatort".into(),
+            Field::Stimmen => "stimmen".into(),
+            Field::TotalGultigeWahlzettel => "total_gultige_wahlzettel".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::AnteilBrieflichWahlende => "anteil_brieflich_wahlende".into(),
+            Field::AbsolutesMehr => "absolutes_mehr".into(),
+            Field::Vereinzelte => "vereinzelte".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -2462,19 +3418,19 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -2650,6 +3606,87 @@ pub mod resultate_der_ersatzwahl_regierungsrat_7_april_2024_2_wahlgang {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahlbezeichnung,
+        Amtsdauer,
+        Wahltermin,
+        AnzahlSitze,
+        WahlkreisNr,
+        WahlkreisCode,
+        BezeichnungWahlkreis,
+        StimmberechtigteManner,
+        StimmberechtigteFrauen,
+        Stimmberechtigte,
+        StimmberechtigteAuslandschweizer,
+        Wahlzettel,
+        BrieflicheStimmabgaben,
+        UngultigeWahlzettel,
+        LeereWahlzettel,
+        LeereStimmen,
+        UngultigeStimmen,
+        VereinzelteStimmen,
+        KandidatenNr,
+        PersonenId,
+        Bisher,
+        Gewahlt,
+        GanzerName,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Anrede,
+        Beruf,
+        Heimatort,
+        Stimmen,
+        TotalGultigeWahlzettel,
+        Stimmbeteiligung,
+        AnteilBrieflichWahlende,
+        AbsolutesMehr,
+        Vereinzelte,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahlbezeichnung => "wahlbezeichnung".into(),
+            Field::Amtsdauer => "amtsdauer".into(),
+            Field::Wahltermin => "wahltermin".into(),
+            Field::AnzahlSitze => "anzahl_sitze".into(),
+            Field::WahlkreisNr => "wahlkreis_nr".into(),
+            Field::WahlkreisCode => "wahlkreis_code".into(),
+            Field::BezeichnungWahlkreis => "bezeichnung_wahlkreis".into(),
+            Field::StimmberechtigteManner => "stimmberechtigte_manner".into(),
+            Field::StimmberechtigteFrauen => "stimmberechtigte_frauen".into(),
+            Field::Stimmberechtigte => "stimmberechtigte".into(),
+            Field::StimmberechtigteAuslandschweizer => "stimmberechtigte_auslandschweizer".into(),
+            Field::Wahlzettel => "wahlzettel".into(),
+            Field::BrieflicheStimmabgaben => "briefliche_stimmabgaben".into(),
+            Field::UngultigeWahlzettel => "ungultige_wahlzettel".into(),
+            Field::LeereWahlzettel => "leere_wahlzettel".into(),
+            Field::LeereStimmen => "leere_stimmen".into(),
+            Field::UngultigeStimmen => "ungultige_stimmen".into(),
+            Field::VereinzelteStimmen => "vereinzelte_stimmen".into(),
+            Field::KandidatenNr => "kandidaten_nr".into(),
+            Field::PersonenId => "personen_id".into(),
+            Field::Bisher => "bisher".into(),
+            Field::Gewahlt => "gewahlt".into(),
+            Field::GanzerName => "ganzer_name".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Anrede => "anrede".into(),
+            Field::Beruf => "beruf".into(),
+            Field::Heimatort => "heimatort".into(),
+            Field::Stimmen => "stimmen".into(),
+            Field::TotalGultigeWahlzettel => "total_gultige_wahlzettel".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::AnteilBrieflichWahlende => "anteil_brieflich_wahlende".into(),
+            Field::AbsolutesMehr => "absolutes_mehr".into(),
+            Field::Vereinzelte => "vereinzelte".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -2658,19 +3695,19 @@ pub mod resultate_der_ersatzwahl_regierungsrat_7_april_2024_2_wahlgang {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -2898,6 +3935,115 @@ pub mod regierungsrats_und_regierungspraesidiumswahl_2020 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahlTitel,
+        Wahlgang,
+        ArtDerWahl,
+        Datum,
+        AnzahlSitze,
+        ListenNr,
+        Liste,
+        KandidatenNr,
+        Bisher,
+        GanzerName,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Alter,
+        Partei,
+        Beruf,
+        Gemeinde,
+        Stimmen,
+        Gewahlt,
+        Wahlzettel,
+        BrieflicheStimmabgaben,
+        LeereStimmzettel,
+        UngultigeStimmzettel,
+        GultigeStimmzettel,
+        VereinzelteStimmen,
+        AbsolutesMehr,
+        Stimmbeteiligung,
+        StimmenPrasidium,
+        AnteilBrieflichStimmende,
+        Prasidium,
+        KandidatenNrPraidium,
+        BisherPrasidium,
+        GewahltPrasidium,
+        WahlzettelPrasidium,
+        BrieflicheStimmabgabenPrasidium,
+        LeereStimmzettelPrasidium,
+        UngultigeStimmzettelPrasidium,
+        GultigeStimmzettelPrasidium,
+        VereinzelteStimmenPrasidium,
+        AbsolutesMehrPrasidium,
+        StimmbeteiligungPrasidium,
+        AnteilBrieflichStimmendePrasidium,
+        GemeindeId,
+        Stimmberechtigte,
+        StimmberechtigteManner,
+        StimmberechtigteFrauen,
+        Stimmrechtsausweise,
+        JahrgangNum,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahlTitel => "wahl_titel".into(),
+            Field::Wahlgang => "wahlgang".into(),
+            Field::ArtDerWahl => "art_der_wahl".into(),
+            Field::Datum => "datum".into(),
+            Field::AnzahlSitze => "anzahl_sitze".into(),
+            Field::ListenNr => "listen_nr".into(),
+            Field::Liste => "liste".into(),
+            Field::KandidatenNr => "kandidaten_nr".into(),
+            Field::Bisher => "bisher".into(),
+            Field::GanzerName => "ganzer_name".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Alter => "alter".into(),
+            Field::Partei => "partei".into(),
+            Field::Beruf => "beruf".into(),
+            Field::Gemeinde => "gemeinde".into(),
+            Field::Stimmen => "stimmen".into(),
+            Field::Gewahlt => "gewahlt".into(),
+            Field::Wahlzettel => "wahlzettel".into(),
+            Field::BrieflicheStimmabgaben => "briefliche_stimmabgaben".into(),
+            Field::LeereStimmzettel => "leere_stimmzettel".into(),
+            Field::UngultigeStimmzettel => "ungultige_stimmzettel".into(),
+            Field::GultigeStimmzettel => "gultige_stimmzettel".into(),
+            Field::VereinzelteStimmen => "vereinzelte_stimmen".into(),
+            Field::AbsolutesMehr => "absolutes_mehr".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::StimmenPrasidium => "stimmen_prasidium".into(),
+            Field::AnteilBrieflichStimmende => "anteil_brieflich_stimmende".into(),
+            Field::Prasidium => "prasidium".into(),
+            Field::KandidatenNrPraidium => "kandidaten_nr_praidium".into(),
+            Field::BisherPrasidium => "bisher_prasidium".into(),
+            Field::GewahltPrasidium => "gewahlt_prasidium".into(),
+            Field::WahlzettelPrasidium => "wahlzettel_prasidium".into(),
+            Field::BrieflicheStimmabgabenPrasidium => "briefliche_stimmabgaben_prasidium".into(),
+            Field::LeereStimmzettelPrasidium => "leere_stimmzettel_prasidium".into(),
+            Field::UngultigeStimmzettelPrasidium => "ungultige_stimmzettel_prasidium".into(),
+            Field::GultigeStimmzettelPrasidium => "gultige_stimmzettel_prasidium".into(),
+            Field::VereinzelteStimmenPrasidium => "vereinzelte_stimmen_prasidium".into(),
+            Field::AbsolutesMehrPrasidium => "absolutes_mehr_prasidium".into(),
+            Field::StimmbeteiligungPrasidium => "stimmbeteiligung_prasidium".into(),
+            Field::AnteilBrieflichStimmendePrasidium => {
+                "anteil_brieflich_stimmende_prasidium".into()
+            }
+            Field::GemeindeId => "gemeinde_id".into(),
+            Field::Stimmberechtigte => "stimmberechtigte".into(),
+            Field::StimmberechtigteManner => "stimmberechtigte_manner".into(),
+            Field::StimmberechtigteFrauen => "stimmberechtigte_frauen".into(),
+            Field::Stimmrechtsausweise => "stimmrechtsausweise".into(),
+            Field::JahrgangNum => "jahrgang_num".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -2906,19 +4052,19 @@ pub mod regierungsrats_und_regierungspraesidiumswahl_2020 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -3012,6 +4158,47 @@ pub mod zuordnung_von_parzellen_auf_statistische_raumeinheiten {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        R1Nummer,
+        R1EgrisE,
+        R1Art,
+        R1ArtTxt,
+        R1Sektion,
+        BezId,
+        BezName,
+        WovId,
+        WovName,
+        BloId,
+        BloLabel,
+        GemeindeName,
+        Oid,
+        PointX,
+        PointY,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::R1Nummer => "r1_nummer".into(),
+            Field::R1EgrisE => "r1_egris_e".into(),
+            Field::R1Art => "r1_art".into(),
+            Field::R1ArtTxt => "r1_art_txt".into(),
+            Field::R1Sektion => "r1_sektion".into(),
+            Field::BezId => "bez_id".into(),
+            Field::BezName => "bez_name".into(),
+            Field::WovId => "wov_id".into(),
+            Field::WovName => "wov_name".into(),
+            Field::BloId => "blo_id".into(),
+            Field::BloLabel => "blo_label".into(),
+            Field::GemeindeName => "gemeinde_name".into(),
+            Field::Oid => "oid".into(),
+            Field::PointX => "point_x".into(),
+            Field::PointY => "point_y".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -3020,19 +4207,19 @@ pub mod zuordnung_von_parzellen_auf_statistische_raumeinheiten {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -3144,6 +4331,59 @@ pub mod kennzahlen_der_abstimmung_vom_29_november_2020 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+        StimmberAnz,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstIdTitel,
+        AbstTyp,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+            Field::StimmberAnz => "stimmber_anz".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::AbstTyp => "abst_typ".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -3152,19 +4392,19 @@ pub mod kennzahlen_der_abstimmung_vom_29_november_2020 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -3230,6 +4470,35 @@ pub mod schuelerprognose_riehen_und_bettingen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Schuljahr,
+        Nummer,
+        Perimeter,
+        Schulstufe,
+        Sus,
+        UnteresPrognoseintervall,
+        OberesPrognoseintervall,
+        Typ,
+        GeoShape,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Schuljahr => "schuljahr".into(),
+            Field::Nummer => "nummer".into(),
+            Field::Perimeter => "perimeter".into(),
+            Field::Schulstufe => "schulstufe".into(),
+            Field::Sus => "sus".into(),
+            Field::UnteresPrognoseintervall => "unteres_prognoseintervall".into(),
+            Field::OberesPrognoseintervall => "oberes_prognoseintervall".into(),
+            Field::Typ => "typ".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -3238,19 +4507,19 @@ pub mod schuelerprognose_riehen_und_bettingen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -3388,6 +4657,73 @@ pub mod kennzahlen_der_abstimmung_vom_13_juni_2021 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        InitOgaAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        StimmberAnz,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstTyp,
+        GegeJaAnz,
+        GegeNeinAnz,
+        GegeOgaAnz,
+        StiInitiativeAnz,
+        StiGegenvorschlagAnz,
+        StiOgaAnz,
+        GegeAnteilJaStimmen,
+        StiAnteilInitStimmen,
+        AbstIdTitel,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::InitOgaAnz => "init_oga_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::StimmberAnz => "stimmber_anz".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::GegeJaAnz => "gege_ja_anz".into(),
+            Field::GegeNeinAnz => "gege_nein_anz".into(),
+            Field::GegeOgaAnz => "gege_oga_anz".into(),
+            Field::StiInitiativeAnz => "sti_initiative_anz".into(),
+            Field::StiGegenvorschlagAnz => "sti_gegenvorschlag_anz".into(),
+            Field::StiOgaAnz => "sti_oga_anz".into(),
+            Field::GegeAnteilJaStimmen => "gege_anteil_ja_stimmen".into(),
+            Field::StiAnteilInitStimmen => "sti_anteil_init_stimmen".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -3396,19 +4732,19 @@ pub mod kennzahlen_der_abstimmung_vom_13_juni_2021 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -3544,6 +4880,67 @@ pub mod kantonale_abstimmungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        BsId,
+        Jahr,
+        Datum,
+        AbstimmungsterminNr,
+        VorlagenId,
+        Titel,
+        Kurztitel,
+        Thema,
+        Unterthema,
+        Vorlagentyp,
+        Stimmberechtigte,
+        Stimmrechtsausweise,
+        Stimmzettel,
+        Stimmbeteiligung,
+        Briefliche,
+        Ergebnis,
+        Leere,
+        Ungueltige,
+        Gueltige,
+        JaStimmen,
+        NeinStimmen,
+        JaAnteil,
+        Grossratsbeschlussdatum,
+        Stichfragenannahmen,
+        Stichfragenauslassung,
+        Unterschriften,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::BsId => "bs_id".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Datum => "datum".into(),
+            Field::AbstimmungsterminNr => "abstimmungstermin_nr".into(),
+            Field::VorlagenId => "vorlagen_id".into(),
+            Field::Titel => "titel".into(),
+            Field::Kurztitel => "kurztitel".into(),
+            Field::Thema => "thema".into(),
+            Field::Unterthema => "unterthema".into(),
+            Field::Vorlagentyp => "vorlagentyp".into(),
+            Field::Stimmberechtigte => "stimmberechtigte".into(),
+            Field::Stimmrechtsausweise => "stimmrechtsausweise".into(),
+            Field::Stimmzettel => "stimmzettel".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::Briefliche => "briefliche".into(),
+            Field::Ergebnis => "ergebnis".into(),
+            Field::Leere => "leere".into(),
+            Field::Ungueltige => "ungueltige".into(),
+            Field::Gueltige => "gueltige".into(),
+            Field::JaStimmen => "ja_stimmen".into(),
+            Field::NeinStimmen => "nein_stimmen".into(),
+            Field::JaAnteil => "ja_anteil".into(),
+            Field::Grossratsbeschlussdatum => "grossratsbeschlussdatum".into(),
+            Field::Stichfragenannahmen => "stichfragenannahmen".into(),
+            Field::Stichfragenauslassung => "stichfragenauslassung".into(),
+            Field::Unterschriften => "unterschriften".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -3552,19 +4949,19 @@ pub mod kantonale_abstimmungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -3658,6 +5055,51 @@ pub mod abstimmung_29_november_2020_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+        AbstTyp,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+            Field::AbstTyp => "abst_typ".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -3666,19 +5108,19 @@ pub mod abstimmung_29_november_2020_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -3732,6 +5174,27 @@ pub mod monatliche_ankuenfte_und_logiernaechte {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        Herkunftsland,
+        Anzankuenfte,
+        Anzlogiernaechte,
+        Jahr,
+        Monat,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::Herkunftsland => "herkunftsland".into(),
+            Field::Anzankuenfte => "anzankuenfte".into(),
+            Field::Anzlogiernaechte => "anzlogiernaechte".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -3740,19 +5203,19 @@ pub mod monatliche_ankuenfte_und_logiernaechte {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -3830,6 +5293,41 @@ pub mod coronavirus_covid_19_ergaenzte_fallzahlen_ganze_schweiz {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Date,
+        AbbreviationCantonAndFl,
+        NcumulConf,
+        CurrentHosp,
+        CurrentIcu,
+        NcumulReleased,
+        NcumulDeceased,
+        CurrentIsolated,
+        CurrentQuarantined,
+        CurrentQuarantinedRiskareatravel,
+        NdiffConf,
+        NdiffReleased,
+        NdiffDeceased,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Date => "date".into(),
+            Field::AbbreviationCantonAndFl => "abbreviation_canton_and_fl".into(),
+            Field::NcumulConf => "ncumul_conf".into(),
+            Field::CurrentHosp => "current_hosp".into(),
+            Field::CurrentIcu => "current_icu".into(),
+            Field::NcumulReleased => "ncumul_released".into(),
+            Field::NcumulDeceased => "ncumul_deceased".into(),
+            Field::CurrentIsolated => "current_isolated".into(),
+            Field::CurrentQuarantined => "current_quarantined".into(),
+            Field::CurrentQuarantinedRiskareatravel => "current_quarantined_riskareatravel".into(),
+            Field::NdiffConf => "ndiff_conf".into(),
+            Field::NdiffReleased => "ndiff_released".into(),
+            Field::NdiffDeceased => "ndiff_deceased".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -3838,19 +5336,19 @@ pub mod coronavirus_covid_19_ergaenzte_fallzahlen_ganze_schweiz {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -3964,6 +5462,59 @@ pub mod kennzahlen_der_abstimmung_vom_9_juni_2024 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstTyp,
+        AbstIdTitel,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+        AnzElektrProAbstArt,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+            Field::AnzElektrProAbstArt => "anz_elektr_pro_abst_art".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -3972,19 +5523,19 @@ pub mod kennzahlen_der_abstimmung_vom_9_juni_2024 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -4096,6 +5647,59 @@ pub mod kennzahlen_der_abstimmung_vom_27_september_2020 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+        StimmberAnz,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstIdTitel,
+        AbstTyp,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+            Field::StimmberAnz => "stimmber_anz".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::AbstTyp => "abst_typ".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -4104,19 +5708,19 @@ pub mod kennzahlen_der_abstimmung_vom_27_september_2020 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -4182,6 +5786,33 @@ pub mod kandidierende_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        ListenNr,
+        Listenbezeichnung,
+        Bisher,
+        NameVorname,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Zusatz,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::ListenNr => "listen_nr".into(),
+            Field::Listenbezeichnung => "listenbezeichnung".into(),
+            Field::Bisher => "bisher".into(),
+            Field::NameVorname => "name_vorname".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Zusatz => "zusatz".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -4190,19 +5821,19 @@ pub mod kandidierende_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -4458,6 +6089,139 @@ pub mod resultate_der_buergergemeinderatswahlen_2023 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahlbezeichnung,
+        Amtsdauer,
+        Wahltermin,
+        AnzahlSitze,
+        WahlkreisNr,
+        WahlkreisCode,
+        Wahlkreisbezeichnung,
+        StimmberechtigteManner,
+        StimmberechtigteFrauen,
+        Stimmberechtigte,
+        StimmberechtigteAuslandschweizer,
+        Wahlzettel,
+        BrieflicheStimmabgaben,
+        UngultigeWahlzettel,
+        LeereWahlzettel,
+        UnveranderteWahlzettel,
+        VeranderteWahlzettelMitBezeichnung,
+        VeranderteWahlzettelOhneBezeichnung,
+        LeereStimmen,
+        ParteiId,
+        Parteikurzbezeichnung,
+        Parteibezeichnung,
+        AnzahlSitzeListe,
+        UnveranderteWahlzettelListe,
+        VeranderteWahlzettelListe,
+        KandidatenstimmenUnveranderteWahlzettel,
+        ZusatzstimmenUnveranderteWahlzettel,
+        KandidatenstimmenVeranderteWahlzettel,
+        ZusatzstimmenVeranderteWahlzettel,
+        KandidatenNr,
+        Kumulation,
+        Bisher,
+        Gewahlt,
+        GanzerName,
+        Name,
+        Vorname,
+        Rangfolge,
+        X00Ohne,
+        X01Fdp,
+        X03Ldp,
+        X04Evp,
+        X05Sp,
+        X07Mitte,
+        X10Glp,
+        X12Svp,
+        X17Gp,
+        X27Basta,
+        X30Unabh,
+        UngestempelteWahlzettel,
+        ListenNr,
+        StimmenUnveranderteWahlzettel,
+        StimmenVeranderteWahlzettel,
+        StimmenTotalAusWahlzettel,
+        TotalDerGultigenWahlzettel,
+        Stimmbeteiligung,
+        AnteilBrieflichWahlende,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahlbezeichnung => "wahlbezeichnung".into(),
+            Field::Amtsdauer => "amtsdauer".into(),
+            Field::Wahltermin => "wahltermin".into(),
+            Field::AnzahlSitze => "anzahl_sitze".into(),
+            Field::WahlkreisNr => "wahlkreis_nr".into(),
+            Field::WahlkreisCode => "wahlkreis_code".into(),
+            Field::Wahlkreisbezeichnung => "wahlkreisbezeichnung".into(),
+            Field::StimmberechtigteManner => "stimmberechtigte_manner".into(),
+            Field::StimmberechtigteFrauen => "stimmberechtigte_frauen".into(),
+            Field::Stimmberechtigte => "stimmberechtigte".into(),
+            Field::StimmberechtigteAuslandschweizer => "stimmberechtigte_auslandschweizer".into(),
+            Field::Wahlzettel => "wahlzettel".into(),
+            Field::BrieflicheStimmabgaben => "briefliche_stimmabgaben".into(),
+            Field::UngultigeWahlzettel => "ungultige_wahlzettel".into(),
+            Field::LeereWahlzettel => "leere_wahlzettel".into(),
+            Field::UnveranderteWahlzettel => "unveranderte_wahlzettel".into(),
+            Field::VeranderteWahlzettelMitBezeichnung => {
+                "veranderte_wahlzettel_mit_bezeichnung".into()
+            }
+            Field::VeranderteWahlzettelOhneBezeichnung => {
+                "veranderte_wahlzettel_ohne_bezeichnung".into()
+            }
+            Field::LeereStimmen => "leere_stimmen".into(),
+            Field::ParteiId => "partei_id".into(),
+            Field::Parteikurzbezeichnung => "parteikurzbezeichnung".into(),
+            Field::Parteibezeichnung => "parteibezeichnung".into(),
+            Field::AnzahlSitzeListe => "anzahl_sitze_liste".into(),
+            Field::UnveranderteWahlzettelListe => "unveranderte_wahlzettel_liste".into(),
+            Field::VeranderteWahlzettelListe => "veranderte_wahlzettel_liste".into(),
+            Field::KandidatenstimmenUnveranderteWahlzettel => {
+                "kandidatenstimmen_unveranderte_wahlzettel".into()
+            }
+            Field::ZusatzstimmenUnveranderteWahlzettel => {
+                "zusatzstimmen_unveranderte_wahlzettel".into()
+            }
+            Field::KandidatenstimmenVeranderteWahlzettel => {
+                "kandidatenstimmen_veranderte_wahlzettel".into()
+            }
+            Field::ZusatzstimmenVeranderteWahlzettel => {
+                "zusatzstimmen_veranderte_wahlzettel".into()
+            }
+            Field::KandidatenNr => "kandidaten_nr".into(),
+            Field::Kumulation => "kumulation".into(),
+            Field::Bisher => "bisher".into(),
+            Field::Gewahlt => "gewahlt".into(),
+            Field::GanzerName => "ganzer_name".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Rangfolge => "rangfolge".into(),
+            Field::X00Ohne => "00_ohne".into(),
+            Field::X01Fdp => "01_fdp".into(),
+            Field::X03Ldp => "03_ldp".into(),
+            Field::X04Evp => "04_evp".into(),
+            Field::X05Sp => "05_sp".into(),
+            Field::X07Mitte => "07_mitte".into(),
+            Field::X10Glp => "10_glp".into(),
+            Field::X12Svp => "12_svp".into(),
+            Field::X17Gp => "17_gp".into(),
+            Field::X27Basta => "27_basta".into(),
+            Field::X30Unabh => "30_unabh".into(),
+            Field::UngestempelteWahlzettel => "ungestempelte_wahlzettel".into(),
+            Field::ListenNr => "listen_nr".into(),
+            Field::StimmenUnveranderteWahlzettel => "stimmen_unveranderte_wahlzettel".into(),
+            Field::StimmenVeranderteWahlzettel => "stimmen_veranderte_wahlzettel".into(),
+            Field::StimmenTotalAusWahlzettel => "stimmen_total_aus_wahlzettel".into(),
+            Field::TotalDerGultigenWahlzettel => "total_der_gultigen_wahlzettel".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::AnteilBrieflichWahlende => "anteil_brieflich_wahlende".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -4466,19 +6230,19 @@ pub mod resultate_der_buergergemeinderatswahlen_2023 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -4652,6 +6416,87 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_7_april_2024_2_wahlgang {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahlbezeichnung,
+        Amtsdauer,
+        Wahltermin,
+        AnzahlSitze,
+        WahlkreisNr,
+        WahlkreisCode,
+        BezeichnungWahlkreis,
+        StimmberechtigteManner,
+        StimmberechtigteFrauen,
+        Stimmberechtigte,
+        StimmberechtigteAuslandschweizer,
+        Wahlzettel,
+        BrieflicheStimmabgaben,
+        UngultigeWahlzettel,
+        LeereWahlzettel,
+        LeereStimmen,
+        UngultigeStimmen,
+        VereinzelteStimmen,
+        KandidatenNr,
+        PersonenId,
+        Bisher,
+        Gewahlt,
+        GanzerName,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Anrede,
+        Beruf,
+        Heimatort,
+        Stimmen,
+        TotalGultigeWahlzettel,
+        Stimmbeteiligung,
+        AnteilBrieflichWahlende,
+        AbsolutesMehr,
+        Vereinzelte,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahlbezeichnung => "wahlbezeichnung".into(),
+            Field::Amtsdauer => "amtsdauer".into(),
+            Field::Wahltermin => "wahltermin".into(),
+            Field::AnzahlSitze => "anzahl_sitze".into(),
+            Field::WahlkreisNr => "wahlkreis_nr".into(),
+            Field::WahlkreisCode => "wahlkreis_code".into(),
+            Field::BezeichnungWahlkreis => "bezeichnung_wahlkreis".into(),
+            Field::StimmberechtigteManner => "stimmberechtigte_manner".into(),
+            Field::StimmberechtigteFrauen => "stimmberechtigte_frauen".into(),
+            Field::Stimmberechtigte => "stimmberechtigte".into(),
+            Field::StimmberechtigteAuslandschweizer => "stimmberechtigte_auslandschweizer".into(),
+            Field::Wahlzettel => "wahlzettel".into(),
+            Field::BrieflicheStimmabgaben => "briefliche_stimmabgaben".into(),
+            Field::UngultigeWahlzettel => "ungultige_wahlzettel".into(),
+            Field::LeereWahlzettel => "leere_wahlzettel".into(),
+            Field::LeereStimmen => "leere_stimmen".into(),
+            Field::UngultigeStimmen => "ungultige_stimmen".into(),
+            Field::VereinzelteStimmen => "vereinzelte_stimmen".into(),
+            Field::KandidatenNr => "kandidaten_nr".into(),
+            Field::PersonenId => "personen_id".into(),
+            Field::Bisher => "bisher".into(),
+            Field::Gewahlt => "gewahlt".into(),
+            Field::GanzerName => "ganzer_name".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Anrede => "anrede".into(),
+            Field::Beruf => "beruf".into(),
+            Field::Heimatort => "heimatort".into(),
+            Field::Stimmen => "stimmen".into(),
+            Field::TotalGultigeWahlzettel => "total_gultige_wahlzettel".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::AnteilBrieflichWahlende => "anteil_brieflich_wahlende".into(),
+            Field::AbsolutesMehr => "absolutes_mehr".into(),
+            Field::Vereinzelte => "vereinzelte".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -4660,19 +6505,19 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_7_april_2024_2_wahlgang {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -4882,6 +6727,103 @@ pub mod studierende_der_universitaet_basel_nach_geschlecht_und_fakultaet {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        InternationaleStudenten,
+        SchweizerStudenten,
+        StudentenTotal,
+        InternationaleStudentinnen,
+        SchweizerStudentinnen,
+        StudentinnenTotal,
+        StudierendeTotal,
+        TheologieM,
+        TheologieF,
+        TheologieTotal,
+        JurisprudenzM,
+        JurisprudenzF,
+        JurisprudenzTotal,
+        MedizinM,
+        MedizinF,
+        MedizinTotal,
+        Philosophie1M,
+        Philosophie1F,
+        Philosophie1Total,
+        PsychologieM,
+        PsychologieF,
+        PsychologieTotal,
+        WirtschaftM,
+        WirtschaftF,
+        WirtschaftTotal,
+        Philosophie2M,
+        Philosophie2F,
+        Philosophie2Total,
+        UniversitaetbaselM,
+        UniversitaetbaselF,
+        UniversitaetbaselTotal,
+        LehrerausbildungM,
+        LehrerausbildungF,
+        LehrerausbildungTotal,
+        AdvancedstudiesM,
+        AdvancedstudiesF,
+        AdvancedstudiesTotal,
+        BildungswissenschaftenM,
+        BildungswissenschaftenF,
+        BildungswissenschaftenTotal,
+        PhilosophieM,
+        PhilosophieF,
+        PhilosophieTotal,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::InternationaleStudenten => "internationale_studenten".into(),
+            Field::SchweizerStudenten => "schweizer_studenten".into(),
+            Field::StudentenTotal => "studenten_total".into(),
+            Field::InternationaleStudentinnen => "internationale_studentinnen".into(),
+            Field::SchweizerStudentinnen => "schweizer_studentinnen".into(),
+            Field::StudentinnenTotal => "studentinnen_total".into(),
+            Field::StudierendeTotal => "studierende_total".into(),
+            Field::TheologieM => "theologie_m".into(),
+            Field::TheologieF => "theologie_f".into(),
+            Field::TheologieTotal => "theologie_total".into(),
+            Field::JurisprudenzM => "jurisprudenz_m".into(),
+            Field::JurisprudenzF => "jurisprudenz_f".into(),
+            Field::JurisprudenzTotal => "jurisprudenz_total".into(),
+            Field::MedizinM => "medizin_m".into(),
+            Field::MedizinF => "medizin_f".into(),
+            Field::MedizinTotal => "medizin_total".into(),
+            Field::Philosophie1M => "philosophie1_m".into(),
+            Field::Philosophie1F => "philosophie1_f".into(),
+            Field::Philosophie1Total => "philosophie1_total".into(),
+            Field::PsychologieM => "psychologie_m".into(),
+            Field::PsychologieF => "psychologie_f".into(),
+            Field::PsychologieTotal => "psychologie_total".into(),
+            Field::WirtschaftM => "wirtschaft_m".into(),
+            Field::WirtschaftF => "wirtschaft_f".into(),
+            Field::WirtschaftTotal => "wirtschaft_total".into(),
+            Field::Philosophie2M => "philosophie2_m".into(),
+            Field::Philosophie2F => "philosophie2_f".into(),
+            Field::Philosophie2Total => "philosophie2_total".into(),
+            Field::UniversitaetbaselM => "universitaetbasel_m".into(),
+            Field::UniversitaetbaselF => "universitaetbasel_f".into(),
+            Field::UniversitaetbaselTotal => "universitaetbasel_total".into(),
+            Field::LehrerausbildungM => "lehrerausbildung_m".into(),
+            Field::LehrerausbildungF => "lehrerausbildung_f".into(),
+            Field::LehrerausbildungTotal => "lehrerausbildung_total".into(),
+            Field::AdvancedstudiesM => "advancedstudies_m".into(),
+            Field::AdvancedstudiesF => "advancedstudies_f".into(),
+            Field::AdvancedstudiesTotal => "advancedstudies_total".into(),
+            Field::BildungswissenschaftenM => "bildungswissenschaften_m".into(),
+            Field::BildungswissenschaftenF => "bildungswissenschaften_f".into(),
+            Field::BildungswissenschaftenTotal => "bildungswissenschaften_total".into(),
+            Field::PhilosophieM => "philosophie_m".into(),
+            Field::PhilosophieF => "philosophie_f".into(),
+            Field::PhilosophieTotal => "philosophie_total".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -4890,19 +6832,19 @@ pub mod studierende_der_universitaet_basel_nach_geschlecht_und_fakultaet {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -4954,6 +6896,25 @@ pub mod coronavirus_covid_19_fuer_impfung_angemeldete_personen_nach_altersklasse
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Date,
+        AgeGroup,
+        HasAppointments,
+        Count,
+        Week,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Date => "date".into(),
+            Field::AgeGroup => "age_group".into(),
+            Field::HasAppointments => "has_appointments".into(),
+            Field::Count => "count".into(),
+            Field::Week => "week".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -4962,19 +6923,19 @@ pub mod coronavirus_covid_19_fuer_impfung_angemeldete_personen_nach_altersklasse
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -5030,6 +6991,27 @@ pub mod coronavirus_covid_19_massentests_in_betrieben {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Firstdayofweek,
+        Weekofyear,
+        Result,
+        Count,
+        Counttotal,
+        Positivityratepercent,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Firstdayofweek => "firstdayofweek".into(),
+            Field::Weekofyear => "weekofyear".into(),
+            Field::Result => "result".into(),
+            Field::Count => "count".into(),
+            Field::Counttotal => "counttotal".into(),
+            Field::Positivityratepercent => "positivityratepercent".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -5038,19 +7020,19 @@ pub mod coronavirus_covid_19_massentests_in_betrieben {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -5114,6 +7096,33 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden_langer_datensatz
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Publikationsjahr,
+        IndikatorNr,
+        Datenjahr,
+        Wert,
+        IndikatorLabel,
+        IndikatorName,
+        WohnviertelId,
+        Wohnviertel,
+        Rang,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Publikationsjahr => "publikationsjahr".into(),
+            Field::IndikatorNr => "indikator_nr".into(),
+            Field::Datenjahr => "datenjahr".into(),
+            Field::Wert => "wert".into(),
+            Field::IndikatorLabel => "indikator_label".into(),
+            Field::IndikatorName => "indikator_name".into(),
+            Field::WohnviertelId => "wohnviertel_id".into(),
+            Field::Wohnviertel => "wohnviertel".into(),
+            Field::Rang => "rang".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -5122,19 +7131,19 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden_langer_datensatz
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -5243,6 +7252,55 @@ pub mod wasserstand_grundwasser {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        Stationnr,
+        Stationname,
+        Sensornr,
+        Sensname,
+        Value,
+        GeoPoint2d,
+        Xcoord,
+        Ycoord,
+        Topterrain,
+        Refpoint,
+        Status,
+        OnOffline,
+        Date,
+        Time,
+        TimestampText,
+        Stationid,
+        Lat,
+        Lon,
+        BohrkatasterLink,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::Stationnr => "stationnr".into(),
+            Field::Stationname => "stationname".into(),
+            Field::Sensornr => "sensornr".into(),
+            Field::Sensname => "sensname".into(),
+            Field::Value => "value".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Xcoord => "xcoord".into(),
+            Field::Ycoord => "ycoord".into(),
+            Field::Topterrain => "topterrain".into(),
+            Field::Refpoint => "refpoint".into(),
+            Field::Status => "status".into(),
+            Field::OnOffline => "on_offline".into(),
+            Field::Date => "date".into(),
+            Field::Time => "time".into(),
+            Field::TimestampText => "timestamp_text".into(),
+            Field::Stationid => "stationid".into(),
+            Field::Lat => "lat".into(),
+            Field::Lon => "lon".into(),
+            Field::BohrkatasterLink => "bohrkataster_link".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -5251,19 +7309,19 @@ pub mod wasserstand_grundwasser {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -5359,6 +7417,51 @@ pub mod abstimmung_vom_26_september_2021_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        AbstIdTitel,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -5367,19 +7470,19 @@ pub mod abstimmung_vom_26_september_2021_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -5499,6 +7602,61 @@ pub mod verkehrszaehldaten_velos_und_fussgaenger {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        ZstNr,
+        Sitecode,
+        Sitename,
+        Datetimefrom,
+        Datetimeto,
+        Directionname,
+        Lanecode,
+        Lanename,
+        Valuesapproved,
+        Valuesedited,
+        Traffictype,
+        Total,
+        Year,
+        Month,
+        Day,
+        Weekday,
+        Hourfrom,
+        Date,
+        Timefrom,
+        Timeto,
+        Dayofyear,
+        ZstId,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::ZstNr => "zst_nr".into(),
+            Field::Sitecode => "sitecode".into(),
+            Field::Sitename => "sitename".into(),
+            Field::Datetimefrom => "datetimefrom".into(),
+            Field::Datetimeto => "datetimeto".into(),
+            Field::Directionname => "directionname".into(),
+            Field::Lanecode => "lanecode".into(),
+            Field::Lanename => "lanename".into(),
+            Field::Valuesapproved => "valuesapproved".into(),
+            Field::Valuesedited => "valuesedited".into(),
+            Field::Traffictype => "traffictype".into(),
+            Field::Total => "total".into(),
+            Field::Year => "year".into(),
+            Field::Month => "month".into(),
+            Field::Day => "day".into(),
+            Field::Weekday => "weekday".into(),
+            Field::Hourfrom => "hourfrom".into(),
+            Field::Date => "date".into(),
+            Field::Timefrom => "timefrom".into(),
+            Field::Timeto => "timeto".into(),
+            Field::Dayofyear => "dayofyear".into(),
+            Field::ZstId => "zst_id".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -5507,19 +7665,19 @@ pub mod verkehrszaehldaten_velos_und_fussgaenger {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -5569,6 +7727,25 @@ pub mod bevoelkerung_nach_geschlecht_heimat_und_altersjahr_ab_1945 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        PersAlter,
+        Geschlecht,
+        Herkunft,
+        Anzahl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::PersAlter => "pers_alter".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Herkunft => "herkunft".into(),
+            Field::Anzahl => "anzahl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -5577,19 +7754,19 @@ pub mod bevoelkerung_nach_geschlecht_heimat_und_altersjahr_ab_1945 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -5659,6 +7836,35 @@ pub mod coronavirus_covid_19_todesfaelle_basel_stadt_nach_alter_und_geschlecht {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Date,
+        Area,
+        Ageyear,
+        AgeyearNumeric,
+        Gender,
+        Newdeaths,
+        Preexistingcond,
+        NcumulDeceased,
+        Casenumberperday,
+        Source,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Date => "date".into(),
+            Field::Area => "area".into(),
+            Field::Ageyear => "ageyear".into(),
+            Field::AgeyearNumeric => "ageyear_numeric".into(),
+            Field::Gender => "gender".into(),
+            Field::Newdeaths => "newdeaths".into(),
+            Field::Preexistingcond => "preexistingcond".into(),
+            Field::NcumulDeceased => "ncumul_deceased".into(),
+            Field::Casenumberperday => "casenumberperday".into(),
+            Field::Source => "source".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -5667,19 +7873,19 @@ pub mod coronavirus_covid_19_todesfaelle_basel_stadt_nach_alter_und_geschlecht {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -5745,6 +7951,33 @@ pub mod kandidierende_der_regierungsratswahl_20_oktober_2024 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        ListenNr,
+        Listenbezeichnung,
+        Bisher,
+        NameVorname,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Zusatz,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::ListenNr => "listen_nr".into(),
+            Field::Listenbezeichnung => "listenbezeichnung".into(),
+            Field::Bisher => "bisher".into(),
+            Field::NameVorname => "name_vorname".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Zusatz => "zusatz".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -5753,19 +7986,19 @@ pub mod kandidierende_der_regierungsratswahl_20_oktober_2024 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -5821,6 +8054,27 @@ pub mod zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        Address,
+        Power,
+        Parkingfield,
+        Totalparkings,
+        Status,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::Address => "address".into(),
+            Field::Power => "power".into(),
+            Field::Parkingfield => "parkingfield".into(),
+            Field::Totalparkings => "totalparkings".into(),
+            Field::Status => "status".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -5829,19 +8083,19 @@ pub mod zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -5955,6 +8209,57 @@ pub mod gebaeudeeingaenge_gebaeude_und_wohnungsregister_gwr {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Egid,
+        Edid,
+        Egaid,
+        Deinr,
+        Esid,
+        Strname,
+        Strnamk,
+        Strindx,
+        Strsp,
+        StrspDecoded,
+        Stroffiziel,
+        StroffizielDecoded,
+        Dplz4,
+        Dplzz,
+        Dplzname,
+        Dkode,
+        Dkodn,
+        EingangKoordinaten,
+        Doffadr,
+        DoffadrDecoded,
+        Dexpdat,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Egid => "egid".into(),
+            Field::Edid => "edid".into(),
+            Field::Egaid => "egaid".into(),
+            Field::Deinr => "deinr".into(),
+            Field::Esid => "esid".into(),
+            Field::Strname => "strname".into(),
+            Field::Strnamk => "strnamk".into(),
+            Field::Strindx => "strindx".into(),
+            Field::Strsp => "strsp".into(),
+            Field::StrspDecoded => "strsp_decoded".into(),
+            Field::Stroffiziel => "stroffiziel".into(),
+            Field::StroffizielDecoded => "stroffiziel_decoded".into(),
+            Field::Dplz4 => "dplz4".into(),
+            Field::Dplzz => "dplzz".into(),
+            Field::Dplzname => "dplzname".into(),
+            Field::Dkode => "dkode".into(),
+            Field::Dkodn => "dkodn".into(),
+            Field::EingangKoordinaten => "eingang_koordinaten".into(),
+            Field::Doffadr => "doffadr".into(),
+            Field::DoffadrDecoded => "doffadr_decoded".into(),
+            Field::Dexpdat => "dexpdat".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -5963,19 +8268,19 @@ pub mod gebaeudeeingaenge_gebaeude_und_wohnungsregister_gwr {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -6019,6 +8324,21 @@ pub mod wohnbevoelkerung_nach_postleitzahl_seit_1979 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        Postleitzahl,
+        Anzahl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::Postleitzahl => "postleitzahl".into(),
+            Field::Anzahl => "anzahl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -6027,19 +8347,19 @@ pub mod wohnbevoelkerung_nach_postleitzahl_seit_1979 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -6081,6 +8401,25 @@ pub mod vornamen_der_baselstaedtischen_bevoelkerung {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        Vorname,
+        Geschlecht,
+        Anzahl,
+        Jahr,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Anzahl => "anzahl".into(),
+            Field::Jahr => "jahr".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -6089,19 +8428,19 @@ pub mod vornamen_der_baselstaedtischen_bevoelkerung {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -6161,6 +8500,29 @@ pub mod effektiver_und_erwarteter_taeglicher_stromverbrauch {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Time,
+        Stromverbrauch,
+        Forecast,
+        VglRealMinusForecast,
+        ForecastLowfi,
+        ForecastHighfi,
+        Trainorforecast,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Time => "time".into(),
+            Field::Stromverbrauch => "stromverbrauch".into(),
+            Field::Forecast => "forecast".into(),
+            Field::VglRealMinusForecast => "vgl_real_minus_forecast".into(),
+            Field::ForecastLowfi => "forecast_lowfi".into(),
+            Field::ForecastHighfi => "forecast_highfi".into(),
+            Field::Trainorforecast => "trainorforecast".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -6169,19 +8531,19 @@ pub mod effektiver_und_erwarteter_taeglicher_stromverbrauch {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -6247,6 +8609,49 @@ pub mod gemeinden {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        Entstehung,
+        Ortschaft,
+        Status,
+        StatusTxt,
+        Inaenderun,
+        Inaenderu1,
+        R1Objid,
+        R1Nbident,
+        R1Identif,
+        R1Beschre,
+        R1Gueltig,
+        R1Guelti1,
+        R1Guelti2,
+        Name,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::Entstehung => "entstehung".into(),
+            Field::Ortschaft => "ortschaft".into(),
+            Field::Status => "status".into(),
+            Field::StatusTxt => "status_txt".into(),
+            Field::Inaenderun => "inaenderun".into(),
+            Field::Inaenderu1 => "inaenderu1".into(),
+            Field::R1Objid => "r1_objid".into(),
+            Field::R1Nbident => "r1_nbident".into(),
+            Field::R1Identif => "r1_identif".into(),
+            Field::R1Beschre => "r1_beschre".into(),
+            Field::R1Gueltig => "r1_gueltig".into(),
+            Field::R1Guelti1 => "r1_guelti1".into(),
+            Field::R1Guelti2 => "r1_guelti2".into(),
+            Field::Name => "name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -6255,19 +8660,19 @@ pub mod gemeinden {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -6347,6 +8752,63 @@ pub mod postleitzahlenkreise {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        Entstehung,
+        Plz6Von,
+        Status,
+        StatusTxt,
+        Inaenderun,
+        Inaenderu1,
+        Plz,
+        Zusatzziff,
+        R1Objid,
+        R1Nbident,
+        R1Identif,
+        R1Beschre,
+        R1Gueltig,
+        R1Guelti1,
+        R1Guelti2,
+        R2Objid,
+        R2Entsteh,
+        R2Ortscha,
+        R2Status,
+        R2Inaende,
+        R2Inaend1,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::Entstehung => "entstehung".into(),
+            Field::Plz6Von => "plz6_von".into(),
+            Field::Status => "status".into(),
+            Field::StatusTxt => "status_txt".into(),
+            Field::Inaenderun => "inaenderun".into(),
+            Field::Inaenderu1 => "inaenderu1".into(),
+            Field::Plz => "plz".into(),
+            Field::Zusatzziff => "zusatzziff".into(),
+            Field::R1Objid => "r1_objid".into(),
+            Field::R1Nbident => "r1_nbident".into(),
+            Field::R1Identif => "r1_identif".into(),
+            Field::R1Beschre => "r1_beschre".into(),
+            Field::R1Gueltig => "r1_gueltig".into(),
+            Field::R1Guelti1 => "r1_guelti1".into(),
+            Field::R1Guelti2 => "r1_guelti2".into(),
+            Field::R2Objid => "r2_objid".into(),
+            Field::R2Entsteh => "r2_entsteh".into(),
+            Field::R2Ortscha => "r2_ortscha".into(),
+            Field::R2Status => "r2_status".into(),
+            Field::R2Inaende => "r2_inaende".into(),
+            Field::R2Inaend1 => "r2_inaend1".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -6355,19 +8817,19 @@ pub mod postleitzahlenkreise {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -6429,6 +8891,33 @@ pub mod invasive_neophyten {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        KartId,
+        Flaeche,
+        Art,
+        Deckung,
+        Abundanz,
+        Jahr,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::KartId => "kart_id".into(),
+            Field::Flaeche => "flaeche".into(),
+            Field::Art => "art".into(),
+            Field::Deckung => "deckung".into(),
+            Field::Abundanz => "abundanz".into(),
+            Field::Jahr => "jahr".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -6437,19 +8926,19 @@ pub mod invasive_neophyten {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -6535,6 +9024,43 @@ pub mod handelsregister_firmen_mit_rechtsform_und_standort {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        CompanyTypeDe,
+        CompanyLegalName,
+        CompanyUid,
+        Municipality,
+        Street,
+        Zusatz,
+        Plz,
+        Locality,
+        Address,
+        Coordinates,
+        UrlCantonalRegister,
+        TypeId,
+        CompanyUri,
+        MuniId,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::CompanyTypeDe => "company_type_de".into(),
+            Field::CompanyLegalName => "company_legal_name".into(),
+            Field::CompanyUid => "company_uid".into(),
+            Field::Municipality => "municipality".into(),
+            Field::Street => "street".into(),
+            Field::Zusatz => "zusatz".into(),
+            Field::Plz => "plz".into(),
+            Field::Locality => "locality".into(),
+            Field::Address => "address".into(),
+            Field::Coordinates => "coordinates".into(),
+            Field::UrlCantonalRegister => "url_cantonal_register".into(),
+            Field::TypeId => "type_id".into(),
+            Field::CompanyUri => "company_uri".into(),
+            Field::MuniId => "muni_id".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -6543,19 +9069,19 @@ pub mod handelsregister_firmen_mit_rechtsform_und_standort {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -6597,6 +9123,25 @@ pub mod velo_einbahnstrassen_und_gefahrenstellen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        Recnum,
+        Art,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::Recnum => "recnum".into(),
+            Field::Art => "art".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -6605,19 +9150,19 @@ pub mod velo_einbahnstrassen_und_gefahrenstellen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -6669,6 +9214,35 @@ pub mod recyclingstationen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdRs,
+        Name,
+        Status,
+        Adresse,
+        Plz,
+        Ort,
+        Webseite,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdRs => "id_rs".into(),
+            Field::Name => "name".into(),
+            Field::Status => "status".into(),
+            Field::Adresse => "adresse".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::Webseite => "webseite".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -6677,19 +9251,19 @@ pub mod recyclingstationen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -6739,6 +9313,33 @@ pub mod sauberkeitsindex_pro_quartal_und_wohnviertel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wohnviertel,
+        Ski,
+        Quartal,
+        Jahr,
+        Quartalsnummer,
+        QuartalBeginn,
+        QuartalEnde,
+        GeoPoint2d,
+        GeoShape,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wohnviertel => "wohnviertel".into(),
+            Field::Ski => "ski".into(),
+            Field::Quartal => "quartal".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Quartalsnummer => "quartalsnummer".into(),
+            Field::QuartalBeginn => "quartal_beginn".into(),
+            Field::QuartalEnde => "quartal_ende".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -6747,19 +9348,19 @@ pub mod sauberkeitsindex_pro_quartal_und_wohnviertel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -6805,6 +9406,29 @@ pub mod verkehrsreiche_strassen_50_km_h_oder_mehr {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        Attribute1,
+        VeloplanT,
+        StrName,
+        Gemeinde,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::Attribute1 => "attribute1".into(),
+            Field::VeloplanT => "veloplan_t".into(),
+            Field::StrName => "str_name".into(),
+            Field::Gemeinde => "gemeinde".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -6813,19 +9437,19 @@ pub mod verkehrsreiche_strassen_50_km_h_oder_mehr {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -6873,6 +9497,25 @@ pub mod steile_velo_strecken {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdSteig,
+        Steigung,
+        Winkel,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdSteig => "id_steig".into(),
+            Field::Steigung => "steigung".into(),
+            Field::Winkel => "winkel".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -6881,19 +9524,19 @@ pub mod steile_velo_strecken {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -6929,6 +9572,19 @@ pub mod empfohlene_schwimmbereiche_im_rhein {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -6937,19 +9593,19 @@ pub mod empfohlene_schwimmbereiche_im_rhein {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -7003,6 +9659,37 @@ pub mod quartiertreffpunkte {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        QtId,
+        Name,
+        StrasseNr,
+        Plz,
+        Ort,
+        Kanton,
+        Telefon,
+        Link,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::QtId => "qt_id".into(),
+            Field::Name => "name".into(),
+            Field::StrasseNr => "strasse_nr".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::Kanton => "kanton".into(),
+            Field::Telefon => "telefon".into(),
+            Field::Link => "link".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -7011,19 +9698,19 @@ pub mod quartiertreffpunkte {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -7089,6 +9776,37 @@ pub mod baustellen_in_gewaessernaehe {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Idunique,
+        SichtbarVon,
+        SichtbarBis,
+        Status,
+        DatumVon,
+        DatumBis,
+        Titel,
+        Untertitel,
+        Text,
+        Image,
+        Shape,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Idunique => "idunique".into(),
+            Field::SichtbarVon => "sichtbar_von".into(),
+            Field::SichtbarBis => "sichtbar_bis".into(),
+            Field::Status => "status".into(),
+            Field::DatumVon => "datum_von".into(),
+            Field::DatumBis => "datum_bis".into(),
+            Field::Titel => "titel".into(),
+            Field::Untertitel => "untertitel".into(),
+            Field::Text => "text".into(),
+            Field::Image => "image".into(),
+            Field::Shape => "shape".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -7097,19 +9815,19 @@ pub mod baustellen_in_gewaessernaehe {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -7254,6 +9972,71 @@ pub mod basler_index_der_konsumentenpreise {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Date,
+        Year,
+        Month,
+        Bfsid,
+        WarenkorbHierarchie,
+        Name,
+        Name1,
+        Name2,
+        Name3,
+        Name4,
+        Name5,
+        Name6,
+        Name7,
+        Name8,
+        Weight,
+        Depth,
+        Currentsortorder,
+        Currentname,
+        Currentweight,
+        Currentdepth,
+        Revisiondate,
+        Viewrevisiondate,
+        Currentvalue,
+        Lastmonthvalue,
+        Lastyearvalue,
+        Monthpriceincrease,
+        Yearpriceincrease,
+        Relweight,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Date => "date".into(),
+            Field::Year => "year".into(),
+            Field::Month => "month".into(),
+            Field::Bfsid => "bfsid".into(),
+            Field::WarenkorbHierarchie => "warenkorb_hierarchie".into(),
+            Field::Name => "name".into(),
+            Field::Name1 => "name1".into(),
+            Field::Name2 => "name2".into(),
+            Field::Name3 => "name3".into(),
+            Field::Name4 => "name4".into(),
+            Field::Name5 => "name5".into(),
+            Field::Name6 => "name6".into(),
+            Field::Name7 => "name7".into(),
+            Field::Name8 => "name8".into(),
+            Field::Weight => "weight".into(),
+            Field::Depth => "depth".into(),
+            Field::Currentsortorder => "currentsortorder".into(),
+            Field::Currentname => "currentname".into(),
+            Field::Currentweight => "currentweight".into(),
+            Field::Currentdepth => "currentdepth".into(),
+            Field::Revisiondate => "revisiondate".into(),
+            Field::Viewrevisiondate => "viewrevisiondate".into(),
+            Field::Currentvalue => "currentvalue".into(),
+            Field::Lastmonthvalue => "lastmonthvalue".into(),
+            Field::Lastyearvalue => "lastyearvalue".into(),
+            Field::Monthpriceincrease => "monthpriceincrease".into(),
+            Field::Yearpriceincrease => "yearpriceincrease".into(),
+            Field::Relweight => "relweight".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -7262,19 +10045,19 @@ pub mod basler_index_der_konsumentenpreise {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -7330,6 +10113,39 @@ pub mod defibrillatoren {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdDf,
+        Standort,
+        Strasse,
+        Hausnummer,
+        Plz,
+        Ort,
+        Kanton,
+        Verfuegbar,
+        Bemerkung,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdDf => "id_df".into(),
+            Field::Standort => "standort".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Hausnummer => "hausnummer".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::Kanton => "kanton".into(),
+            Field::Verfuegbar => "verfuegbar".into(),
+            Field::Bemerkung => "bemerkung".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -7338,19 +10154,19 @@ pub mod defibrillatoren {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -7392,6 +10208,25 @@ pub mod politische_wahlkreise {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        Text,
+        Wahlkreis,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::Text => "text".into(),
+            Field::Wahlkreis => "wahlkreis".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -7400,19 +10235,19 @@ pub mod politische_wahlkreise {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -7492,6 +10327,39 @@ pub mod grosser_rat_politische_vorstoesse {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Signatur,
+        Geschaftstyp,
+        Partei,
+        Urheber,
+        Titel,
+        BeginnDatum,
+        Ende,
+        Thema1,
+        Thema2,
+        Schwerpunkt,
+        Geschaft,
+        Status,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Signatur => "signatur".into(),
+            Field::Geschaftstyp => "geschaftstyp".into(),
+            Field::Partei => "partei".into(),
+            Field::Urheber => "urheber".into(),
+            Field::Titel => "titel".into(),
+            Field::BeginnDatum => "beginn_datum".into(),
+            Field::Ende => "ende".into(),
+            Field::Thema1 => "thema_1".into(),
+            Field::Thema2 => "thema_2".into(),
+            Field::Schwerpunkt => "schwerpunkt".into(),
+            Field::Geschaft => "geschaft".into(),
+            Field::Status => "status".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -7500,19 +10368,19 @@ pub mod grosser_rat_politische_vorstoesse {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -7564,6 +10432,35 @@ pub mod touristische_velorouten {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        Objectid,
+        Informatio,
+        Kategorie,
+        Routenbez,
+        Rbeschreib,
+        Richtung,
+        ShapeLeng,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::Objectid => "objectid".into(),
+            Field::Informatio => "informatio".into(),
+            Field::Kategorie => "kategorie".into(),
+            Field::Routenbez => "routenbez".into(),
+            Field::Rbeschreib => "rbeschreib".into(),
+            Field::Richtung => "richtung".into(),
+            Field::ShapeLeng => "shape_leng".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -7572,19 +10469,19 @@ pub mod touristische_velorouten {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -7636,6 +10533,35 @@ pub mod alltagsvelorouten {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        Objectid,
+        Informatio,
+        Kategorie,
+        Routenbez,
+        Rbeschreib,
+        Richtung,
+        ShapeLeng,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::Objectid => "objectid".into(),
+            Field::Informatio => "informatio".into(),
+            Field::Kategorie => "kategorie".into(),
+            Field::Routenbez => "routenbez".into(),
+            Field::Rbeschreib => "rbeschreib".into(),
+            Field::Richtung => "richtung".into(),
+            Field::ShapeLeng => "shape_leng".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -7644,19 +10570,19 @@ pub mod alltagsvelorouten {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -7704,6 +10630,31 @@ pub mod bio_klappen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdBk,
+        Name,
+        Plz,
+        Ort,
+        Webseite,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdBk => "id_bk".into(),
+            Field::Name => "name".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::Webseite => "webseite".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -7712,19 +10663,19 @@ pub mod bio_klappen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -7768,6 +10719,27 @@ pub mod statistische_raumeinheiten_bloecke {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        BloId,
+        BloLabel,
+        WovId,
+        BezId,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::BloId => "blo_id".into(),
+            Field::BloLabel => "blo_label".into(),
+            Field::WovId => "wov_id".into(),
+            Field::BezId => "bez_id".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -7776,19 +10748,19 @@ pub mod statistische_raumeinheiten_bloecke {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -7884,6 +10856,53 @@ pub mod abstimmung_27_september_2020_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        AbstIdTitel,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+        AbstTyp,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+            Field::AbstTyp => "abst_typ".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -7892,19 +10911,19 @@ pub mod abstimmung_27_september_2020_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -7982,6 +11001,39 @@ pub mod kantonaler_stromverbrauch {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        TimestampIntervalStart,
+        TimestampIntervalStartText,
+        StromverbrauchKwh,
+        GrundversorgteKundenKwh,
+        FreieKundenKwh,
+        Year,
+        Month,
+        Day,
+        Weekday,
+        Dayofyear,
+        Quarter,
+        Weekofyear,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::TimestampIntervalStart => "timestamp_interval_start".into(),
+            Field::TimestampIntervalStartText => "timestamp_interval_start_text".into(),
+            Field::StromverbrauchKwh => "stromverbrauch_kwh".into(),
+            Field::GrundversorgteKundenKwh => "grundversorgte_kunden_kwh".into(),
+            Field::FreieKundenKwh => "freie_kunden_kwh".into(),
+            Field::Year => "year".into(),
+            Field::Month => "month".into(),
+            Field::Day => "day".into(),
+            Field::Weekday => "weekday".into(),
+            Field::Dayofyear => "dayofyear".into(),
+            Field::Quarter => "quarter".into(),
+            Field::Weekofyear => "weekofyear".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -7990,19 +11042,19 @@ pub mod kantonaler_stromverbrauch {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -8070,6 +11122,37 @@ pub mod bachapp_infos_allgemein {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Id,
+        Status,
+        SichtbarVon,
+        SichtbarBis,
+        Titel,
+        Untertitel,
+        Text,
+        ImageTop,
+        FischliAnrede,
+        FischliKurztext,
+        FischliOnboarding,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Id => "id".into(),
+            Field::Status => "status".into(),
+            Field::SichtbarVon => "sichtbar_von".into(),
+            Field::SichtbarBis => "sichtbar_bis".into(),
+            Field::Titel => "titel".into(),
+            Field::Untertitel => "untertitel".into(),
+            Field::Text => "text".into(),
+            Field::ImageTop => "image_top".into(),
+            Field::FischliAnrede => "fischli_anrede".into(),
+            Field::FischliKurztext => "fischli_kurztext".into(),
+            Field::FischliOnboarding => "fischli_onboarding".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -8078,19 +11161,19 @@ pub mod bachapp_infos_allgemein {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -8162,6 +11245,37 @@ pub mod schulwegsicherheit_strassenquerungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        Id,
+        Strkat,
+        Bewertung,
+        Bemerkung,
+        Tram,
+        Konfliktgr,
+        Vra,
+        Vortrtyp,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::Id => "id".into(),
+            Field::Strkat => "strkat".into(),
+            Field::Bewertung => "bewertung".into(),
+            Field::Bemerkung => "bemerkung".into(),
+            Field::Tram => "tram".into(),
+            Field::Konfliktgr => "konfliktgr".into(),
+            Field::Vra => "vra".into(),
+            Field::Vortrtyp => "vortrtyp".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -8170,19 +11284,19 @@ pub mod schulwegsicherheit_strassenquerungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -8239,6 +11353,29 @@ pub mod schulwegsicherheit_fusswege {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        Id,
+        Typ,
+        Strkat,
+        Bemerkung,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::Id => "id".into(),
+            Field::Typ => "typ".into(),
+            Field::Strkat => "strkat".into(),
+            Field::Bemerkung => "bemerkung".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -8247,19 +11384,19 @@ pub mod schulwegsicherheit_fusswege {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -8309,6 +11446,33 @@ pub mod statistische_raumeinheiten_blockseiten {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        BlsId,
+        BlsLabel,
+        BlsName,
+        StrCode,
+        WovId,
+        BezId,
+        BloId,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::BlsId => "bls_id".into(),
+            Field::BlsLabel => "bls_label".into(),
+            Field::BlsName => "bls_name".into(),
+            Field::StrCode => "str_code".into(),
+            Field::WovId => "wov_id".into(),
+            Field::BezId => "bez_id".into(),
+            Field::BloId => "blo_id".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -8317,19 +11481,19 @@ pub mod statistische_raumeinheiten_blockseiten {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -8457,6 +11621,63 @@ pub mod rheinueberwachungsstation_umweltanalyse_schwebstoffe {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Probentyp,
+        Probenahmestelle,
+        GeoPoint2d,
+        XCoord,
+        YCoord,
+        Probenahmedatum,
+        Entnahmezeit,
+        Probenahmedauer,
+        Reihenfolge,
+        Gruppe,
+        Parameter,
+        Bg,
+        Wert,
+        WertNum,
+        Einheit,
+        Auftragnr,
+        Probennr,
+        Resultatnummer,
+        AutomatischeAuswertung,
+        CasBezeichnung,
+        BafuBezeichnung,
+        AllgemeineParametergruppe,
+        ProbenahmedatumDate,
+        Probenahmejahr,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Probentyp => "probentyp".into(),
+            Field::Probenahmestelle => "probenahmestelle".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::XCoord => "x_coord".into(),
+            Field::YCoord => "y_coord".into(),
+            Field::Probenahmedatum => "probenahmedatum".into(),
+            Field::Entnahmezeit => "entnahmezeit".into(),
+            Field::Probenahmedauer => "probenahmedauer".into(),
+            Field::Reihenfolge => "reihenfolge".into(),
+            Field::Gruppe => "gruppe".into(),
+            Field::Parameter => "parameter".into(),
+            Field::Bg => "bg".into(),
+            Field::Wert => "wert".into(),
+            Field::WertNum => "wert_num".into(),
+            Field::Einheit => "einheit".into(),
+            Field::Auftragnr => "auftragnr".into(),
+            Field::Probennr => "probennr".into(),
+            Field::Resultatnummer => "resultatnummer".into(),
+            Field::AutomatischeAuswertung => "automatische_auswertung".into(),
+            Field::CasBezeichnung => "cas_bezeichnung".into(),
+            Field::BafuBezeichnung => "bafu_bezeichnung".into(),
+            Field::AllgemeineParametergruppe => "allgemeine_parametergruppe".into(),
+            Field::ProbenahmedatumDate => "probenahmedatum_date".into(),
+            Field::Probenahmejahr => "probenahmejahr".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -8465,19 +11686,19 @@ pub mod rheinueberwachungsstation_umweltanalyse_schwebstoffe {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -8541,6 +11762,33 @@ pub mod kandidierende_der_grossratswahlen_nach_alter_geschlecht_und_liste_seit_2
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahljahr,
+        Altersgruppe,
+        Listenkurzbezeichnung,
+        Geschlecht,
+        Anzahl,
+        Anteil,
+        AnteilAltersgruppe,
+        AnteilListe,
+        FrauenanteilListe,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahljahr => "wahljahr".into(),
+            Field::Altersgruppe => "altersgruppe".into(),
+            Field::Listenkurzbezeichnung => "listenkurzbezeichnung".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Anzahl => "anzahl".into(),
+            Field::Anteil => "anteil".into(),
+            Field::AnteilAltersgruppe => "anteil_altersgruppe".into(),
+            Field::AnteilListe => "anteil_liste".into(),
+            Field::FrauenanteilListe => "frauenanteil_liste".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -8549,19 +11797,19 @@ pub mod kandidierende_der_grossratswahlen_nach_alter_geschlecht_und_liste_seit_2
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -8615,6 +11863,27 @@ pub mod kandidierende_der_grossratswahlen_nach_geschlecht_seit_1968 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahljahr,
+        Total,
+        Frauen,
+        Manner,
+        FrauenanteilKand,
+        FrauenanteilGew,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahljahr => "wahljahr".into(),
+            Field::Total => "total".into(),
+            Field::Frauen => "frauen".into(),
+            Field::Manner => "manner".into(),
+            Field::FrauenanteilKand => "frauenanteil_kand".into(),
+            Field::FrauenanteilGew => "frauenanteil_gew".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -8623,19 +11892,19 @@ pub mod kandidierende_der_grossratswahlen_nach_geschlecht_seit_1968 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -8725,6 +11994,47 @@ pub mod teilhaltestellen_des_oeffentlichen_verkehrs {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        ThstNr,
+        HstNr,
+        Haltestl,
+        Kt,
+        Richtung,
+        Art,
+        Typ,
+        Tramlinien,
+        Buslinien,
+        Fahrplan,
+        Nachtlin,
+        Tramzugang,
+        Buszugang,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::ThstNr => "thst_nr".into(),
+            Field::HstNr => "hst_nr".into(),
+            Field::Haltestl => "haltestl".into(),
+            Field::Kt => "kt".into(),
+            Field::Richtung => "richtung".into(),
+            Field::Art => "art".into(),
+            Field::Typ => "typ".into(),
+            Field::Tramlinien => "tramlinien".into(),
+            Field::Buslinien => "buslinien".into(),
+            Field::Fahrplan => "fahrplan".into(),
+            Field::Nachtlin => "nachtlin".into(),
+            Field::Tramzugang => "tramzugang".into(),
+            Field::Buszugang => "buszugang".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -8733,19 +12043,19 @@ pub mod teilhaltestellen_des_oeffentlichen_verkehrs {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -8813,6 +12123,35 @@ pub mod liniennetz_des_oeffentlichen_verkehrs {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        LNr,
+        Liniennmr,
+        Strecke,
+        Hinrueck,
+        Fahrzeug,
+        Angebot,
+        Tu,
+        ShpLength,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::LNr => "l_nr".into(),
+            Field::Liniennmr => "liniennmr".into(),
+            Field::Strecke => "strecke".into(),
+            Field::Hinrueck => "hinrueck".into(),
+            Field::Fahrzeug => "fahrzeug".into(),
+            Field::Angebot => "angebot".into(),
+            Field::Tu => "tu".into(),
+            Field::ShpLength => "shp_length".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -8821,19 +12160,19 @@ pub mod liniennetz_des_oeffentlichen_verkehrs {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -8915,6 +12254,43 @@ pub mod haltestellen_des_oeffentlichen_verkehrs {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        HstNr,
+        Name,
+        Angezname,
+        TuNr,
+        Tu,
+        GdeNr,
+        Gde,
+        Kt,
+        Hoehe,
+        Hstart,
+        Art,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::HstNr => "hst_nr".into(),
+            Field::Name => "name".into(),
+            Field::Angezname => "angezname".into(),
+            Field::TuNr => "tu_nr".into(),
+            Field::Tu => "tu".into(),
+            Field::GdeNr => "gde_nr".into(),
+            Field::Gde => "gde".into(),
+            Field::Kt => "kt".into(),
+            Field::Hoehe => "hoehe".into(),
+            Field::Hstart => "hstart".into(),
+            Field::Art => "art".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -8923,19 +12299,19 @@ pub mod haltestellen_des_oeffentlichen_verkehrs {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -9023,6 +12399,43 @@ pub mod eheschliessungen_nach_trauungsdatum {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Trauungsdat,
+        Jahr,
+        Monat,
+        WocheInJahr,
+        DatumWochenstartTrauungsdatum,
+        TagInJahr,
+        Wochentag,
+        PersalterFrauVollendet,
+        PersalterMannVollendet,
+        NamenswahlFrau,
+        NamenswahlMann,
+        NationalitatFrau,
+        NationalitatMann,
+        Anzahl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Trauungsdat => "trauungsdat".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+            Field::WocheInJahr => "woche_in_jahr".into(),
+            Field::DatumWochenstartTrauungsdatum => "datum_wochenstart_trauungsdatum".into(),
+            Field::TagInJahr => "tag_in_jahr".into(),
+            Field::Wochentag => "wochentag".into(),
+            Field::PersalterFrauVollendet => "persalter_frau_vollendet".into(),
+            Field::PersalterMannVollendet => "persalter_mann_vollendet".into(),
+            Field::NamenswahlFrau => "namenswahl_frau".into(),
+            Field::NamenswahlMann => "namenswahl_mann".into(),
+            Field::NationalitatFrau => "nationalitat_frau".into(),
+            Field::NationalitatMann => "nationalitat_mann".into(),
+            Field::Anzahl => "anzahl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -9031,19 +12444,19 @@ pub mod eheschliessungen_nach_trauungsdatum {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -9171,6 +12584,63 @@ pub mod umweltanalyse_grundwasser {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Probentyp,
+        Probenahmestelle,
+        GeoPoint2d,
+        XCoord,
+        YCoord,
+        Probenahmedatum,
+        Entnahmezeit,
+        Probenahmedauer,
+        Reihenfolge,
+        Gruppe,
+        Parameter,
+        Bg,
+        Wert,
+        WertNum,
+        Einheit,
+        Auftragnr,
+        Probennr,
+        Resultatnummer,
+        AutomatischeAuswertung,
+        CasBezeichnung,
+        BafuBezeichnung,
+        AllgemeineParametergruppe,
+        ProbenahmedatumDate,
+        Probenahmejahr,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Probentyp => "probentyp".into(),
+            Field::Probenahmestelle => "probenahmestelle".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::XCoord => "x_coord".into(),
+            Field::YCoord => "y_coord".into(),
+            Field::Probenahmedatum => "probenahmedatum".into(),
+            Field::Entnahmezeit => "entnahmezeit".into(),
+            Field::Probenahmedauer => "probenahmedauer".into(),
+            Field::Reihenfolge => "reihenfolge".into(),
+            Field::Gruppe => "gruppe".into(),
+            Field::Parameter => "parameter".into(),
+            Field::Bg => "bg".into(),
+            Field::Wert => "wert".into(),
+            Field::WertNum => "wert_num".into(),
+            Field::Einheit => "einheit".into(),
+            Field::Auftragnr => "auftragnr".into(),
+            Field::Probennr => "probennr".into(),
+            Field::Resultatnummer => "resultatnummer".into(),
+            Field::AutomatischeAuswertung => "automatische_auswertung".into(),
+            Field::CasBezeichnung => "cas_bezeichnung".into(),
+            Field::BafuBezeichnung => "bafu_bezeichnung".into(),
+            Field::AllgemeineParametergruppe => "allgemeine_parametergruppe".into(),
+            Field::ProbenahmedatumDate => "probenahmedatum_date".into(),
+            Field::Probenahmejahr => "probenahmejahr".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -9179,19 +12649,19 @@ pub mod umweltanalyse_grundwasser {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -9239,6 +12709,23 @@ pub mod vornamen_der_neugeborenen_nach_geschlecht {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        Geschlecht,
+        Vorname,
+        Anzahl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Anzahl => "anzahl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -9247,19 +12734,19 @@ pub mod vornamen_der_neugeborenen_nach_geschlecht {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -9335,6 +12822,37 @@ pub mod gasverbrauch_im_versorgungsgebiet_der_iwb {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        Value,
+        Date,
+        Time,
+        Year,
+        Month,
+        Day,
+        Weekday,
+        Dayofyear,
+        Quarter,
+        Weekofyear,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::Value => "value".into(),
+            Field::Date => "date".into(),
+            Field::Time => "time".into(),
+            Field::Year => "year".into(),
+            Field::Month => "month".into(),
+            Field::Day => "day".into(),
+            Field::Weekday => "weekday".into(),
+            Field::Dayofyear => "dayofyear".into(),
+            Field::Quarter => "quarter".into(),
+            Field::Weekofyear => "weekofyear".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -9343,19 +12861,19 @@ pub mod gasverbrauch_im_versorgungsgebiet_der_iwb {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -9483,6 +13001,63 @@ pub mod umweltanalyse_oberflaechengewaesser {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Probentyp,
+        Probenahmestelle,
+        GeoPoint2d,
+        XCoord,
+        YCoord,
+        Probenahmedatum,
+        Entnahmezeit,
+        Probenahmedauer,
+        Reihenfolge,
+        Gruppe,
+        Parameter,
+        Bg,
+        Wert,
+        WertNum,
+        Einheit,
+        Auftragnr,
+        Probennr,
+        Resultatnummer,
+        AutomatischeAuswertung,
+        CasBezeichnung,
+        BafuBezeichnung,
+        AllgemeineParametergruppe,
+        ProbenahmedatumDate,
+        Probenahmejahr,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Probentyp => "probentyp".into(),
+            Field::Probenahmestelle => "probenahmestelle".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::XCoord => "x_coord".into(),
+            Field::YCoord => "y_coord".into(),
+            Field::Probenahmedatum => "probenahmedatum".into(),
+            Field::Entnahmezeit => "entnahmezeit".into(),
+            Field::Probenahmedauer => "probenahmedauer".into(),
+            Field::Reihenfolge => "reihenfolge".into(),
+            Field::Gruppe => "gruppe".into(),
+            Field::Parameter => "parameter".into(),
+            Field::Bg => "bg".into(),
+            Field::Wert => "wert".into(),
+            Field::WertNum => "wert_num".into(),
+            Field::Einheit => "einheit".into(),
+            Field::Auftragnr => "auftragnr".into(),
+            Field::Probennr => "probennr".into(),
+            Field::Resultatnummer => "resultatnummer".into(),
+            Field::AutomatischeAuswertung => "automatische_auswertung".into(),
+            Field::CasBezeichnung => "cas_bezeichnung".into(),
+            Field::BafuBezeichnung => "bafu_bezeichnung".into(),
+            Field::AllgemeineParametergruppe => "allgemeine_parametergruppe".into(),
+            Field::ProbenahmedatumDate => "probenahmedatum_date".into(),
+            Field::Probenahmejahr => "probenahmejahr".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -9491,19 +13066,19 @@ pub mod umweltanalyse_oberflaechengewaesser {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -9583,6 +13158,39 @@ pub mod grosser_rat_vorgaenge_von_geschaeften {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Beschlnr,
+        Nummer,
+        Vermerk,
+        SizNr,
+        SizDatum,
+        LaufnrGes,
+        SignaturGes,
+        StatusGes,
+        TitelGes,
+        GaRrGr,
+        UrlGes,
+        UrlGeschaeftOds,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Beschlnr => "beschlnr".into(),
+            Field::Nummer => "nummer".into(),
+            Field::Vermerk => "vermerk".into(),
+            Field::SizNr => "siz_nr".into(),
+            Field::SizDatum => "siz_datum".into(),
+            Field::LaufnrGes => "laufnr_ges".into(),
+            Field::SignaturGes => "signatur_ges".into(),
+            Field::StatusGes => "status_ges".into(),
+            Field::TitelGes => "titel_ges".into(),
+            Field::GaRrGr => "ga_rr_gr".into(),
+            Field::UrlGes => "url_ges".into(),
+            Field::UrlGeschaeftOds => "url_geschaeft_ods".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -9591,19 +13199,19 @@ pub mod grosser_rat_vorgaenge_von_geschaeften {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -9671,6 +13279,33 @@ pub mod coronavirus_covid_19_hospitalisierte_in_baselstaedtischen_spitaelern {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Date,
+        CurrentHosp,
+        CurrentHospResident,
+        CurrentHospNonResident,
+        CurrentIcu,
+        Imcu,
+        Normalstation,
+        DataFromAllHosp,
+        DataPlausible,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Date => "date".into(),
+            Field::CurrentHosp => "current_hosp".into(),
+            Field::CurrentHospResident => "current_hosp_resident".into(),
+            Field::CurrentHospNonResident => "current_hosp_non_resident".into(),
+            Field::CurrentIcu => "current_icu".into(),
+            Field::Imcu => "imcu".into(),
+            Field::Normalstation => "normalstation".into(),
+            Field::DataFromAllHosp => "data_from_all_hosp".into(),
+            Field::DataPlausible => "data_plausible".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -9679,19 +13314,19 @@ pub mod coronavirus_covid_19_hospitalisierte_in_baselstaedtischen_spitaelern {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -9771,6 +13406,39 @@ pub mod grosser_rat_interessensbindungen_ratsmitglieder {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Rubrik,
+        IntrBind,
+        Funktion,
+        Text,
+        Anrede,
+        Name,
+        Vorname,
+        NameVorname,
+        ParteiKname,
+        UrlAdr,
+        UniNr,
+        UrlRatsmitgliedschaften,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Rubrik => "rubrik".into(),
+            Field::IntrBind => "intr_bind".into(),
+            Field::Funktion => "funktion".into(),
+            Field::Text => "text".into(),
+            Field::Anrede => "anrede".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::NameVorname => "name_vorname".into(),
+            Field::ParteiKname => "partei_kname".into(),
+            Field::UrlAdr => "url_adr".into(),
+            Field::UniNr => "uni_nr".into(),
+            Field::UrlRatsmitgliedschaften => "url_ratsmitgliedschaften".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -9779,19 +13447,19 @@ pub mod grosser_rat_interessensbindungen_ratsmitglieder {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -9863,6 +13531,37 @@ pub mod events_in_gewaessernaehe {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Idunique,
+        SichtbarVon,
+        SichtbarBis,
+        Status,
+        DatumVon,
+        DatumBis,
+        Titel,
+        Untertitel,
+        Text,
+        Image,
+        Shape,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Idunique => "idunique".into(),
+            Field::SichtbarVon => "sichtbar_von".into(),
+            Field::SichtbarBis => "sichtbar_bis".into(),
+            Field::Status => "status".into(),
+            Field::DatumVon => "datum_von".into(),
+            Field::DatumBis => "datum_bis".into(),
+            Field::Titel => "titel".into(),
+            Field::Untertitel => "untertitel".into(),
+            Field::Text => "text".into(),
+            Field::Image => "image".into(),
+            Field::Shape => "shape".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -9871,19 +13570,19 @@ pub mod events_in_gewaessernaehe {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -9923,6 +13622,21 @@ pub mod feuerstellen_in_gewaessernaehe {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Bezeichnung,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Bezeichnung => "bezeichnung".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -9931,19 +13645,19 @@ pub mod feuerstellen_in_gewaessernaehe {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -10057,6 +13771,59 @@ pub mod coronavirus_covid_19_teststellen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        IdTs,
+        Institut,
+        GeoPoint2d,
+        GeoShape,
+        Strasse,
+        Hausnummer,
+        Plz,
+        Ort,
+        Telefon,
+        Bestehend,
+        Termin,
+        Online,
+        Bemerkung,
+        OeffWt,
+        OeffWe,
+        Schnellte,
+        Kinder,
+        Alter,
+        Testart,
+        Symptom,
+        Kommentar,
+        Adressid,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::IdTs => "id_ts".into(),
+            Field::Institut => "institut".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Hausnummer => "hausnummer".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::Telefon => "telefon".into(),
+            Field::Bestehend => "bestehend".into(),
+            Field::Termin => "termin".into(),
+            Field::Online => "online".into(),
+            Field::Bemerkung => "bemerkung".into(),
+            Field::OeffWt => "oeff_wt".into(),
+            Field::OeffWe => "oeff_we".into(),
+            Field::Schnellte => "schnellte".into(),
+            Field::Kinder => "kinder".into(),
+            Field::Alter => "alter".into(),
+            Field::Testart => "testart".into(),
+            Field::Symptom => "symptom".into(),
+            Field::Kommentar => "kommentar".into(),
+            Field::Adressid => "adressid".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -10065,19 +13832,19 @@ pub mod coronavirus_covid_19_teststellen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -10159,6 +13926,43 @@ pub mod sport_und_bewegungsanlagen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        IdAngebot,
+        Name,
+        Kategorie,
+        Beschreibu,
+        Strassenr,
+        Plz,
+        Ort,
+        Link,
+        Zustaendig,
+        Bemerkung,
+        Baselinfo,
+        GeoPoint2d,
+        GeoShape,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::IdAngebot => "id_angebot".into(),
+            Field::Name => "name".into(),
+            Field::Kategorie => "kategorie".into(),
+            Field::Beschreibu => "beschreibu".into(),
+            Field::Strassenr => "strassenr".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::Link => "link".into(),
+            Field::Zustaendig => "zustaendig".into(),
+            Field::Bemerkung => "bemerkung".into(),
+            Field::Baselinfo => "baselinfo".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -10167,19 +13971,19 @@ pub mod sport_und_bewegungsanlagen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -10225,6 +14029,29 @@ pub mod standorte_der_iwb_ladestationen_fuer_elektroautos {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Name,
+        Description,
+        Geometry,
+        Beschreibung,
+        Art,
+        Ort,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Name => "name".into(),
+            Field::Description => "description".into(),
+            Field::Geometry => "geometry".into(),
+            Field::Beschreibung => "beschreibung".into(),
+            Field::Art => "art".into(),
+            Field::Ort => "ort".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -10233,19 +14060,19 @@ pub mod standorte_der_iwb_ladestationen_fuer_elektroautos {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -10545,6 +14372,149 @@ pub mod gebaeude_gebaeude_und_wohnungsregister_gwr {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Egid,
+        Gdekt,
+        Ggdenr,
+        Ggdename,
+        Egrid,
+        Lgbkr,
+        Lparz,
+        Lparzsx,
+        Ltyp,
+        Gebnr,
+        Gbez,
+        Gkode,
+        Gkodn,
+        Gksce,
+        GksceDecoded,
+        Gstat,
+        GstatDecoded,
+        Gkat,
+        GkatDecoded,
+        Gklas,
+        GklasDecoded,
+        Gbauj,
+        Gbaum,
+        Gbaup,
+        GbaupDecoded,
+        Gabbj,
+        Garea,
+        Gvol,
+        Gvolnorm,
+        GvolnormDecoded,
+        Gvolsce,
+        GvolsceDecoded,
+        Gastw,
+        Ganzwhg,
+        Gazzi,
+        Gschutzr,
+        GschutzrDecoded,
+        Gebf,
+        Gwaerzh1,
+        Gwaerzh1Decoded,
+        Genh1,
+        Genh1Decoded,
+        Gwaersceh1,
+        Gwaersceh1Decoded,
+        Gwaerdath1,
+        Gwaerzh2,
+        Gwaerzh2Decoded,
+        Genh2,
+        Genh2Decoded,
+        Gwaersceh2,
+        Gwaersceh2Decoded,
+        Gwaerdath2,
+        Gwaerzw1,
+        Gwaerzw1Decoded,
+        Genw1,
+        Genw1Decoded,
+        Gwaerscew1,
+        Gwaerscew1Decoded,
+        Gwaerdatw1,
+        Gwaerzw2,
+        Gwaerzw2Decoded,
+        Genw2,
+        Genw2Decoded,
+        Gwaerscew2,
+        Gwaerscew2Decoded,
+        Gwaerdatw2,
+        Gexpdat,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Egid => "egid".into(),
+            Field::Gdekt => "gdekt".into(),
+            Field::Ggdenr => "ggdenr".into(),
+            Field::Ggdename => "ggdename".into(),
+            Field::Egrid => "egrid".into(),
+            Field::Lgbkr => "lgbkr".into(),
+            Field::Lparz => "lparz".into(),
+            Field::Lparzsx => "lparzsx".into(),
+            Field::Ltyp => "ltyp".into(),
+            Field::Gebnr => "gebnr".into(),
+            Field::Gbez => "gbez".into(),
+            Field::Gkode => "gkode".into(),
+            Field::Gkodn => "gkodn".into(),
+            Field::Gksce => "gksce".into(),
+            Field::GksceDecoded => "gksce_decoded".into(),
+            Field::Gstat => "gstat".into(),
+            Field::GstatDecoded => "gstat_decoded".into(),
+            Field::Gkat => "gkat".into(),
+            Field::GkatDecoded => "gkat_decoded".into(),
+            Field::Gklas => "gklas".into(),
+            Field::GklasDecoded => "gklas_decoded".into(),
+            Field::Gbauj => "gbauj".into(),
+            Field::Gbaum => "gbaum".into(),
+            Field::Gbaup => "gbaup".into(),
+            Field::GbaupDecoded => "gbaup_decoded".into(),
+            Field::Gabbj => "gabbj".into(),
+            Field::Garea => "garea".into(),
+            Field::Gvol => "gvol".into(),
+            Field::Gvolnorm => "gvolnorm".into(),
+            Field::GvolnormDecoded => "gvolnorm_decoded".into(),
+            Field::Gvolsce => "gvolsce".into(),
+            Field::GvolsceDecoded => "gvolsce_decoded".into(),
+            Field::Gastw => "gastw".into(),
+            Field::Ganzwhg => "ganzwhg".into(),
+            Field::Gazzi => "gazzi".into(),
+            Field::Gschutzr => "gschutzr".into(),
+            Field::GschutzrDecoded => "gschutzr_decoded".into(),
+            Field::Gebf => "gebf".into(),
+            Field::Gwaerzh1 => "gwaerzh1".into(),
+            Field::Gwaerzh1Decoded => "gwaerzh1_decoded".into(),
+            Field::Genh1 => "genh1".into(),
+            Field::Genh1Decoded => "genh1_decoded".into(),
+            Field::Gwaersceh1 => "gwaersceh1".into(),
+            Field::Gwaersceh1Decoded => "gwaersceh1_decoded".into(),
+            Field::Gwaerdath1 => "gwaerdath1".into(),
+            Field::Gwaerzh2 => "gwaerzh2".into(),
+            Field::Gwaerzh2Decoded => "gwaerzh2_decoded".into(),
+            Field::Genh2 => "genh2".into(),
+            Field::Genh2Decoded => "genh2_decoded".into(),
+            Field::Gwaersceh2 => "gwaersceh2".into(),
+            Field::Gwaersceh2Decoded => "gwaersceh2_decoded".into(),
+            Field::Gwaerdath2 => "gwaerdath2".into(),
+            Field::Gwaerzw1 => "gwaerzw1".into(),
+            Field::Gwaerzw1Decoded => "gwaerzw1_decoded".into(),
+            Field::Genw1 => "genw1".into(),
+            Field::Genw1Decoded => "genw1_decoded".into(),
+            Field::Gwaerscew1 => "gwaerscew1".into(),
+            Field::Gwaerscew1Decoded => "gwaerscew1_decoded".into(),
+            Field::Gwaerdatw1 => "gwaerdatw1".into(),
+            Field::Gwaerzw2 => "gwaerzw2".into(),
+            Field::Gwaerzw2Decoded => "gwaerzw2_decoded".into(),
+            Field::Genw2 => "genw2".into(),
+            Field::Genw2Decoded => "genw2_decoded".into(),
+            Field::Gwaerscew2 => "gwaerscew2".into(),
+            Field::Gwaerscew2Decoded => "gwaerscew2_decoded".into(),
+            Field::Gwaerdatw2 => "gwaerdatw2".into(),
+            Field::Gexpdat => "gexpdat".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -10553,19 +14523,19 @@ pub mod gebaeude_gebaeude_und_wohnungsregister_gwr {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -10647,6 +14617,43 @@ pub mod kandidierende_der_grossratswahl_20_oktober_2024 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahlkreis,
+        ListenNr,
+        Listenkurzbezeichnung,
+        Listenbezeichnung,
+        KandNr,
+        Bisher,
+        NameVorname,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Zusatz,
+        Altersgruppe,
+        Alter,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahlkreis => "wahlkreis".into(),
+            Field::ListenNr => "listen_nr".into(),
+            Field::Listenkurzbezeichnung => "listenkurzbezeichnung".into(),
+            Field::Listenbezeichnung => "listenbezeichnung".into(),
+            Field::KandNr => "kand_nr".into(),
+            Field::Bisher => "bisher".into(),
+            Field::NameVorname => "name_vorname".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Zusatz => "zusatz".into(),
+            Field::Altersgruppe => "altersgruppe".into(),
+            Field::Alter => "alter".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -10655,19 +14662,19 @@ pub mod kandidierende_der_grossratswahl_20_oktober_2024 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -10747,6 +14754,41 @@ pub mod luftqualitaet_station_basel_binningen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        DatumZeit,
+        TimestampText,
+        O3UgM3,
+        No2UgM3,
+        Pm10UgM3,
+        Pm25UgM3,
+        Cpc1Cm3,
+        EcUgM3,
+        PrecMm,
+        RadWM2,
+        So2UgM3,
+        NoxUgM3EqNo2,
+        TempC,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::DatumZeit => "datum_zeit".into(),
+            Field::TimestampText => "timestamp_text".into(),
+            Field::O3UgM3 => "o3_ug_m3".into(),
+            Field::No2UgM3 => "no2_ug_m3".into(),
+            Field::Pm10UgM3 => "pm10_ug_m3".into(),
+            Field::Pm25UgM3 => "pm2_5_ug_m3".into(),
+            Field::Cpc1Cm3 => "cpc_1_cm3".into(),
+            Field::EcUgM3 => "ec_ug_m3".into(),
+            Field::PrecMm => "prec_mm".into(),
+            Field::RadWM2 => "rad_w_m2".into(),
+            Field::So2UgM3 => "so2_ug_m3".into(),
+            Field::NoxUgM3EqNo2 => "nox_ug_m3_eq_no2".into(),
+            Field::TempC => "temp_c".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -10755,19 +14797,19 @@ pub mod luftqualitaet_station_basel_binningen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -11079,6 +15121,163 @@ pub mod gesundheitsversorgung_gsv_spitalkennzahlen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        Spital,
+        AngebotAkutsomatik,
+        AngebotPsychiatrie,
+        AngebotRehabilitation,
+        TotalBetriebsertrag,
+        TotalBetriebsertrag1000,
+        TotalErtragLeistung,
+        ErtragLeistungserstellungInMioChf,
+        UbrigerBetriebsertragInMioChf,
+        TotalBetriebsaufwand,
+        BetriebsaufwandInMioChf,
+        TotalKostenPersonal,
+        PersonalkostenInMioChf,
+        TotalBedarfMedizinisch,
+        MedizinischerBedarfInMioChf,
+        UbrigerAufwandInMioChf,
+        Fte,
+        AnzMa,
+        Bettenbetriebstage,
+        CaseMix,
+        AnzFaelleAlle,
+        Pflegetage,
+        AnzLzpf,
+        AnzAllgemein,
+        AnzKvgAllgklasse,
+        DrgFaelle,
+        AnzKvgFaelle,
+        AnzUvgIvFaelle,
+        Bs,
+        Bl,
+        AgSo,
+        Restschweiz,
+        Ausland,
+        Maennlich,
+        Weiblich,
+        Jahre020,
+        Jahre2140,
+        Jahre4160,
+        Jahre6180,
+        JahreUeber80,
+        TotalAkutsomatik,
+        Basispaket,
+        Gastroenterologie,
+        Geburtshilfe,
+        Gefaesse,
+        Gynaekologie,
+        Hno,
+        Haematologie,
+        Herz,
+        Neugeborene,
+        Neurologie,
+        Orthopaedie,
+        RadioOnkologie,
+        Pneumologie,
+        Urologie,
+        Viszeralchirurgie,
+        Uebrige,
+        TotalPsych,
+        PsychAffektiv,
+        PsychNeurotisch,
+        PsychOrganisch,
+        PsychPsychisch,
+        PsychSchizophren,
+        PsychUebrige,
+        TotalReha,
+        RehaMuskelskelett,
+        RehaVerletzung,
+        RehaKreislauf,
+        RehaLabor,
+        RehaNeubildungen,
+        RehaUebrige,
+        Geopunkt,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::Spital => "spital".into(),
+            Field::AngebotAkutsomatik => "angebot_akutsomatik".into(),
+            Field::AngebotPsychiatrie => "angebot_psychiatrie".into(),
+            Field::AngebotRehabilitation => "angebot_rehabilitation".into(),
+            Field::TotalBetriebsertrag => "total_betriebsertrag".into(),
+            Field::TotalBetriebsertrag1000 => "total_betriebsertrag_1000".into(),
+            Field::TotalErtragLeistung => "total_ertrag_leistung".into(),
+            Field::ErtragLeistungserstellungInMioChf => {
+                "ertrag_leistungserstellung_in_mio_chf".into()
+            }
+            Field::UbrigerBetriebsertragInMioChf => "ubriger_betriebsertrag_in_mio_chf".into(),
+            Field::TotalBetriebsaufwand => "total_betriebsaufwand".into(),
+            Field::BetriebsaufwandInMioChf => "betriebsaufwand_in_mio_chf".into(),
+            Field::TotalKostenPersonal => "total_kosten_personal".into(),
+            Field::PersonalkostenInMioChf => "personalkosten_in_mio_chf".into(),
+            Field::TotalBedarfMedizinisch => "total_bedarf_medizinisch".into(),
+            Field::MedizinischerBedarfInMioChf => "medizinischer_bedarf_in_mio_chf".into(),
+            Field::UbrigerAufwandInMioChf => "ubriger_aufwand_in_mio_chf".into(),
+            Field::Fte => "fte".into(),
+            Field::AnzMa => "anz_ma".into(),
+            Field::Bettenbetriebstage => "bettenbetriebstage".into(),
+            Field::CaseMix => "case_mix".into(),
+            Field::AnzFaelleAlle => "anz_faelle_alle".into(),
+            Field::Pflegetage => "pflegetage".into(),
+            Field::AnzLzpf => "anz_lzpf".into(),
+            Field::AnzAllgemein => "anz_allgemein".into(),
+            Field::AnzKvgAllgklasse => "anz_kvg_allgklasse".into(),
+            Field::DrgFaelle => "drg_faelle".into(),
+            Field::AnzKvgFaelle => "anz_kvg_faelle".into(),
+            Field::AnzUvgIvFaelle => "anz_uvg_iv_faelle".into(),
+            Field::Bs => "bs".into(),
+            Field::Bl => "bl".into(),
+            Field::AgSo => "ag_so".into(),
+            Field::Restschweiz => "restschweiz".into(),
+            Field::Ausland => "ausland".into(),
+            Field::Maennlich => "maennlich".into(),
+            Field::Weiblich => "weiblich".into(),
+            Field::Jahre020 => "jahre_0_20".into(),
+            Field::Jahre2140 => "jahre_21_40".into(),
+            Field::Jahre4160 => "jahre_41_60".into(),
+            Field::Jahre6180 => "jahre_61_80".into(),
+            Field::JahreUeber80 => "jahre_ueber80".into(),
+            Field::TotalAkutsomatik => "total_akutsomatik".into(),
+            Field::Basispaket => "basispaket".into(),
+            Field::Gastroenterologie => "gastroenterologie".into(),
+            Field::Geburtshilfe => "geburtshilfe".into(),
+            Field::Gefaesse => "gefaesse".into(),
+            Field::Gynaekologie => "gynaekologie".into(),
+            Field::Hno => "hno".into(),
+            Field::Haematologie => "haematologie".into(),
+            Field::Herz => "herz".into(),
+            Field::Neugeborene => "neugeborene".into(),
+            Field::Neurologie => "neurologie".into(),
+            Field::Orthopaedie => "orthopaedie".into(),
+            Field::RadioOnkologie => "radio_onkologie".into(),
+            Field::Pneumologie => "pneumologie".into(),
+            Field::Urologie => "urologie".into(),
+            Field::Viszeralchirurgie => "viszeralchirurgie".into(),
+            Field::Uebrige => "uebrige".into(),
+            Field::TotalPsych => "total_psych".into(),
+            Field::PsychAffektiv => "psych_affektiv".into(),
+            Field::PsychNeurotisch => "psych_neurotisch".into(),
+            Field::PsychOrganisch => "psych_organisch".into(),
+            Field::PsychPsychisch => "psych_psychisch".into(),
+            Field::PsychSchizophren => "psych_schizophren".into(),
+            Field::PsychUebrige => "psych_uebrige".into(),
+            Field::TotalReha => "total_reha".into(),
+            Field::RehaMuskelskelett => "reha_muskelskelett".into(),
+            Field::RehaVerletzung => "reha_verletzung".into(),
+            Field::RehaKreislauf => "reha_kreislauf".into(),
+            Field::RehaLabor => "reha_labor".into(),
+            Field::RehaNeubildungen => "reha_neubildungen".into(),
+            Field::RehaUebrige => "reha_uebrige".into(),
+            Field::Geopunkt => "geopunkt".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -11087,19 +15286,19 @@ pub mod gesundheitsversorgung_gsv_spitalkennzahlen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -11145,6 +15344,27 @@ pub mod grillstellen_in_gewaessernaehe {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Id,
+        Status,
+        SichtbarVon,
+        SichtbarBis,
+        Name,
+        Shape,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Id => "id".into(),
+            Field::Status => "status".into(),
+            Field::SichtbarVon => "sichtbar_von".into(),
+            Field::SichtbarBis => "sichtbar_bis".into(),
+            Field::Name => "name".into(),
+            Field::Shape => "shape".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -11153,19 +15373,19 @@ pub mod grillstellen_in_gewaessernaehe {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -11233,6 +15453,35 @@ pub mod strassennamen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Strassenid,
+        Strname,
+        KurzekEz,
+        KurzekZz,
+        GeoShape,
+        GeoPoint2d,
+        ErstErwae,
+        AmtlichBe,
+        Indextext,
+        Kurztext,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Strassenid => "strassenid".into(),
+            Field::Strname => "strname".into(),
+            Field::KurzekEz => "kurzek_ez".into(),
+            Field::KurzekZz => "kurzek_zz".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::ErstErwae => "erst_erwae".into(),
+            Field::AmtlichBe => "amtlich_be".into(),
+            Field::Indextext => "indextext".into(),
+            Field::Kurztext => "kurztext".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -11241,19 +15490,19 @@ pub mod strassennamen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -11319,6 +15568,43 @@ pub mod sanitaere_anlagen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Bezeichnug,
+        Strasse,
+        Eurokey,
+        Plz,
+        Ort,
+        WwwLink,
+        Gebuehr,
+        Kategorie,
+        Typ,
+        Zusatz,
+        Status,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Bezeichnug => "bezeichnug".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Eurokey => "eurokey".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::WwwLink => "www_link".into(),
+            Field::Gebuehr => "gebuehr".into(),
+            Field::Kategorie => "kategorie".into(),
+            Field::Typ => "typ".into(),
+            Field::Zusatz => "zusatz".into(),
+            Field::Status => "status".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -11327,19 +15613,19 @@ pub mod sanitaere_anlagen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -11418,6 +15704,39 @@ pub mod taegliche_klimadaten_der_nbcn_station_basel_binningen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Date,
+        Jahr,
+        Gre000d0,
+        Hto000d0,
+        Nto000d0,
+        Prestad0,
+        Rre150d0,
+        Sre000d0,
+        Tre200d0,
+        Tre200dn,
+        Tre200dx,
+        Ure200d0,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Date => "date".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Gre000d0 => "gre000d0".into(),
+            Field::Hto000d0 => "hto000d0".into(),
+            Field::Nto000d0 => "nto000d0".into(),
+            Field::Prestad0 => "prestad0".into(),
+            Field::Rre150d0 => "rre150d0".into(),
+            Field::Sre000d0 => "sre000d0".into(),
+            Field::Tre200d0 => "tre200d0".into(),
+            Field::Tre200dn => "tre200dn".into(),
+            Field::Tre200dx => "tre200dx".into(),
+            Field::Ure200d0 => "ure200d0".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -11426,19 +15745,19 @@ pub mod taegliche_klimadaten_der_nbcn_station_basel_binningen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -11738,6 +16057,161 @@ pub mod wahl_der_100_mitglieder_des_grossen_rates_vom_25_10_2020 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahljahr,
+        Status,
+        Wahlbezeichnung,
+        Amtsdauer,
+        Wahltermin,
+        AnzahlSitze,
+        WahlkreisNr,
+        WahlkreisCode,
+        Wahlkreisbezeichnung,
+        StimmberechtigteManner,
+        StimmberechtigteFrauen,
+        Stimmberechtigte,
+        StimmberechtigteAuslandschweizer,
+        Wahlzettel,
+        BrieflicheStimmabgaben,
+        UngultigeWahlzettel,
+        LeereWahlzettel,
+        UnveranderteWahlzettel,
+        VeranderteWahlzettelMitBezeichnung,
+        VeranderteWahlzettelOhneBezeichnung,
+        LeereStimmen,
+        Listennummer,
+        ParteiId,
+        Parteikurzbezeichnung,
+        Parteibezeichnung,
+        AnzahlSitzeListe,
+        UnveranderteWahlzettelListe,
+        VeranderteWahlzettelListe,
+        KandidatenstimmenUnveranderteWahlzettel,
+        ZusatzstimmenUnveranderteWahlzettel,
+        KandidatenstimmenVeranderteWahlzettel,
+        ZusatzstimmenVeranderteWahlzettel,
+        KandidatenNr,
+        PersonenId,
+        Kumulation,
+        Bisher,
+        Gewahlt,
+        GanzerName,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Alter,
+        Anrede,
+        Beruf,
+        StimmenUvwz,
+        StimmenVwz,
+        StimmenTotal,
+        Rangfolge,
+        X00Ohne,
+        X01Fdp,
+        X02Pp,
+        X03Ldp,
+        X04Evp,
+        X05Sp,
+        X07Cvp,
+        X08Gb,
+        X10Glp,
+        X12Svp,
+        X13Fuk,
+        X14Va,
+        X16Ab,
+        X19Bdv,
+        X28Pb,
+        X29Kl,
+        Laufnummer,
+        JahrgangNum,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahljahr => "wahljahr".into(),
+            Field::Status => "status".into(),
+            Field::Wahlbezeichnung => "wahlbezeichnung".into(),
+            Field::Amtsdauer => "amtsdauer".into(),
+            Field::Wahltermin => "wahltermin".into(),
+            Field::AnzahlSitze => "anzahl_sitze".into(),
+            Field::WahlkreisNr => "wahlkreis_nr".into(),
+            Field::WahlkreisCode => "wahlkreis_code".into(),
+            Field::Wahlkreisbezeichnung => "wahlkreisbezeichnung".into(),
+            Field::StimmberechtigteManner => "stimmberechtigte_manner".into(),
+            Field::StimmberechtigteFrauen => "stimmberechtigte_frauen".into(),
+            Field::Stimmberechtigte => "stimmberechtigte".into(),
+            Field::StimmberechtigteAuslandschweizer => "stimmberechtigte_auslandschweizer".into(),
+            Field::Wahlzettel => "wahlzettel".into(),
+            Field::BrieflicheStimmabgaben => "briefliche_stimmabgaben".into(),
+            Field::UngultigeWahlzettel => "ungultige_wahlzettel".into(),
+            Field::LeereWahlzettel => "leere_wahlzettel".into(),
+            Field::UnveranderteWahlzettel => "unveranderte_wahlzettel".into(),
+            Field::VeranderteWahlzettelMitBezeichnung => {
+                "veranderte_wahlzettel_mit_bezeichnung".into()
+            }
+            Field::VeranderteWahlzettelOhneBezeichnung => {
+                "veranderte_wahlzettel_ohne_bezeichnung".into()
+            }
+            Field::LeereStimmen => "leere_stimmen".into(),
+            Field::Listennummer => "listennummer".into(),
+            Field::ParteiId => "partei_id".into(),
+            Field::Parteikurzbezeichnung => "parteikurzbezeichnung".into(),
+            Field::Parteibezeichnung => "parteibezeichnung".into(),
+            Field::AnzahlSitzeListe => "anzahl_sitze_liste".into(),
+            Field::UnveranderteWahlzettelListe => "unveranderte_wahlzettel_liste".into(),
+            Field::VeranderteWahlzettelListe => "veranderte_wahlzettel_liste".into(),
+            Field::KandidatenstimmenUnveranderteWahlzettel => {
+                "kandidatenstimmen_unveranderte_wahlzettel".into()
+            }
+            Field::ZusatzstimmenUnveranderteWahlzettel => {
+                "zusatzstimmen_unveranderte_wahlzettel".into()
+            }
+            Field::KandidatenstimmenVeranderteWahlzettel => {
+                "kandidatenstimmen_veranderte_wahlzettel".into()
+            }
+            Field::ZusatzstimmenVeranderteWahlzettel => {
+                "zusatzstimmen_veranderte_wahlzettel".into()
+            }
+            Field::KandidatenNr => "kandidaten_nr".into(),
+            Field::PersonenId => "personen_id".into(),
+            Field::Kumulation => "kumulation".into(),
+            Field::Bisher => "bisher".into(),
+            Field::Gewahlt => "gewahlt".into(),
+            Field::GanzerName => "ganzer_name".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Alter => "alter".into(),
+            Field::Anrede => "anrede".into(),
+            Field::Beruf => "beruf".into(),
+            Field::StimmenUvwz => "stimmen_uvwz".into(),
+            Field::StimmenVwz => "stimmen_vwz".into(),
+            Field::StimmenTotal => "stimmen_total".into(),
+            Field::Rangfolge => "rangfolge".into(),
+            Field::X00Ohne => "00_ohne".into(),
+            Field::X01Fdp => "01_fdp".into(),
+            Field::X02Pp => "02_pp".into(),
+            Field::X03Ldp => "03_ldp".into(),
+            Field::X04Evp => "04_evp".into(),
+            Field::X05Sp => "05_sp".into(),
+            Field::X07Cvp => "07_cvp".into(),
+            Field::X08Gb => "08_gb".into(),
+            Field::X10Glp => "10_glp".into(),
+            Field::X12Svp => "12_svp".into(),
+            Field::X13Fuk => "13_fuk".into(),
+            Field::X14Va => "14_va".into(),
+            Field::X16Ab => "16_ab".into(),
+            Field::X19Bdv => "19_bdv".into(),
+            Field::X28Pb => "28_pb".into(),
+            Field::X29Kl => "29_kl".into(),
+            Field::Laufnummer => "laufnummer".into(),
+            Field::JahrgangNum => "jahrgang_num".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -11746,19 +16220,19 @@ pub mod wahl_der_100_mitglieder_des_grossen_rates_vom_25_10_2020 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -11910,6 +16384,75 @@ pub mod grosser_rat_geschaefte {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        BeginnGes,
+        EndeGes,
+        LaufnrGes,
+        SignaturGes,
+        StatusGes,
+        TitelGes,
+        DepartementGes,
+        GaRrGr,
+        UrlGes,
+        UrlZuweisungen,
+        UrlDokumente,
+        UrlVorgaenge,
+        AnredeUrheber,
+        GremientypUrheber,
+        NameUrheber,
+        VornameUrheber,
+        NameVornameUrheber,
+        ParteiKnameUrheber,
+        UrlUrheber,
+        NrUrheber,
+        UrlUrheberRatsmitgl,
+        AnredeMiturheber,
+        GremientypMiturheber,
+        NameMiturheber,
+        VornameMiturheber,
+        NameVornameMiturheber,
+        ParteiKnameMiturheber,
+        UrlMiturheber,
+        NrMiturheber,
+        UrlMiturheberRatsmitgl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::BeginnGes => "beginn_ges".into(),
+            Field::EndeGes => "ende_ges".into(),
+            Field::LaufnrGes => "laufnr_ges".into(),
+            Field::SignaturGes => "signatur_ges".into(),
+            Field::StatusGes => "status_ges".into(),
+            Field::TitelGes => "titel_ges".into(),
+            Field::DepartementGes => "departement_ges".into(),
+            Field::GaRrGr => "ga_rr_gr".into(),
+            Field::UrlGes => "url_ges".into(),
+            Field::UrlZuweisungen => "url_zuweisungen".into(),
+            Field::UrlDokumente => "url_dokumente".into(),
+            Field::UrlVorgaenge => "url_vorgaenge".into(),
+            Field::AnredeUrheber => "anrede_urheber".into(),
+            Field::GremientypUrheber => "gremientyp_urheber".into(),
+            Field::NameUrheber => "name_urheber".into(),
+            Field::VornameUrheber => "vorname_urheber".into(),
+            Field::NameVornameUrheber => "name_vorname_urheber".into(),
+            Field::ParteiKnameUrheber => "partei_kname_urheber".into(),
+            Field::UrlUrheber => "url_urheber".into(),
+            Field::NrUrheber => "nr_urheber".into(),
+            Field::UrlUrheberRatsmitgl => "url_urheber_ratsmitgl".into(),
+            Field::AnredeMiturheber => "anrede_miturheber".into(),
+            Field::GremientypMiturheber => "gremientyp_miturheber".into(),
+            Field::NameMiturheber => "name_miturheber".into(),
+            Field::VornameMiturheber => "vorname_miturheber".into(),
+            Field::NameVornameMiturheber => "name_vorname_miturheber".into(),
+            Field::ParteiKnameMiturheber => "partei_kname_miturheber".into(),
+            Field::UrlMiturheber => "url_miturheber".into(),
+            Field::NrMiturheber => "nr_miturheber".into(),
+            Field::UrlMiturheberRatsmitgl => "url_miturheber_ratsmitgl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -11918,19 +16461,19 @@ pub mod grosser_rat_geschaefte {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -12038,6 +16581,55 @@ pub mod coronavirus_covid_19_tests_basel_stadt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        NegativeTests,
+        PositiveTests,
+        TotalTests,
+        PositivityRatePercent,
+        PositivityRate,
+        Dayofweek,
+        WeekdayNr,
+        Woche,
+        EntriesAntigenSchnelltest,
+        EntriesPcr,
+        EntriesNegAntigenSchnelltest,
+        EntriesNegPcr,
+        EntriesPosAntigenSchnelltest,
+        EntriesPosPcr,
+        PositivityRateAntigenSchnelltest,
+        PositivityRatePcr,
+        PositivityRatePercentAntigenSchnelltest,
+        PositivityRatePercentPcr,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::NegativeTests => "negative_tests".into(),
+            Field::PositiveTests => "positive_tests".into(),
+            Field::TotalTests => "total_tests".into(),
+            Field::PositivityRatePercent => "positivity_rate_percent".into(),
+            Field::PositivityRate => "positivity_rate".into(),
+            Field::Dayofweek => "dayofweek".into(),
+            Field::WeekdayNr => "weekday_nr".into(),
+            Field::Woche => "woche".into(),
+            Field::EntriesAntigenSchnelltest => "entries_antigen_schnelltest".into(),
+            Field::EntriesPcr => "entries_pcr".into(),
+            Field::EntriesNegAntigenSchnelltest => "entries_neg_antigen_schnelltest".into(),
+            Field::EntriesNegPcr => "entries_neg_pcr".into(),
+            Field::EntriesPosAntigenSchnelltest => "entries_pos_antigen_schnelltest".into(),
+            Field::EntriesPosPcr => "entries_pos_pcr".into(),
+            Field::PositivityRateAntigenSchnelltest => "positivity_rate_antigen_schnelltest".into(),
+            Field::PositivityRatePcr => "positivity_rate_pcr".into(),
+            Field::PositivityRatePercentAntigenSchnelltest => {
+                "positivity_rate_percent_antigen_schnelltest".into()
+            }
+            Field::PositivityRatePercentPcr => "positivity_rate_percent_pcr".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -12046,19 +16638,19 @@ pub mod coronavirus_covid_19_tests_basel_stadt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -12140,6 +16732,43 @@ pub mod veloabstellplaetze {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        IdPlatz,
+        Typ,
+        Strasse,
+        Tarif,
+        Anzvelos,
+        Anschliess,
+        Gedeckt,
+        Zugang,
+        Infos,
+        Cargovelo,
+        Bikeride,
+        GeoPoint2d,
+        GeoShape,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::IdPlatz => "id_platz".into(),
+            Field::Typ => "typ".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Tarif => "tarif".into(),
+            Field::Anzvelos => "anzvelos".into(),
+            Field::Anschliess => "anschliess".into(),
+            Field::Gedeckt => "gedeckt".into(),
+            Field::Zugang => "zugang".into(),
+            Field::Infos => "infos".into(),
+            Field::Cargovelo => "cargovelo".into(),
+            Field::Bikeride => "bikeride".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -12148,19 +16777,19 @@ pub mod veloabstellplaetze {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -12230,6 +16859,37 @@ pub mod velopumpen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        IdPumpe,
+        Haendler,
+        Strasse,
+        Plz,
+        Ort,
+        Pumpe,
+        Verfuegbar,
+        Link,
+        GeoPoint2d,
+        GeoShape,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::IdPumpe => "id_pumpe".into(),
+            Field::Haendler => "haendler".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::Pumpe => "pumpe".into(),
+            Field::Verfuegbar => "verfuegbar".into(),
+            Field::Link => "link".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -12238,19 +16898,19 @@ pub mod velopumpen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -12306,6 +16966,29 @@ pub mod verkehrsberuhigte_zonen_kernzone_verkehrskonzept_innenstadt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        Objectid,
+        Name,
+        Infos,
+        Zufahrt,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::Objectid => "objectid".into(),
+            Field::Name => "name".into(),
+            Field::Infos => "infos".into(),
+            Field::Zufahrt => "zufahrt".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -12314,19 +16997,19 @@ pub mod verkehrsberuhigte_zonen_kernzone_verkehrskonzept_innenstadt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -12378,6 +17061,27 @@ pub mod strassen_und_wege_kantonsstrassen_riehen_und_bettingen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdKsrb,
+        Gemeinde,
+        Eigentum,
+        Strasse,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdKsrb => "id_ksrb".into(),
+            Field::Gemeinde => "gemeinde".into(),
+            Field::Eigentum => "eigentum".into(),
+            Field::Strasse => "strasse".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -12386,19 +17090,19 @@ pub mod strassen_und_wege_kantonsstrassen_riehen_und_bettingen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -12486,6 +17190,45 @@ pub mod nutzungsplan_zonenplan_riehen_ueberlagernde_festlegungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Idueberfes,
+        Festueber,
+        Festuebtxt,
+        GeoPoint2d,
+        GeoShape,
+        Verbindli,
+        Schutzzwec,
+        Rekurshaen,
+        Bezeichnng,
+        Idgeschae,
+        Geschaesta,
+        Datumstat,
+        Geolink,
+        Geschaebez,
+        Bemerkung,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Idueberfes => "idueberfes".into(),
+            Field::Festueber => "festueber".into(),
+            Field::Festuebtxt => "festuebtxt".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Verbindli => "verbindli".into(),
+            Field::Schutzzwec => "schutzzwec".into(),
+            Field::Rekurshaen => "rekurshaen".into(),
+            Field::Bezeichnng => "bezeichnng".into(),
+            Field::Idgeschae => "idgeschae".into(),
+            Field::Geschaesta => "geschaesta".into(),
+            Field::Datumstat => "datumstat".into(),
+            Field::Geolink => "geolink".into(),
+            Field::Geschaebez => "geschaebez".into(),
+            Field::Bemerkung => "bemerkung".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -12494,19 +17237,19 @@ pub mod nutzungsplan_zonenplan_riehen_ueberlagernde_festlegungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -12586,6 +17329,41 @@ pub mod nutzungsplan_zonenplan_bettingen_ueberlagernde_festlegungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Idueberfes,
+        Festueber,
+        GeoPoint2d,
+        GeoShape,
+        Verbindli,
+        Rekurshaen,
+        Bezeichnng,
+        Idgeschae,
+        Geschaesta,
+        Datumstat,
+        Geolink,
+        Geschaebez,
+        Bemerkung,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Idueberfes => "idueberfes".into(),
+            Field::Festueber => "festueber".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Verbindli => "verbindli".into(),
+            Field::Rekurshaen => "rekurshaen".into(),
+            Field::Bezeichnng => "bezeichnng".into(),
+            Field::Idgeschae => "idgeschae".into(),
+            Field::Geschaesta => "geschaesta".into(),
+            Field::Datumstat => "datumstat".into(),
+            Field::Geolink => "geolink".into(),
+            Field::Geschaebez => "geschaebez".into(),
+            Field::Bemerkung => "bemerkung".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -12594,19 +17372,19 @@ pub mod nutzungsplan_zonenplan_bettingen_ueberlagernde_festlegungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -12666,6 +17444,31 @@ pub mod verkehrsberuhigte_zonen_fussgaengerzone {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdFussgae,
+        Regime,
+        Regimenr,
+        Name,
+        Umdatum,
+        Umjahr,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdFussgae => "id_fussgae".into(),
+            Field::Regime => "regime".into(),
+            Field::Regimenr => "regimenr".into(),
+            Field::Name => "name".into(),
+            Field::Umdatum => "umdatum".into(),
+            Field::Umjahr => "umjahr".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -12674,19 +17477,19 @@ pub mod verkehrsberuhigte_zonen_fussgaengerzone {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -12768,6 +17571,43 @@ pub mod standorte_der_smiley_geschwindigkeitsanzeigen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdSmiley,
+        Idstandort,
+        Strname,
+        Hausnr,
+        Geschwind,
+        Richtung,
+        Hinweis,
+        Status,
+        Messbegin,
+        Messende,
+        Ogdeinzel,
+        Odganalyse,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdSmiley => "id_smiley".into(),
+            Field::Idstandort => "idstandort".into(),
+            Field::Strname => "strname".into(),
+            Field::Hausnr => "hausnr".into(),
+            Field::Geschwind => "geschwind".into(),
+            Field::Richtung => "richtung".into(),
+            Field::Hinweis => "hinweis".into(),
+            Field::Status => "status".into(),
+            Field::Messbegin => "messbegin".into(),
+            Field::Messende => "messende".into(),
+            Field::Ogdeinzel => "ogdeinzel".into(),
+            Field::Odganalyse => "odganalyse".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -12776,19 +17616,19 @@ pub mod standorte_der_smiley_geschwindigkeitsanzeigen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -12850,6 +17690,35 @@ pub mod strassen_und_wege_strassentypen_und_wege {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdStrweg,
+        Strname,
+        Snh,
+        StrassennetzhierarchienBeschreibung,
+        Gemeinde,
+        Kategorie,
+        Weg,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdStrweg => "id_strweg".into(),
+            Field::Strname => "strname".into(),
+            Field::Snh => "snh".into(),
+            Field::StrassennetzhierarchienBeschreibung => {
+                "strassennetzhierarchien_beschreibung".into()
+            }
+            Field::Gemeinde => "gemeinde".into(),
+            Field::Kategorie => "kategorie".into(),
+            Field::Weg => "weg".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -12858,19 +17727,19 @@ pub mod strassen_und_wege_strassentypen_und_wege {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -12999,6 +17868,63 @@ pub mod rheinueberwachungsstation_umweltanalyse_wasserphase {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Probentyp,
+        Probenahmestelle,
+        GeoPoint2d,
+        XCoord,
+        YCoord,
+        Probenahmedatum,
+        Entnahmezeit,
+        Probenahmedauer,
+        Reihenfolge,
+        Gruppe,
+        Parameter,
+        Bg,
+        Wert,
+        WertNum,
+        Einheit,
+        Auftragnr,
+        Probennr,
+        Resultatnummer,
+        AutomatischeAuswertung,
+        CasBezeichnung,
+        BafuBezeichnung,
+        AllgemeineParametergruppe,
+        ProbenahmedatumDate,
+        Probenahmejahr,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Probentyp => "probentyp".into(),
+            Field::Probenahmestelle => "probenahmestelle".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::XCoord => "x_coord".into(),
+            Field::YCoord => "y_coord".into(),
+            Field::Probenahmedatum => "probenahmedatum".into(),
+            Field::Entnahmezeit => "entnahmezeit".into(),
+            Field::Probenahmedauer => "probenahmedauer".into(),
+            Field::Reihenfolge => "reihenfolge".into(),
+            Field::Gruppe => "gruppe".into(),
+            Field::Parameter => "parameter".into(),
+            Field::Bg => "bg".into(),
+            Field::Wert => "wert".into(),
+            Field::WertNum => "wert_num".into(),
+            Field::Einheit => "einheit".into(),
+            Field::Auftragnr => "auftragnr".into(),
+            Field::Probennr => "probennr".into(),
+            Field::Resultatnummer => "resultatnummer".into(),
+            Field::AutomatischeAuswertung => "automatische_auswertung".into(),
+            Field::CasBezeichnung => "cas_bezeichnung".into(),
+            Field::BafuBezeichnung => "bafu_bezeichnung".into(),
+            Field::AllgemeineParametergruppe => "allgemeine_parametergruppe".into(),
+            Field::ProbenahmedatumDate => "probenahmedatum_date".into(),
+            Field::Probenahmejahr => "probenahmejahr".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -13007,19 +17933,19 @@ pub mod rheinueberwachungsstation_umweltanalyse_wasserphase {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -13063,6 +17989,27 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_gemessene_ueber
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        Standort,
+        Parameter,
+        MesswertUgM3,
+        InterventionswertUgM3,
+        InfoMassnahmen,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::Standort => "standort".into(),
+            Field::Parameter => "parameter".into(),
+            Field::MesswertUgM3 => "messwert_ug_m3".into(),
+            Field::InterventionswertUgM3 => "interventionswert_ug_m3".into(),
+            Field::InfoMassnahmen => "info_massnahmen".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -13071,19 +18018,19 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_gemessene_ueber
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -13167,6 +18114,47 @@ pub mod schulstandorte_gemeinde_basel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Schulstand,
+        Schultyp,
+        Name,
+        Funktion,
+        Strasse,
+        Hausnummer,
+        Plz,
+        Ortschaft,
+        Telefon,
+        Fax,
+        Link,
+        PdfReport,
+        Geometrie,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Schulstand => "schulstand".into(),
+            Field::Schultyp => "schultyp".into(),
+            Field::Name => "name".into(),
+            Field::Funktion => "funktion".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Hausnummer => "hausnummer".into(),
+            Field::Plz => "plz".into(),
+            Field::Ortschaft => "ortschaft".into(),
+            Field::Telefon => "telefon".into(),
+            Field::Fax => "fax".into(),
+            Field::Link => "link".into(),
+            Field::PdfReport => "pdf_report".into(),
+            Field::Geometrie => "geometrie".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -13175,19 +18163,19 @@ pub mod schulstandorte_gemeinde_basel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -13245,6 +18233,31 @@ pub mod gewaesserschutzkarte_gewaesserschutzbereiche {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Idgbereich,
+        Typ,
+        Kantypbez,
+        TypBeschreibung,
+        Geolink,
+        Bemerkung,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Idgbereich => "idgbereich".into(),
+            Field::Typ => "typ".into(),
+            Field::Kantypbez => "kantypbez".into(),
+            Field::TypBeschreibung => "typ_beschreibung".into(),
+            Field::Geolink => "geolink".into(),
+            Field::Bemerkung => "bemerkung".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -13253,19 +18266,19 @@ pub mod gewaesserschutzkarte_gewaesserschutzbereiche {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -13329,6 +18342,47 @@ pub mod schulstandorte_gemeinden_riehen_und_bettingen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdSchule,
+        Standort,
+        Typ,
+        Name,
+        Telefon1,
+        Telefon2,
+        Strasse,
+        Hausnummer,
+        Plz,
+        Ort,
+        Fax,
+        Link,
+        Geometrie,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdSchule => "id_schule".into(),
+            Field::Standort => "standort".into(),
+            Field::Typ => "typ".into(),
+            Field::Name => "name".into(),
+            Field::Telefon1 => "telefon1".into(),
+            Field::Telefon2 => "telefon2".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Hausnummer => "hausnummer".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::Fax => "fax".into(),
+            Field::Link => "link".into(),
+            Field::Geometrie => "geometrie".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -13337,19 +18391,19 @@ pub mod schulstandorte_gemeinden_riehen_und_bettingen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -13475,6 +18529,63 @@ pub mod coronavirus_covid_19_fallzahlen_basel_stadt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        AbbreviationCantonAndFl,
+        CurrentIsolated,
+        CurrentQuarantined,
+        CurrentQuarantinedRiskareatravel,
+        CurrentQuarantinedTotal,
+        NcumulConf,
+        NcumulConfirmedNonResident,
+        NdiffConf,
+        NdiffConfirmedNonResident,
+        CurrentHosp,
+        CurrentHospResident,
+        CurrentHospNonResident,
+        NewHosp,
+        CurrentIcu,
+        CurrentVent,
+        NcumulReleased,
+        NdiffReleased,
+        NcumulDeceased,
+        NdiffDeceased,
+        Source,
+        Date,
+        Time,
+        Week,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::AbbreviationCantonAndFl => "abbreviation_canton_and_fl".into(),
+            Field::CurrentIsolated => "current_isolated".into(),
+            Field::CurrentQuarantined => "current_quarantined".into(),
+            Field::CurrentQuarantinedRiskareatravel => "current_quarantined_riskareatravel".into(),
+            Field::CurrentQuarantinedTotal => "current_quarantined_total".into(),
+            Field::NcumulConf => "ncumul_conf".into(),
+            Field::NcumulConfirmedNonResident => "ncumul_confirmed_non_resident".into(),
+            Field::NdiffConf => "ndiff_conf".into(),
+            Field::NdiffConfirmedNonResident => "ndiff_confirmed_non_resident".into(),
+            Field::CurrentHosp => "current_hosp".into(),
+            Field::CurrentHospResident => "current_hosp_resident".into(),
+            Field::CurrentHospNonResident => "current_hosp_non_resident".into(),
+            Field::NewHosp => "new_hosp".into(),
+            Field::CurrentIcu => "current_icu".into(),
+            Field::CurrentVent => "current_vent".into(),
+            Field::NcumulReleased => "ncumul_released".into(),
+            Field::NdiffReleased => "ndiff_released".into(),
+            Field::NcumulDeceased => "ncumul_deceased".into(),
+            Field::NdiffDeceased => "ndiff_deceased".into(),
+            Field::Source => "source".into(),
+            Field::Date => "date".into(),
+            Field::Time => "time".into(),
+            Field::Week => "week".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -13483,19 +18594,19 @@ pub mod coronavirus_covid_19_fallzahlen_basel_stadt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -13573,6 +18684,41 @@ pub mod gewaesserschutzkarte_grundwasserschutzzonen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Idgwszone,
+        Typ,
+        Kantypbez,
+        TypBeschreibung,
+        Altrecht,
+        Bemerkung,
+        Idgeschaef,
+        Geschaesta,
+        Datumstat,
+        Geolink,
+        Geschaebez,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Idgwszone => "idgwszone".into(),
+            Field::Typ => "typ".into(),
+            Field::Kantypbez => "kantypbez".into(),
+            Field::TypBeschreibung => "typ_beschreibung".into(),
+            Field::Altrecht => "altrecht".into(),
+            Field::Bemerkung => "bemerkung".into(),
+            Field::Idgeschaef => "idgeschaef".into(),
+            Field::Geschaesta => "geschaesta".into(),
+            Field::Datumstat => "datumstat".into(),
+            Field::Geolink => "geolink".into(),
+            Field::Geschaebez => "geschaebez".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -13581,19 +18727,19 @@ pub mod gewaesserschutzkarte_grundwasserschutzzonen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -13631,6 +18777,21 @@ pub mod abfuhrzonen_gemeinde_basel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Zone,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Zone => "zone".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -13639,19 +18800,19 @@ pub mod abfuhrzonen_gemeinde_basel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -13699,6 +18860,25 @@ pub mod verbotszonen_geteilte_mikromobilitaet_sperr_und_parkverbotszonen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdVerbot,
+        Name,
+        Regart,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdVerbot => "id_verbot".into(),
+            Field::Name => "name".into(),
+            Field::Regart => "regart".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -13707,19 +18887,19 @@ pub mod verbotszonen_geteilte_mikromobilitaet_sperr_und_parkverbotszonen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -13763,6 +18943,21 @@ pub mod feinstaubmessungen_naturhistorisches_museum_basel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Anfangszeit,
+        Pm25,
+        ZeitstempelText,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Anfangszeit => "anfangszeit".into(),
+            Field::Pm25 => "pm25".into(),
+            Field::ZeitstempelText => "zeitstempel_text".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -13771,19 +18966,19 @@ pub mod feinstaubmessungen_naturhistorisches_museum_basel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -13831,6 +19026,25 @@ pub mod tigermueckenbekaempfung_bekaempfungszone {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdBekam,
+        Url,
+        Merkblatt,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdBekam => "id_bekam".into(),
+            Field::Url => "url".into(),
+            Field::Merkblatt => "merkblatt".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -13839,19 +19053,19 @@ pub mod tigermueckenbekaempfung_bekaempfungszone {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -13913,6 +19127,39 @@ pub mod secondhand_angebote_wiederverwendungsstellen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        IdWiederv,
+        Kategorie,
+        Name,
+        Beschreibu,
+        Adresse,
+        Plz,
+        Ortschaft,
+        Telefon,
+        Link,
+        GeoPoint2d,
+        GeoShape,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::IdWiederv => "id_wiederv".into(),
+            Field::Kategorie => "kategorie".into(),
+            Field::Name => "name".into(),
+            Field::Beschreibu => "beschreibu".into(),
+            Field::Adresse => "adresse".into(),
+            Field::Plz => "plz".into(),
+            Field::Ortschaft => "ortschaft".into(),
+            Field::Telefon => "telefon".into(),
+            Field::Link => "link".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -13921,19 +19168,19 @@ pub mod secondhand_angebote_wiederverwendungsstellen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -14003,6 +19250,37 @@ pub mod kitas_und_tagesheime {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdTk,
+        StdName,
+        Strasse,
+        HausNr,
+        Plz,
+        Ort,
+        Telefon,
+        Homepage,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdTk => "id_tk".into(),
+            Field::StdName => "std_name".into(),
+            Field::Strasse => "strasse".into(),
+            Field::HausNr => "haus_nr".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::Telefon => "telefon".into(),
+            Field::Homepage => "homepage".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -14011,19 +19289,19 @@ pub mod kitas_und_tagesheime {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -14183,6 +19461,79 @@ pub mod grosser_rat_live_abstimmungsergebnisse {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        Zeit,
+        Traktandum,
+        Subtraktandum,
+        Geschaeft,
+        SignaturGes,
+        UrlGes,
+        UrlGeschaeftOds,
+        SignaturDok,
+        AbstNr,
+        Typ,
+        AnzJ,
+        AnzN,
+        AnzE,
+        AnzA,
+        AnzP,
+        SitzNr,
+        MitgliedAnrede,
+        MitgliedNachname,
+        MitgliedVorname,
+        MitgliedName,
+        Fraktion,
+        MitgliedNameFraktion,
+        MitgliedFunktion,
+        EntscheidMitglied,
+        GrUniNr,
+        GrUrl,
+        GrUrlOds,
+        ZeitstempelText,
+        DatenstandText,
+        Anr,
+        UrlAbstimmungDok,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::Zeit => "zeit".into(),
+            Field::Traktandum => "traktandum".into(),
+            Field::Subtraktandum => "subtraktandum".into(),
+            Field::Geschaeft => "geschaeft".into(),
+            Field::SignaturGes => "signatur_ges".into(),
+            Field::UrlGes => "url_ges".into(),
+            Field::UrlGeschaeftOds => "url_geschaeft_ods".into(),
+            Field::SignaturDok => "signatur_dok".into(),
+            Field::AbstNr => "abst_nr".into(),
+            Field::Typ => "typ".into(),
+            Field::AnzJ => "anz_j".into(),
+            Field::AnzN => "anz_n".into(),
+            Field::AnzE => "anz_e".into(),
+            Field::AnzA => "anz_a".into(),
+            Field::AnzP => "anz_p".into(),
+            Field::SitzNr => "sitz_nr".into(),
+            Field::MitgliedAnrede => "mitglied_anrede".into(),
+            Field::MitgliedNachname => "mitglied_nachname".into(),
+            Field::MitgliedVorname => "mitglied_vorname".into(),
+            Field::MitgliedName => "mitglied_name".into(),
+            Field::Fraktion => "fraktion".into(),
+            Field::MitgliedNameFraktion => "mitglied_name_fraktion".into(),
+            Field::MitgliedFunktion => "mitglied_funktion".into(),
+            Field::EntscheidMitglied => "entscheid_mitglied".into(),
+            Field::GrUniNr => "gr_uni_nr".into(),
+            Field::GrUrl => "gr_url".into(),
+            Field::GrUrlOds => "gr_url_ods".into(),
+            Field::ZeitstempelText => "zeitstempel_text".into(),
+            Field::DatenstandText => "datenstand_text".into(),
+            Field::Anr => "anr".into(),
+            Field::UrlAbstimmungDok => "url_abstimmung_dok".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -14191,19 +19542,19 @@ pub mod grosser_rat_live_abstimmungsergebnisse {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -14303,6 +19654,49 @@ pub mod vorhersagen_rhein_wasserstand_und_abfluss {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        Wasserstand,
+        Abfluss,
+        Methode,
+        AusgegebenAn,
+        Meteolauf,
+        GemesseneWertenBis,
+        HMin,
+        HP25,
+        HP50,
+        HP75,
+        HMax,
+        QMin,
+        QP25,
+        QP50,
+        QP75,
+        QMax,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::Wasserstand => "wasserstand".into(),
+            Field::Abfluss => "abfluss".into(),
+            Field::Methode => "methode".into(),
+            Field::AusgegebenAn => "ausgegeben_an".into(),
+            Field::Meteolauf => "meteolauf".into(),
+            Field::GemesseneWertenBis => "gemessene_werten_bis".into(),
+            Field::HMin => "h_min".into(),
+            Field::HP25 => "h_p25".into(),
+            Field::HP50 => "h_p50".into(),
+            Field::HP75 => "h_p75".into(),
+            Field::HMax => "h_max".into(),
+            Field::QMin => "q_min".into(),
+            Field::QP25 => "q_p25".into(),
+            Field::QP50 => "q_p50".into(),
+            Field::QP75 => "q_p75".into(),
+            Field::QMax => "q_max".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -14311,19 +19705,19 @@ pub mod vorhersagen_rhein_wasserstand_und_abfluss {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -14403,6 +19797,39 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_fluechtige_scha
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Messbeginn,
+        Messende,
+        Standort,
+        Parameter,
+        Messwert,
+        Messwert3Dezimalstellen,
+        Interventionswert,
+        Interventionswert3Dez,
+        Warnwert,
+        Warnwert3Dez,
+        Einheit,
+        Messmethode,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Messbeginn => "messbeginn".into(),
+            Field::Messende => "messende".into(),
+            Field::Standort => "standort".into(),
+            Field::Parameter => "parameter".into(),
+            Field::Messwert => "messwert".into(),
+            Field::Messwert3Dezimalstellen => "messwert_3_dezimalstellen".into(),
+            Field::Interventionswert => "interventionswert".into(),
+            Field::Interventionswert3Dez => "interventionswert_3_dez".into(),
+            Field::Warnwert => "warnwert".into(),
+            Field::Warnwert3Dez => "warnwert_3_dez".into(),
+            Field::Einheit => "einheit".into(),
+            Field::Messmethode => "messmethode".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -14411,19 +19838,19 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_fluechtige_scha
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -14471,6 +19898,23 @@ pub mod birs_temperatur_wasserstand_und_abfluss {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        Abfluss,
+        Pegel,
+        Temperatur,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::Abfluss => "abfluss".into(),
+            Field::Pegel => "pegel".into(),
+            Field::Temperatur => "temperatur".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -14479,19 +19923,19 @@ pub mod birs_temperatur_wasserstand_und_abfluss {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -14537,6 +19981,27 @@ pub mod smart_climate_feinstaubmessungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Zeitstempel,
+        Pm25,
+        Name,
+        GeoPoint2d,
+        Id,
+        Station,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Zeitstempel => "zeitstempel".into(),
+            Field::Pm25 => "pm_2_5".into(),
+            Field::Name => "name".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Id => "id".into(),
+            Field::Station => "station".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -14545,19 +20010,19 @@ pub mod smart_climate_feinstaubmessungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -14613,6 +20078,29 @@ pub mod smart_climate_schallpegelmessungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        StationId,
+        Timestamp,
+        Value,
+        GeoPoint2d,
+        Latitude,
+        Longitude,
+        Eui,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::StationId => "station_id".into(),
+            Field::Timestamp => "timestamp".into(),
+            Field::Value => "value".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Latitude => "latitude".into(),
+            Field::Longitude => "longitude".into(),
+            Field::Eui => "eui".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -14621,19 +20109,19 @@ pub mod smart_climate_schallpegelmessungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -14673,6 +20161,19 @@ pub mod rhein_wasserstand_klingentalfaehre {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        Pegel,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::Pegel => "pegel".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -14681,19 +20182,19 @@ pub mod rhein_wasserstand_klingentalfaehre {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -14773,6 +20274,41 @@ pub mod strassenverkehrsunfaelle {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdUnfall,
+        Typ,
+        Schwere,
+        Jahr,
+        Monat,
+        Wochentag,
+        Stunde,
+        Strasseart,
+        FussggBet,
+        FahrrdBet,
+        MotordBet,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdUnfall => "id_unfall".into(),
+            Field::Typ => "typ".into(),
+            Field::Schwere => "schwere".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+            Field::Wochentag => "wochentag".into(),
+            Field::Stunde => "stunde".into(),
+            Field::Strasseart => "strasseart".into(),
+            Field::FussggBet => "fussgg_bet".into(),
+            Field::FahrrdBet => "fahrrd_bet".into(),
+            Field::MotordBet => "motord_bet".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -14781,19 +20317,19 @@ pub mod strassenverkehrsunfaelle {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -14857,6 +20393,31 @@ pub mod rheinmesswerte_kontinuierlich {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Startzeitpunkt,
+        StartText,
+        Endezeitpunkt,
+        EndeText,
+        RusWOS3Lf,
+        RusWOS3O2,
+        RusWOS3Ph,
+        RusWOS3Te,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Startzeitpunkt => "startzeitpunkt".into(),
+            Field::StartText => "start_text".into(),
+            Field::Endezeitpunkt => "endezeitpunkt".into(),
+            Field::EndeText => "ende_text".into(),
+            Field::RusWOS3Lf => "rus_w_o_s3_lf".into(),
+            Field::RusWOS3O2 => "rus_w_o_s3_o2".into(),
+            Field::RusWOS3Ph => "rus_w_o_s3_ph".into(),
+            Field::RusWOS3Te => "rus_w_o_s3_te".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -14865,19 +20426,19 @@ pub mod rheinmesswerte_kontinuierlich {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -14917,6 +20478,21 @@ pub mod solarkataster_dachkanten {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdDkante,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdDkante => "id_dkante".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -14925,19 +20501,19 @@ pub mod solarkataster_dachkanten {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -15013,6 +20589,39 @@ pub mod smarte_strasse_luftqualitaet_des_vortages {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        G107No2,
+        G10703,
+        G107Pm25,
+        G125No2,
+        G125O3,
+        G125Pm25,
+        G131No2,
+        G131O3,
+        G131Pm25,
+        TimestampText,
+        Anfangszeit,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::G107No2 => "g107_no2".into(),
+            Field::G10703 => "g107_03".into(),
+            Field::G107Pm25 => "g107_pm25".into(),
+            Field::G125No2 => "g125_no2".into(),
+            Field::G125O3 => "g125_o3".into(),
+            Field::G125Pm25 => "g125_pm25".into(),
+            Field::G131No2 => "g131_no2".into(),
+            Field::G131O3 => "g131_o3".into(),
+            Field::G131Pm25 => "g131_pm25".into(),
+            Field::TimestampText => "timestamp_text".into(),
+            Field::Anfangszeit => "anfangszeit".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -15021,19 +20630,19 @@ pub mod smarte_strasse_luftqualitaet_des_vortages {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -15105,6 +20714,35 @@ pub mod coronavirus_covid_19_reproduktionszahl_re {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Country,
+        Region,
+        Source,
+        DataType,
+        EstimateType,
+        Date,
+        MedianRMean,
+        MedianRHighhpd,
+        MedianRLowhpd,
+        Countryiso3,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Country => "country".into(),
+            Field::Region => "region".into(),
+            Field::Source => "source".into(),
+            Field::DataType => "data_type".into(),
+            Field::EstimateType => "estimate_type".into(),
+            Field::Date => "date".into(),
+            Field::MedianRMean => "median_r_mean".into(),
+            Field::MedianRHighhpd => "median_r_highhpd".into(),
+            Field::MedianRLowhpd => "median_r_lowhpd".into(),
+            Field::Countryiso3 => "countryiso3".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -15113,19 +20751,19 @@ pub mod coronavirus_covid_19_reproduktionszahl_re {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -15181,6 +20819,27 @@ pub mod smarte_strasse_zu_und_wegfahrten_parkplatzauslastung {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        From,
+        To,
+        RType,
+        SumInflow,
+        SumOutflow,
+        AvgOccupancyAbs,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::From => "from".into(),
+            Field::To => "to".into(),
+            Field::RType => "type".into(),
+            Field::SumInflow => "sum_inflow".into(),
+            Field::SumOutflow => "sum_outflow".into(),
+            Field::AvgOccupancyAbs => "avg_occupancy_abs".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -15189,19 +20848,19 @@ pub mod smarte_strasse_zu_und_wegfahrten_parkplatzauslastung {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -15253,6 +20912,25 @@ pub mod aktuelle_temperaturen_der_gartenbaeder {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Name,
+        Temperatur,
+        ZeitpunktJob,
+        Koordinaten,
+        UrlSportanlage,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Name => "name".into(),
+            Field::Temperatur => "temperatur".into(),
+            Field::ZeitpunktJob => "zeitpunkt_job".into(),
+            Field::Koordinaten => "koordinaten".into(),
+            Field::UrlSportanlage => "url_sportanlage".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -15261,19 +20939,19 @@ pub mod aktuelle_temperaturen_der_gartenbaeder {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -15321,6 +20999,29 @@ pub mod luftqualitaet_station_st_johannplatz {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        DatumZeit,
+        TimestampText,
+        Pm10StundenmittelwerteUgM3,
+        Pm25StundenmittelwerteUgM3,
+        O3StundenmittelwerteUgM3,
+        No2StundenmittelwerteUgM3,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::DatumZeit => "datum_zeit".into(),
+            Field::TimestampText => "timestamp_text".into(),
+            Field::Pm10StundenmittelwerteUgM3 => "pm10_stundenmittelwerte_ug_m3".into(),
+            Field::Pm25StundenmittelwerteUgM3 => "pm2_5_stundenmittelwerte_ug_m3".into(),
+            Field::O3StundenmittelwerteUgM3 => "o3_stundenmittelwerte_ug_m3".into(),
+            Field::No2StundenmittelwerteUgM3 => "no2_stundenmittelwerte_ug_m3".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -15329,19 +21030,19 @@ pub mod luftqualitaet_station_st_johannplatz {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -15417,6 +21118,37 @@ pub mod briefliche_stimmbeteiligung {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Tag,
+        Datum,
+        EingangProTag,
+        EingangKumuliert,
+        Stimmbeteiligung,
+        DatumUrnengang,
+        TageBisUrnengang,
+        Abstimmungen,
+        Wahlen,
+        WahlenTyp,
+        DatumUrnengangText,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Tag => "tag".into(),
+            Field::Datum => "datum".into(),
+            Field::EingangProTag => "eingang_pro_tag".into(),
+            Field::EingangKumuliert => "eingang_kumuliert".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::DatumUrnengang => "datum_urnengang".into(),
+            Field::TageBisUrnengang => "tage_bis_urnengang".into(),
+            Field::Abstimmungen => "abstimmungen".into(),
+            Field::Wahlen => "wahlen".into(),
+            Field::WahlenTyp => "wahlen_typ".into(),
+            Field::DatumUrnengangText => "datum_urnengang_text".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -15425,19 +21157,19 @@ pub mod briefliche_stimmbeteiligung {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -15513,6 +21245,39 @@ pub mod smarte_strasse_luftqualitaet {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        G107No2,
+        G10703,
+        G107Pm25,
+        G125No2,
+        G125O3,
+        G125Pm25,
+        G131No2,
+        G131O3,
+        G131Pm25,
+        TimestampText,
+        Anfangszeit,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::G107No2 => "g107_no2".into(),
+            Field::G10703 => "g107_03".into(),
+            Field::G107Pm25 => "g107_pm25".into(),
+            Field::G125No2 => "g125_no2".into(),
+            Field::G125O3 => "g125_o3".into(),
+            Field::G125Pm25 => "g125_pm25".into(),
+            Field::G131No2 => "g131_no2".into(),
+            Field::G131O3 => "g131_o3".into(),
+            Field::G131Pm25 => "g131_pm25".into(),
+            Field::TimestampText => "timestamp_text".into(),
+            Field::Anfangszeit => "anfangszeit".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -15521,19 +21286,19 @@ pub mod smarte_strasse_luftqualitaet {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -15609,6 +21374,37 @@ pub mod baustellen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        ProjektName,
+        ProjektBeschrieb,
+        ProjektInfo,
+        ProjektLink,
+        DatumVon,
+        DatumBis,
+        Dokument1,
+        Dokument2,
+        Dokument3,
+        Id,
+        Allmendbewilligungen,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::ProjektName => "projekt_name".into(),
+            Field::ProjektBeschrieb => "projekt_beschrieb".into(),
+            Field::ProjektInfo => "projekt_info".into(),
+            Field::ProjektLink => "projekt_link".into(),
+            Field::DatumVon => "datum_von".into(),
+            Field::DatumBis => "datum_bis".into(),
+            Field::Dokument1 => "dokument1".into(),
+            Field::Dokument2 => "dokument2".into(),
+            Field::Dokument3 => "dokument3".into(),
+            Field::Id => "id".into(),
+            Field::Allmendbewilligungen => "allmendbewilligungen".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -15617,19 +21413,19 @@ pub mod baustellen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -15675,6 +21471,23 @@ pub mod smarte_strasse_fahrzeugdurchfahrten {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Localdatetime,
+        Classification,
+        TimestampText,
+        Classificationindex,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Localdatetime => "localdatetime".into(),
+            Field::Classification => "classification".into(),
+            Field::TimestampText => "timestamp_text".into(),
+            Field::Classificationindex => "classificationindex".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -15683,19 +21496,19 @@ pub mod smarte_strasse_fahrzeugdurchfahrten {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -15753,6 +21566,39 @@ pub mod standorte_der_oeffentlichen_parkhaeuser_basel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Title,
+        Address,
+        Id,
+        LotType,
+        Name,
+        Id2,
+        Total,
+        Link,
+        GeoPoint2d,
+        CoordsLat,
+        CoordsLng,
+        Published,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Title => "title".into(),
+            Field::Address => "address".into(),
+            Field::Id => "id".into(),
+            Field::LotType => "lot_type".into(),
+            Field::Name => "name".into(),
+            Field::Id2 => "id2".into(),
+            Field::Total => "total".into(),
+            Field::Link => "link".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::CoordsLat => "coords_lat".into(),
+            Field::CoordsLng => "coords_lng".into(),
+            Field::Published => "published".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -15761,19 +21607,19 @@ pub mod standorte_der_oeffentlichen_parkhaeuser_basel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -15817,6 +21663,27 @@ pub mod luftqualitaet_station_feldbergstrasse {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        DatumZeit,
+        TimestampText,
+        Pm10StundenmittelwerteUgM3,
+        Pm25StundenmittelwerteUgM3,
+        No2StundenmittelwerteUgM3,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::DatumZeit => "datum_zeit".into(),
+            Field::TimestampText => "timestamp_text".into(),
+            Field::Pm10StundenmittelwerteUgM3 => "pm10_stundenmittelwerte_ug_m3".into(),
+            Field::Pm25StundenmittelwerteUgM3 => "pm2_5_stundenmittelwerte_ug_m3".into(),
+            Field::No2StundenmittelwerteUgM3 => "no2_stundenmittelwerte_ug_m3".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -15825,19 +21692,19 @@ pub mod luftqualitaet_station_feldbergstrasse {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -15877,6 +21744,21 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_online_sensor_f
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        Station,
+        Pm25,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::Station => "station".into(),
+            Field::Pm25 => "pm_2_5".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -15885,19 +21767,19 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_online_sensor_f
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -15945,6 +21827,23 @@ pub mod zeitreihe_der_temperaturen_der_gartenbaeder {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Name,
+        Temperatur,
+        ZeitpunktJob,
+        Koordinaten,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Name => "name".into(),
+            Field::Temperatur => "temperatur".into(),
+            Field::ZeitpunktJob => "zeitpunkt_job".into(),
+            Field::Koordinaten => "koordinaten".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -15953,19 +21852,19 @@ pub mod zeitreihe_der_temperaturen_der_gartenbaeder {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -16097,6 +21996,117 @@ pub mod ogd_datensaetze {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        DatasetIdentifier,
+        FederatedDataset,
+        Title,
+        Description,
+        Themes,
+        Keywords,
+        License,
+        Language,
+        Timezone,
+        Modified,
+        DataProcessed,
+        MetadataProcessed,
+        Publisher,
+        Reference,
+        Attributions,
+        Created,
+        Issued,
+        Creator,
+        Contributor,
+        ContactName,
+        ContactEmail,
+        AccrualPeriodicity,
+        Spatial,
+        Temporal,
+        Granularity,
+        DataQuality,
+        PublisherType,
+        ConformsTo,
+        TemporalCoverageStartDate,
+        TemporalCoverageEndDate,
+        Rights,
+        RmlMapping,
+        PublizierendeOrganisation,
+        GeodatenModellbeschreibung,
+        Tags,
+        NumberOfRecords,
+        SizeOfRecordsInTheDatasetInBytes,
+        ReuseCount,
+        ApiCallCount,
+        DownloadCount,
+        AttachmentsDownloadCount,
+        FileFieldsDownloadCount,
+        PopularityScore,
+        VisibilityDomainOrRestricted,
+        Published,
+        PublishingProperties,
+        UpdateFrequency,
+        Domain0,
+        AccessRights,
+        UrlDataset,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::DatasetIdentifier => "dataset_identifier".into(),
+            Field::FederatedDataset => "federated_dataset".into(),
+            Field::Title => "title".into(),
+            Field::Description => "description".into(),
+            Field::Themes => "themes".into(),
+            Field::Keywords => "keywords".into(),
+            Field::License => "license".into(),
+            Field::Language => "language".into(),
+            Field::Timezone => "timezone".into(),
+            Field::Modified => "modified".into(),
+            Field::DataProcessed => "data_processed".into(),
+            Field::MetadataProcessed => "metadata_processed".into(),
+            Field::Publisher => "publisher".into(),
+            Field::Reference => "reference".into(),
+            Field::Attributions => "attributions".into(),
+            Field::Created => "created".into(),
+            Field::Issued => "issued".into(),
+            Field::Creator => "creator".into(),
+            Field::Contributor => "contributor".into(),
+            Field::ContactName => "contact_name".into(),
+            Field::ContactEmail => "contact_email".into(),
+            Field::AccrualPeriodicity => "accrual_periodicity".into(),
+            Field::Spatial => "spatial".into(),
+            Field::Temporal => "temporal".into(),
+            Field::Granularity => "granularity".into(),
+            Field::DataQuality => "data_quality".into(),
+            Field::PublisherType => "publisher_type".into(),
+            Field::ConformsTo => "conforms_to".into(),
+            Field::TemporalCoverageStartDate => "temporal_coverage_start_date".into(),
+            Field::TemporalCoverageEndDate => "temporal_coverage_end_date".into(),
+            Field::Rights => "rights".into(),
+            Field::RmlMapping => "rml_mapping".into(),
+            Field::PublizierendeOrganisation => "publizierende_organisation".into(),
+            Field::GeodatenModellbeschreibung => "geodaten_modellbeschreibung".into(),
+            Field::Tags => "tags".into(),
+            Field::NumberOfRecords => "number_of_records".into(),
+            Field::SizeOfRecordsInTheDatasetInBytes => {
+                "size_of_records_in_the_dataset_in_bytes".into()
+            }
+            Field::ReuseCount => "reuse_count".into(),
+            Field::ApiCallCount => "api_call_count".into(),
+            Field::DownloadCount => "download_count".into(),
+            Field::AttachmentsDownloadCount => "attachments_download_count".into(),
+            Field::FileFieldsDownloadCount => "file_fields_download_count".into(),
+            Field::PopularityScore => "popularity_score".into(),
+            Field::VisibilityDomainOrRestricted => "visibility_domain_or_restricted".into(),
+            Field::Published => "published".into(),
+            Field::PublishingProperties => "publishing_properties".into(),
+            Field::UpdateFrequency => "update_frequency".into(),
+            Field::Domain0 => "domain0".into(),
+            Field::AccessRights => "access_rights".into(),
+            Field::UrlDataset => "url_dataset".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -16105,19 +22115,19 @@ pub mod ogd_datensaetze {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -16249,6 +22259,65 @@ pub mod wahl_eines_mitglieds_des_gerichts_fuer_fuersorgerische_unterbringungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahlTitel,
+        Wahlgang,
+        ResultatsTyp,
+        Datum,
+        AnzSitze,
+        KandidatNr,
+        NameGanz,
+        Name,
+        Vorname,
+        Gemeinde,
+        Stimmen,
+        Vereinzelte,
+        Gewaehlt,
+        Stimmrechtsausweise,
+        Eingelegte,
+        Leere,
+        Ungueltige,
+        Gueltige,
+        AnzBriefliche,
+        StimmberTotal,
+        StimmberMaen,
+        StimmberFraue,
+        AbsolutesMehr,
+        Stimmbeteiligung,
+        AntBrieflich,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahlTitel => "wahl_titel".into(),
+            Field::Wahlgang => "wahlgang".into(),
+            Field::ResultatsTyp => "resultats_typ".into(),
+            Field::Datum => "datum".into(),
+            Field::AnzSitze => "anz_sitze".into(),
+            Field::KandidatNr => "kandidat_nr".into(),
+            Field::NameGanz => "name_ganz".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Gemeinde => "gemeinde".into(),
+            Field::Stimmen => "stimmen".into(),
+            Field::Vereinzelte => "vereinzelte".into(),
+            Field::Gewaehlt => "gewaehlt".into(),
+            Field::Stimmrechtsausweise => "stimmrechtsausweise".into(),
+            Field::Eingelegte => "eingelegte".into(),
+            Field::Leere => "leere".into(),
+            Field::Ungueltige => "ungueltige".into(),
+            Field::Gueltige => "gueltige".into(),
+            Field::AnzBriefliche => "anz_briefliche".into(),
+            Field::StimmberTotal => "stimmber_total".into(),
+            Field::StimmberMaen => "stimmber_maen".into(),
+            Field::StimmberFraue => "stimmber_fraue".into(),
+            Field::AbsolutesMehr => "absolutes_mehr".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::AntBrieflich => "ant_brieflich".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -16257,19 +22326,19 @@ pub mod wahl_eines_mitglieds_des_gerichts_fuer_fuersorgerische_unterbringungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -16309,6 +22378,23 @@ pub mod standorte_mess_stationen_smart_climate_feinstaubmessungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Name,
+        Id,
+        Titel,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Name => "name".into(),
+            Field::Id => "id".into(),
+            Field::Titel => "titel".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -16317,19 +22403,19 @@ pub mod standorte_mess_stationen_smart_climate_feinstaubmessungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -16461,6 +22547,65 @@ pub mod wahl_von_fuenf_praesidentinnen_oder_praesidenten_des_appellationsgericht
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahlTitel,
+        Wahlgang,
+        ResultatsTyp,
+        Datum,
+        AnzSitze,
+        KandidatNr,
+        NameGanz,
+        Name,
+        Vorname,
+        Gemeinde,
+        Stimmen,
+        Vereinzelte,
+        Gewaehlt,
+        Stimmrechtsausweise,
+        Eingelegte,
+        Leere,
+        Ungueltige,
+        Gueltige,
+        AnzBriefliche,
+        StimmberTotal,
+        StimmberMaen,
+        StimmberFraue,
+        AbsolutesMehr,
+        Stimmbeteiligung,
+        AntBrieflich,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahlTitel => "wahl_titel".into(),
+            Field::Wahlgang => "wahlgang".into(),
+            Field::ResultatsTyp => "resultats_typ".into(),
+            Field::Datum => "datum".into(),
+            Field::AnzSitze => "anz_sitze".into(),
+            Field::KandidatNr => "kandidat_nr".into(),
+            Field::NameGanz => "name_ganz".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Gemeinde => "gemeinde".into(),
+            Field::Stimmen => "stimmen".into(),
+            Field::Vereinzelte => "vereinzelte".into(),
+            Field::Gewaehlt => "gewaehlt".into(),
+            Field::Stimmrechtsausweise => "stimmrechtsausweise".into(),
+            Field::Eingelegte => "eingelegte".into(),
+            Field::Leere => "leere".into(),
+            Field::Ungueltige => "ungueltige".into(),
+            Field::Gueltige => "gueltige".into(),
+            Field::AnzBriefliche => "anz_briefliche".into(),
+            Field::StimmberTotal => "stimmber_total".into(),
+            Field::StimmberMaen => "stimmber_maen".into(),
+            Field::StimmberFraue => "stimmber_fraue".into(),
+            Field::AbsolutesMehr => "absolutes_mehr".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::AntBrieflich => "ant_brieflich".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -16469,19 +22614,19 @@ pub mod wahl_von_fuenf_praesidentinnen_oder_praesidenten_des_appellationsgericht
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -16547,6 +22692,33 @@ pub mod kandidierende_der_regierungspraesidiumswahl_20_oktober_2024 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        ListenNr,
+        Listenbezeichnung,
+        Bisher,
+        NameVorname,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Zusatz,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::ListenNr => "listen_nr".into(),
+            Field::Listenbezeichnung => "listenbezeichnung".into(),
+            Field::Bisher => "bisher".into(),
+            Field::NameVorname => "name_vorname".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Zusatz => "zusatz".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -16555,19 +22727,19 @@ pub mod kandidierende_der_regierungspraesidiumswahl_20_oktober_2024 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -16635,6 +22807,33 @@ pub mod sammlung_europa {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Inventarnummer,
+        Einlaufnummer,
+        Kurzbezeichnung,
+        Titel,
+        Datierung,
+        MaterialTechnik,
+        Herkunft,
+        EinlaufInfo,
+        Masse,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Inventarnummer => "inventarnummer".into(),
+            Field::Einlaufnummer => "einlaufnummer".into(),
+            Field::Kurzbezeichnung => "kurzbezeichnung".into(),
+            Field::Titel => "titel".into(),
+            Field::Datierung => "datierung".into(),
+            Field::MaterialTechnik => "material_technik".into(),
+            Field::Herkunft => "herkunft".into(),
+            Field::EinlaufInfo => "einlauf_info".into(),
+            Field::Masse => "masse".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -16643,19 +22842,19 @@ pub mod sammlung_europa {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -16787,6 +22986,71 @@ pub mod abstimmung_vom_27_november_2022_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        InitOgaAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        AbstTyp,
+        GegeJaAnz,
+        GegeNeinAnz,
+        GegeOgaAnz,
+        StiInitiativeAnz,
+        StiGegenvorschlagAnz,
+        StiOgaAnz,
+        GegeAnteilJaStimmen,
+        StiAnteilInitStimmen,
+        AbstIdTitel,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::InitOgaAnz => "init_oga_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::GegeJaAnz => "gege_ja_anz".into(),
+            Field::GegeNeinAnz => "gege_nein_anz".into(),
+            Field::GegeOgaAnz => "gege_oga_anz".into(),
+            Field::StiInitiativeAnz => "sti_initiative_anz".into(),
+            Field::StiGegenvorschlagAnz => "sti_gegenvorschlag_anz".into(),
+            Field::StiOgaAnz => "sti_oga_anz".into(),
+            Field::GegeAnteilJaStimmen => "gege_anteil_ja_stimmen".into(),
+            Field::StiAnteilInitStimmen => "sti_anteil_init_stimmen".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -16795,19 +23059,19 @@ pub mod abstimmung_vom_27_november_2022_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -16885,6 +23149,39 @@ pub mod kandidaturen_fuer_gerichtspraesidienwahlen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Titel,
+        Datum,
+        AnzahlSitze,
+        Listennr,
+        Listenbezeichnung,
+        Zeilennummer,
+        Name,
+        Vorname,
+        Bisher,
+        Geschlecht,
+        Jahrgang,
+        ZusatzlicheAngaben,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Titel => "titel".into(),
+            Field::Datum => "datum".into(),
+            Field::AnzahlSitze => "anzahl_sitze".into(),
+            Field::Listennr => "listennr".into(),
+            Field::Listenbezeichnung => "listenbezeichnung".into(),
+            Field::Zeilennummer => "zeilennummer".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Bisher => "bisher".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::ZusatzlicheAngaben => "zusatzliche_angaben".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -16893,19 +23190,19 @@ pub mod kandidaturen_fuer_gerichtspraesidienwahlen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -16979,6 +23276,45 @@ pub mod coronavirus_covid_19_tests_nach_nachweismethode {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        Georegion,
+        Entries,
+        Pop,
+        Dayofweek,
+        Wochentag,
+        Week,
+        OffsetLast7d,
+        OffsetLast14d,
+        OffsetLast28d,
+        Sumdelta7d,
+        Inzdelta7d,
+        TypeVariant,
+        EntriesLetzterStand,
+        EntriesNeuGemeldet,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::Georegion => "georegion".into(),
+            Field::Entries => "entries".into(),
+            Field::Pop => "pop".into(),
+            Field::Dayofweek => "dayofweek".into(),
+            Field::Wochentag => "wochentag".into(),
+            Field::Week => "week".into(),
+            Field::OffsetLast7d => "offset_last7d".into(),
+            Field::OffsetLast14d => "offset_last14d".into(),
+            Field::OffsetLast28d => "offset_last28d".into(),
+            Field::Sumdelta7d => "sumdelta7d".into(),
+            Field::Inzdelta7d => "inzdelta7d".into(),
+            Field::TypeVariant => "type_variant".into(),
+            Field::EntriesLetzterStand => "entries_letzter_stand".into(),
+            Field::EntriesNeuGemeldet => "entries_neu_gemeldet".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -16987,19 +23323,19 @@ pub mod coronavirus_covid_19_tests_nach_nachweismethode {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -17095,6 +23431,51 @@ pub mod abstimmung_vom_28_november_2021_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        AbstIdTitel,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -17103,19 +23484,19 @@ pub mod abstimmung_vom_28_november_2021_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -17213,6 +23594,53 @@ pub mod abstimmung_vom_15_mai_2022_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        AbstTyp,
+        AbstIdTitel,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -17221,19 +23649,19 @@ pub mod abstimmung_vom_15_mai_2022_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -17347,6 +23775,59 @@ pub mod kennzahlen_der_abstimmung_vom_3_maerz_2024 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstTyp,
+        AbstIdTitel,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+        AnzElektrProAbstArt,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+            Field::AnzElektrProAbstArt => "anz_elektr_pro_abst_art".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -17355,19 +23836,19 @@ pub mod kennzahlen_der_abstimmung_vom_3_maerz_2024 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -17481,6 +23962,59 @@ pub mod kennzahlen_der_abstimmung_vom_26_november_2023 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstTyp,
+        AbstIdTitel,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+        AnzElektrProAbstArt,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+            Field::AnzElektrProAbstArt => "anz_elektr_pro_abst_art".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -17489,19 +24023,19 @@ pub mod kennzahlen_der_abstimmung_vom_26_november_2023 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -17605,6 +24139,55 @@ pub mod kennzahlen_der_abstimmung_vom_7_maerz_2021 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        StimmberAnz,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstIdTitel,
+        AbstTyp,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::StimmberAnz => "stimmber_anz".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::AbstTyp => "abst_typ".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -17613,19 +24196,19 @@ pub mod kennzahlen_der_abstimmung_vom_7_maerz_2021 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -17725,6 +24308,53 @@ pub mod abstimmung_vom_12_maerz_2023_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        AbstTyp,
+        AbstIdTitel,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -17733,19 +24363,19 @@ pub mod abstimmung_vom_12_maerz_2023_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -17839,6 +24469,51 @@ pub mod abstimmung_7_maerz_2021_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+        AbstTyp,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+            Field::AbstTyp => "abst_typ".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -17847,19 +24522,19 @@ pub mod abstimmung_7_maerz_2021_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -17959,6 +24634,53 @@ pub mod abstimmung_vom_3_maerz_2024_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        AbstTyp,
+        AbstIdTitel,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -17967,19 +24689,19 @@ pub mod abstimmung_vom_3_maerz_2024_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -18077,6 +24799,53 @@ pub mod abstimmung_vom_13_februar_2022_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        AbstTyp,
+        AbstIdTitel,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -18085,19 +24854,19 @@ pub mod abstimmung_vom_13_februar_2022_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -18421,6 +25190,207 @@ pub mod resultate_der_nationalratswahlen_2023 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahlbezeichnung,
+        Amtsdauer,
+        Wahltermin,
+        AnzahlSitze,
+        WahlkreisNr,
+        WahlkreisCode,
+        Wahlkreisbezeichnung,
+        StimmberechtigteManner,
+        StimmberechtigteFrauen,
+        Stimmberechtigte,
+        StimmberechtigteAuslandschweizer,
+        Wahlzettel,
+        BrieflicheStimmabgaben,
+        UngestempelteWahlzettel,
+        UngultigeWahlzettel,
+        LeereWahlzettel,
+        UnveranderteWahlzettel,
+        VeranderteWahlzettelMitBezeichnung,
+        VeranderteWahlzettelOhneBezeichnung,
+        LeereStimmen,
+        ListenNr,
+        ParteiId,
+        Parteikurzbezeichnung,
+        Parteibezeichnung,
+        HlvNr,
+        HlvBezeichnung,
+        UlvNr,
+        UlvBezeichnung,
+        AnzahlSitzeListe,
+        UnveranderteWahlzettelListe,
+        VeranderteWahlzettelListe,
+        KandidatenstimmenUnveranderteWahlzettel,
+        ZusatzstimmenUnveranderteWahlzettel,
+        KandidatenstimmenVeranderteWahlzettel,
+        ZusatzstimmenVeranderteWahlzettel,
+        KandidatenNr,
+        PersonenId,
+        Kumulation,
+        Bisher,
+        Gewahlt,
+        GanzerName,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Anrede,
+        Beruf,
+        Heimatort,
+        StimmenUnveranderteWahlzettel,
+        StimmenVeranderteWahlzettel,
+        StimmenTotalAusWahlzettel,
+        X01Fdp,
+        X03Ldp,
+        X04Evp,
+        X05Sp,
+        X09Edu,
+        X10Glp,
+        X12Svp,
+        X14Va,
+        X18Jsvp,
+        X21Jgb,
+        X23Jlb,
+        X25Jglp,
+        X00Ohne,
+        Rangfolge,
+        TotalDerGultigenWahlzettel,
+        Stimmbeteiligung,
+        AnteilBrieflichWahlende,
+        X06Jfdp,
+        X07Mitte,
+        X08Bgb,
+        X11Pda,
+        X17BastaRm,
+        X20Juso,
+        X22Jmitte,
+        X24Sp60,
+        X26Fdp,
+        X27BastaJa,
+        X28Mv,
+        X30SvpGew,
+        X31Svp60,
+        X32GlpKU,
+        X33GlpB,
+        X34LdpGew,
+        X35GlpRE,
+        X36Mitte60,
+        X37GlpKmu,
+        X38GlpI,
+        JahrgangNum,
+        AlterAmJahresende2023,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahlbezeichnung => "wahlbezeichnung".into(),
+            Field::Amtsdauer => "amtsdauer".into(),
+            Field::Wahltermin => "wahltermin".into(),
+            Field::AnzahlSitze => "anzahl_sitze".into(),
+            Field::WahlkreisNr => "wahlkreis_nr".into(),
+            Field::WahlkreisCode => "wahlkreis_code".into(),
+            Field::Wahlkreisbezeichnung => "wahlkreisbezeichnung".into(),
+            Field::StimmberechtigteManner => "stimmberechtigte_manner".into(),
+            Field::StimmberechtigteFrauen => "stimmberechtigte_frauen".into(),
+            Field::Stimmberechtigte => "stimmberechtigte".into(),
+            Field::StimmberechtigteAuslandschweizer => "stimmberechtigte_auslandschweizer".into(),
+            Field::Wahlzettel => "wahlzettel".into(),
+            Field::BrieflicheStimmabgaben => "briefliche_stimmabgaben".into(),
+            Field::UngestempelteWahlzettel => "ungestempelte_wahlzettel".into(),
+            Field::UngultigeWahlzettel => "ungultige_wahlzettel".into(),
+            Field::LeereWahlzettel => "leere_wahlzettel".into(),
+            Field::UnveranderteWahlzettel => "unveranderte_wahlzettel".into(),
+            Field::VeranderteWahlzettelMitBezeichnung => {
+                "veranderte_wahlzettel_mit_bezeichnung".into()
+            }
+            Field::VeranderteWahlzettelOhneBezeichnung => {
+                "veranderte_wahlzettel_ohne_bezeichnung".into()
+            }
+            Field::LeereStimmen => "leere_stimmen".into(),
+            Field::ListenNr => "listen_nr".into(),
+            Field::ParteiId => "partei_id".into(),
+            Field::Parteikurzbezeichnung => "parteikurzbezeichnung".into(),
+            Field::Parteibezeichnung => "parteibezeichnung".into(),
+            Field::HlvNr => "hlv_nr".into(),
+            Field::HlvBezeichnung => "hlv_bezeichnung".into(),
+            Field::UlvNr => "ulv_nr".into(),
+            Field::UlvBezeichnung => "ulv_bezeichnung".into(),
+            Field::AnzahlSitzeListe => "anzahl_sitze_liste".into(),
+            Field::UnveranderteWahlzettelListe => "unveranderte_wahlzettel_liste".into(),
+            Field::VeranderteWahlzettelListe => "veranderte_wahlzettel_liste".into(),
+            Field::KandidatenstimmenUnveranderteWahlzettel => {
+                "kandidatenstimmen_unveranderte_wahlzettel".into()
+            }
+            Field::ZusatzstimmenUnveranderteWahlzettel => {
+                "zusatzstimmen_unveranderte_wahlzettel".into()
+            }
+            Field::KandidatenstimmenVeranderteWahlzettel => {
+                "kandidatenstimmen_veranderte_wahlzettel".into()
+            }
+            Field::ZusatzstimmenVeranderteWahlzettel => {
+                "zusatzstimmen_veranderte_wahlzettel".into()
+            }
+            Field::KandidatenNr => "kandidaten_nr".into(),
+            Field::PersonenId => "personen_id".into(),
+            Field::Kumulation => "kumulation".into(),
+            Field::Bisher => "bisher".into(),
+            Field::Gewahlt => "gewahlt".into(),
+            Field::GanzerName => "ganzer_name".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Anrede => "anrede".into(),
+            Field::Beruf => "beruf".into(),
+            Field::Heimatort => "heimatort".into(),
+            Field::StimmenUnveranderteWahlzettel => "stimmen_unveranderte_wahlzettel".into(),
+            Field::StimmenVeranderteWahlzettel => "stimmen_veranderte_wahlzettel".into(),
+            Field::StimmenTotalAusWahlzettel => "stimmen_total_aus_wahlzettel".into(),
+            Field::X01Fdp => "01_fdp".into(),
+            Field::X03Ldp => "03_ldp".into(),
+            Field::X04Evp => "04_evp".into(),
+            Field::X05Sp => "05_sp".into(),
+            Field::X09Edu => "09_edu".into(),
+            Field::X10Glp => "10_glp".into(),
+            Field::X12Svp => "12_svp".into(),
+            Field::X14Va => "14_va".into(),
+            Field::X18Jsvp => "18_jsvp".into(),
+            Field::X21Jgb => "21_jgb".into(),
+            Field::X23Jlb => "23_jlb".into(),
+            Field::X25Jglp => "25_jglp".into(),
+            Field::X00Ohne => "00_ohne".into(),
+            Field::Rangfolge => "rangfolge".into(),
+            Field::TotalDerGultigenWahlzettel => "total_der_gultigen_wahlzettel".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::AnteilBrieflichWahlende => "anteil_brieflich_wahlende".into(),
+            Field::X06Jfdp => "06_jfdp".into(),
+            Field::X07Mitte => "07_mitte".into(),
+            Field::X08Bgb => "08_bgb".into(),
+            Field::X11Pda => "11_pda".into(),
+            Field::X17BastaRm => "17_basta_rm".into(),
+            Field::X20Juso => "20_juso".into(),
+            Field::X22Jmitte => "22_jmitte".into(),
+            Field::X24Sp60 => "24_sp60".into(),
+            Field::X26Fdp => "26_fdp".into(),
+            Field::X27BastaJa => "27_basta_ja".into(),
+            Field::X28Mv => "28_mv".into(),
+            Field::X30SvpGew => "30_svp_gew".into(),
+            Field::X31Svp60 => "31_svp60".into(),
+            Field::X32GlpKU => "32_glp_k_u".into(),
+            Field::X33GlpB => "33_glp_b".into(),
+            Field::X34LdpGew => "34_ldp_gew".into(),
+            Field::X35GlpRE => "35_glp_r_e".into(),
+            Field::X36Mitte60 => "36_mitte60".into(),
+            Field::X37GlpKmu => "37_glp_kmu".into(),
+            Field::X38GlpI => "38_glp_i".into(),
+            Field::JahrgangNum => "jahrgang_num".into(),
+            Field::AlterAmJahresende2023 => "alter_am_jahresende_2023".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -18429,19 +25399,19 @@ pub mod resultate_der_nationalratswahlen_2023 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -18485,6 +25455,27 @@ pub mod smarte_strasse_sensoren {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WasWirdGemessen,
+        Verantwortlich,
+        QrcNr,
+        ZuDenMesswerten,
+        Foto,
+        GeoPoint,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WasWirdGemessen => "was_wird_gemessen".into(),
+            Field::Verantwortlich => "verantwortlich".into(),
+            Field::QrcNr => "qrc_nr".into(),
+            Field::ZuDenMesswerten => "zu_den_messwerten".into(),
+            Field::Foto => "foto".into(),
+            Field::GeoPoint => "geo_point".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -18493,19 +25484,19 @@ pub mod smarte_strasse_sensoren {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -18681,6 +25672,87 @@ pub mod resultate_der_ersatzwahl_regierungsrat_3_maerz_2024 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahlbezeichnung,
+        Amtsdauer,
+        Wahltermin,
+        AnzahlSitze,
+        WahlkreisNr,
+        WahlkreisCode,
+        BezeichnungWahlkreis,
+        StimmberechtigteManner,
+        StimmberechtigteFrauen,
+        Stimmberechtigte,
+        StimmberechtigteAuslandschweizer,
+        Wahlzettel,
+        BrieflicheStimmabgaben,
+        UngultigeWahlzettel,
+        LeereWahlzettel,
+        LeereStimmen,
+        UngultigeStimmen,
+        VereinzelteStimmen,
+        KandidatenNr,
+        PersonenId,
+        Bisher,
+        Gewahlt,
+        GanzerName,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Anrede,
+        Beruf,
+        Heimatort,
+        Stimmen,
+        TotalGultigeWahlzettel,
+        Stimmbeteiligung,
+        AnteilBrieflichWahlende,
+        AbsolutesMehr,
+        Vereinzelte,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahlbezeichnung => "wahlbezeichnung".into(),
+            Field::Amtsdauer => "amtsdauer".into(),
+            Field::Wahltermin => "wahltermin".into(),
+            Field::AnzahlSitze => "anzahl_sitze".into(),
+            Field::WahlkreisNr => "wahlkreis_nr".into(),
+            Field::WahlkreisCode => "wahlkreis_code".into(),
+            Field::BezeichnungWahlkreis => "bezeichnung_wahlkreis".into(),
+            Field::StimmberechtigteManner => "stimmberechtigte_manner".into(),
+            Field::StimmberechtigteFrauen => "stimmberechtigte_frauen".into(),
+            Field::Stimmberechtigte => "stimmberechtigte".into(),
+            Field::StimmberechtigteAuslandschweizer => "stimmberechtigte_auslandschweizer".into(),
+            Field::Wahlzettel => "wahlzettel".into(),
+            Field::BrieflicheStimmabgaben => "briefliche_stimmabgaben".into(),
+            Field::UngultigeWahlzettel => "ungultige_wahlzettel".into(),
+            Field::LeereWahlzettel => "leere_wahlzettel".into(),
+            Field::LeereStimmen => "leere_stimmen".into(),
+            Field::UngultigeStimmen => "ungultige_stimmen".into(),
+            Field::VereinzelteStimmen => "vereinzelte_stimmen".into(),
+            Field::KandidatenNr => "kandidaten_nr".into(),
+            Field::PersonenId => "personen_id".into(),
+            Field::Bisher => "bisher".into(),
+            Field::Gewahlt => "gewahlt".into(),
+            Field::GanzerName => "ganzer_name".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Anrede => "anrede".into(),
+            Field::Beruf => "beruf".into(),
+            Field::Heimatort => "heimatort".into(),
+            Field::Stimmen => "stimmen".into(),
+            Field::TotalGultigeWahlzettel => "total_gultige_wahlzettel".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::AnteilBrieflichWahlende => "anteil_brieflich_wahlende".into(),
+            Field::AbsolutesMehr => "absolutes_mehr".into(),
+            Field::Vereinzelte => "vereinzelte".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -18689,19 +25761,19 @@ pub mod resultate_der_ersatzwahl_regierungsrat_3_maerz_2024 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -18765,6 +25837,31 @@ pub mod grosser_rat_gremien {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        IstAktuellesGremium,
+        Kurzname,
+        Name,
+        Gremientyp,
+        UniNr,
+        UrlMitgliedschaften,
+        UrlUrheber,
+        UrlZugewGeschaefte,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::IstAktuellesGremium => "ist_aktuelles_gremium".into(),
+            Field::Kurzname => "kurzname".into(),
+            Field::Name => "name".into(),
+            Field::Gremientyp => "gremientyp".into(),
+            Field::UniNr => "uni_nr".into(),
+            Field::UrlMitgliedschaften => "url_mitgliedschaften".into(),
+            Field::UrlUrheber => "url_urheber".into(),
+            Field::UrlZugewGeschaefte => "url_zugew_geschaefte".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -18773,19 +25870,19 @@ pub mod grosser_rat_gremien {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -18851,6 +25948,33 @@ pub mod kandidierende_der_ersatzwahl_regierungsrat_3_maerz_2024 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        ListenNr,
+        Listenbezeichnung,
+        Bisher,
+        NameVorname,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Zusatz,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::ListenNr => "listen_nr".into(),
+            Field::Listenbezeichnung => "listenbezeichnung".into(),
+            Field::Bisher => "bisher".into(),
+            Field::NameVorname => "name_vorname".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Zusatz => "zusatz".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -18859,19 +25983,19 @@ pub mod kandidierende_der_ersatzwahl_regierungsrat_3_maerz_2024 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -18923,6 +26047,25 @@ pub mod ein_und_ausfahrten_oeffentlicher_parkhaeuser_basel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        Title,
+        TimestampText,
+        Einfahrten,
+        Ausfahrten,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::Title => "title".into(),
+            Field::TimestampText => "timestamp_text".into(),
+            Field::Einfahrten => "einfahrten".into(),
+            Field::Ausfahrten => "ausfahrten".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -18931,19 +26074,19 @@ pub mod ein_und_ausfahrten_oeffentlicher_parkhaeuser_basel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -19043,6 +26186,53 @@ pub mod abstimmung_vom_9_juni_2024_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        AbstTyp,
+        AbstIdTitel,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -19051,19 +26241,19 @@ pub mod abstimmung_vom_9_juni_2024_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -19123,6 +26313,29 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_sekundarstufe_ii {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Firstdayofweek,
+        Weekofyear,
+        Result,
+        Count,
+        Counttotal,
+        Positivityratepercent,
+        Schoolcount,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Firstdayofweek => "firstdayofweek".into(),
+            Field::Weekofyear => "weekofyear".into(),
+            Field::Result => "result".into(),
+            Field::Count => "count".into(),
+            Field::Counttotal => "counttotal".into(),
+            Field::Positivityratepercent => "positivityratepercent".into(),
+            Field::Schoolcount => "schoolcount".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -19131,19 +26344,19 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_sekundarstufe_ii {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -19231,6 +26444,43 @@ pub mod gesundheitsversorgung_gsv_pflegeheimbewohnende {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        Id,
+        Bewohner,
+        AnzahlFrauen,
+        AnteilFrauen,
+        AnzahlMaenner,
+        AnteilMaenner,
+        MeanAlterBewohner,
+        MeanAlterFrauen,
+        MeanAlterMaenner,
+        VerstorbenBewohner,
+        Alos,
+        AlosFrauen,
+        AlosMaenner,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::Id => "id".into(),
+            Field::Bewohner => "bewohner".into(),
+            Field::AnzahlFrauen => "anzahl_frauen".into(),
+            Field::AnteilFrauen => "anteil_frauen".into(),
+            Field::AnzahlMaenner => "anzahl_maenner".into(),
+            Field::AnteilMaenner => "anteil_maenner".into(),
+            Field::MeanAlterBewohner => "mean_alter_bewohner".into(),
+            Field::MeanAlterFrauen => "mean_alter_frauen".into(),
+            Field::MeanAlterMaenner => "mean_alter_maenner".into(),
+            Field::VerstorbenBewohner => "verstorben_bewohner".into(),
+            Field::Alos => "alos".into(),
+            Field::AlosFrauen => "alos_frauen".into(),
+            Field::AlosMaenner => "alos_maenner".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -19239,19 +26489,19 @@ pub mod gesundheitsversorgung_gsv_pflegeheimbewohnende {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -19367,6 +26617,61 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Publikationsjahr,
+        WohnviertelId,
+        WohnviertelName,
+        Altersquotient,
+        Jugendquotient,
+        AnteilPersonenOhneReligionszugehoerigkeit,
+        AnteilPersonenInEinpersonenhaushalten,
+        AnteilSesshafte,
+        BaujahrDerWohngebaeude,
+        AnteilEinfamilienhaeuser,
+        Gymnasialquote,
+        AnteilSozialhilfeempfaenger,
+        AnteilAuslaender,
+        AnteilGruenflaechen,
+        FlaecheProWohnung,
+        WohnflaecheProPerson,
+        VermoegenssteuerProVeranlagung,
+        EinkommenssteuerProVeranlagung,
+        Erwerbstaetigenquote,
+        ArbeitsplaetzeProEinwohner,
+        Arbeitslosenquote,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Publikationsjahr => "publikationsjahr".into(),
+            Field::WohnviertelId => "wohnviertel_id".into(),
+            Field::WohnviertelName => "wohnviertel_name".into(),
+            Field::Altersquotient => "altersquotient".into(),
+            Field::Jugendquotient => "jugendquotient".into(),
+            Field::AnteilPersonenOhneReligionszugehoerigkeit => {
+                "anteil_personen_ohne_religionszugehoerigkeit".into()
+            }
+            Field::AnteilPersonenInEinpersonenhaushalten => {
+                "anteil_personen_in_einpersonenhaushalten".into()
+            }
+            Field::AnteilSesshafte => "anteil_sesshafte".into(),
+            Field::BaujahrDerWohngebaeude => "baujahr_der_wohngebaeude".into(),
+            Field::AnteilEinfamilienhaeuser => "anteil_einfamilienhaeuser".into(),
+            Field::Gymnasialquote => "gymnasialquote".into(),
+            Field::AnteilSozialhilfeempfaenger => "anteil_sozialhilfeempfaenger".into(),
+            Field::AnteilAuslaender => "anteil_auslaender".into(),
+            Field::AnteilGruenflaechen => "anteil_gruenflaechen".into(),
+            Field::FlaecheProWohnung => "flaeche_pro_wohnung".into(),
+            Field::WohnflaecheProPerson => "wohnflaeche_pro_person".into(),
+            Field::VermoegenssteuerProVeranlagung => "vermoegenssteuer_pro_veranlagung".into(),
+            Field::EinkommenssteuerProVeranlagung => "einkommenssteuer_pro_veranlagung".into(),
+            Field::Erwerbstaetigenquote => "erwerbstaetigenquote".into(),
+            Field::ArbeitsplaetzeProEinwohner => "arbeitsplaetze_pro_einwohner".into(),
+            Field::Arbeitslosenquote => "arbeitslosenquote".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -19375,19 +26680,19 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -19431,6 +26736,21 @@ pub mod grosser_rat_sitzungskalender {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Summary,
+        Dtstart,
+        Dtend,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Summary => "summary".into(),
+            Field::Dtstart => "dtstart".into(),
+            Field::Dtend => "dtend".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -19439,19 +26759,19 @@ pub mod grosser_rat_sitzungskalender {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -19495,6 +26815,21 @@ pub mod coronavirus_covid_19_positiv_getestete_minderjaehrige_in_3_jahresklassen
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        TestDatum,
+        PersAlter,
+        Anzahl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::TestDatum => "test_datum".into(),
+            Field::PersAlter => "pers_alter".into(),
+            Field::Anzahl => "anzahl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -19503,19 +26838,19 @@ pub mod coronavirus_covid_19_positiv_getestete_minderjaehrige_in_3_jahresklassen
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -19625,6 +26960,57 @@ pub mod kennzahlen_der_abstimmung_vom_12_maerz_2023 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstTyp,
+        AbstIdTitel,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -19633,19 +27019,19 @@ pub mod kennzahlen_der_abstimmung_vom_12_maerz_2023 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -19689,6 +27075,21 @@ pub mod baumkronenbedeckung {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        UrlPng,
+        UrlPgw,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::UrlPng => "url_png".into(),
+            Field::UrlPgw => "url_pgw".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -19697,19 +27098,19 @@ pub mod baumkronenbedeckung {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -19797,6 +27198,51 @@ pub mod nationalratswahlen_2023_veraenderte_wahlzettel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Column1,
+        Wahljahr,
+        Wahlkreis,
+        WahlzettelType,
+        ListenNr,
+        Parteikurzbezeichnung,
+        Parteibezeichnung,
+        Kandidat1,
+        Kandidat1Name,
+        Kandidat2,
+        Kandidat2Name,
+        Kandidat3,
+        Kandidat3Name,
+        Kandidat4,
+        Kandidat4Name,
+        WahlzettelTyp,
+        Listenverbindungen,
+        Unterlistenverbindungen,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Column1 => "column_1".into(),
+            Field::Wahljahr => "wahljahr".into(),
+            Field::Wahlkreis => "wahlkreis".into(),
+            Field::WahlzettelType => "wahlzettel_type".into(),
+            Field::ListenNr => "listen_nr".into(),
+            Field::Parteikurzbezeichnung => "parteikurzbezeichnung".into(),
+            Field::Parteibezeichnung => "parteibezeichnung".into(),
+            Field::Kandidat1 => "kandidat_1".into(),
+            Field::Kandidat1Name => "kandidat_1_name".into(),
+            Field::Kandidat2 => "kandidat_2".into(),
+            Field::Kandidat2Name => "kandidat_2_name".into(),
+            Field::Kandidat3 => "kandidat_3".into(),
+            Field::Kandidat3Name => "kandidat_3_name".into(),
+            Field::Kandidat4 => "kandidat_4".into(),
+            Field::Kandidat4Name => "kandidat_4_name".into(),
+            Field::WahlzettelTyp => "wahlzettel_typ".into(),
+            Field::Listenverbindungen => "listenverbindungen".into(),
+            Field::Unterlistenverbindungen => "unterlistenverbindungen".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -19805,19 +27251,19 @@ pub mod nationalratswahlen_2023_veraenderte_wahlzettel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -19911,6 +27357,47 @@ pub mod nationalratswahlen_2023_kandidierende_aus_basel_stadt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        ListenNr,
+        Listenkurzbezeichnung,
+        Listenbezeichnung,
+        HlvMit,
+        HlvLink,
+        UlvMit,
+        UlvLink,
+        KandNr,
+        Bisher,
+        NameVorname,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Kurzbeschrieb,
+        WhIn,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::ListenNr => "listen_nr".into(),
+            Field::Listenkurzbezeichnung => "listenkurzbezeichnung".into(),
+            Field::Listenbezeichnung => "listenbezeichnung".into(),
+            Field::HlvMit => "hlv_mit".into(),
+            Field::HlvLink => "hlv_link".into(),
+            Field::UlvMit => "ulv_mit".into(),
+            Field::UlvLink => "ulv_link".into(),
+            Field::KandNr => "kand_nr".into(),
+            Field::Bisher => "bisher".into(),
+            Field::NameVorname => "name_vorname".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Kurzbeschrieb => "kurzbeschrieb".into(),
+            Field::WhIn => "wh_in".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -19919,19 +27406,19 @@ pub mod nationalratswahlen_2023_kandidierende_aus_basel_stadt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -19999,6 +27486,33 @@ pub mod staenderatswahlen_2023_kandidierende_aus_basel_stadt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        ListenNr,
+        Listenbezeichnung,
+        Bisher,
+        NameVorname,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Kurzbeschrieb,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::ListenNr => "listen_nr".into(),
+            Field::Listenbezeichnung => "listenbezeichnung".into(),
+            Field::Bisher => "bisher".into(),
+            Field::NameVorname => "name_vorname".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Kurzbeschrieb => "kurzbeschrieb".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -20007,19 +27521,19 @@ pub mod staenderatswahlen_2023_kandidierende_aus_basel_stadt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -20067,6 +27581,23 @@ pub mod wahllokale_kanton_basel_stadt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WahllokName,
+        WahllokId,
+        GemeinId,
+        GemeinName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WahllokName => "wahllok_name".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -20075,19 +27606,19 @@ pub mod wahllokale_kanton_basel_stadt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -20159,6 +27690,35 @@ pub mod lebendgeborene_seit_1901 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        Total,
+        Knaben,
+        Madchen,
+        MutterVerheiratet,
+        MutterUnverheiratet,
+        Kantonsburger,
+        UbrigeSchweiz,
+        Schweiz,
+        Ausland,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::Total => "total".into(),
+            Field::Knaben => "knaben".into(),
+            Field::Madchen => "madchen".into(),
+            Field::MutterVerheiratet => "mutter_verheiratet".into(),
+            Field::MutterUnverheiratet => "mutter_unverheiratet".into(),
+            Field::Kantonsburger => "kantonsburger".into(),
+            Field::UbrigeSchweiz => "ubrige_schweiz".into(),
+            Field::Schweiz => "schweiz".into(),
+            Field::Ausland => "ausland".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -20167,19 +27727,19 @@ pub mod lebendgeborene_seit_1901 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -20223,6 +27783,23 @@ pub mod perimeter_der_schuelerprognosen_basel_stadt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Nummer,
+        Zonen,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Nummer => "nummer".into(),
+            Field::Zonen => "zonen".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -20231,19 +27808,19 @@ pub mod perimeter_der_schuelerprognosen_basel_stadt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -20373,6 +27950,77 @@ pub mod geschwindigkeitsklassen_motorisierter_individualverkehr {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        ZstId,
+        Sitename,
+        Directionname,
+        Lanecode,
+        Lanename,
+        Date,
+        Timefrom,
+        Timeto,
+        Traffictype,
+        Total,
+        X20,
+        X2030,
+        X3040,
+        X4050,
+        X5060,
+        X6070,
+        X7080,
+        X8090,
+        X90100,
+        X100110,
+        X110120,
+        X120130,
+        X130,
+        Datetimefrom,
+        Datetimeto,
+        Year,
+        Month,
+        Day,
+        Weekday,
+        Hourfrom,
+        Dayofyear,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::ZstId => "zst_id".into(),
+            Field::Sitename => "sitename".into(),
+            Field::Directionname => "directionname".into(),
+            Field::Lanecode => "lanecode".into(),
+            Field::Lanename => "lanename".into(),
+            Field::Date => "date".into(),
+            Field::Timefrom => "timefrom".into(),
+            Field::Timeto => "timeto".into(),
+            Field::Traffictype => "traffictype".into(),
+            Field::Total => "total".into(),
+            Field::X20 => "20".into(),
+            Field::X2030 => "20_30".into(),
+            Field::X3040 => "30_40".into(),
+            Field::X4050 => "40_50".into(),
+            Field::X5060 => "50_60".into(),
+            Field::X6070 => "60_70".into(),
+            Field::X7080 => "70_80".into(),
+            Field::X8090 => "80_90".into(),
+            Field::X90100 => "90_100".into(),
+            Field::X100110 => "100_110".into(),
+            Field::X110120 => "110_120".into(),
+            Field::X120130 => "120_130".into(),
+            Field::X130 => "130".into(),
+            Field::Datetimefrom => "datetimefrom".into(),
+            Field::Datetimeto => "datetimeto".into(),
+            Field::Year => "year".into(),
+            Field::Month => "month".into(),
+            Field::Day => "day".into(),
+            Field::Weekday => "weekday".into(),
+            Field::Hourfrom => "hourfrom".into(),
+            Field::Dayofyear => "dayofyear".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -20381,19 +28029,19 @@ pub mod geschwindigkeitsklassen_motorisierter_individualverkehr {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -20431,6 +28079,21 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_baustellenberei
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        N,
+        Geometry,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::N => "n".into(),
+            Field::Geometry => "geometry".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -20439,19 +28102,19 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_baustellenberei
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -20555,6 +28218,57 @@ pub mod steuerstatistik_basel_stadt_kennzahlen_seit_1991_nach_gemeinde_und_wohnv
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Steuerjahr,
+        Wohnviertel,
+        WohnviertelName,
+        N,
+        ReineinkommenMittelwert,
+        ReineinkommenMedian,
+        ReineinkommenGinik,
+        EinkommenSteuerbarMittelwert,
+        EinkommenSteuerbarMedian,
+        EinkommenSteuerbetragKtgdeMittelwert,
+        EinkommenSteuerbetragKtgdeMedian,
+        ReinvermoegenMittelwert,
+        ReinvermoegenMedian,
+        ReinvermoegenGinik,
+        VermoegenSteuerbarMittelwert,
+        VermoegenSteuerbarMedian,
+        VermoegenSteuerbetragKtgdeMittelwert,
+        VermoegenSteuerbetragKtgdeMedian,
+        SteuerjahrZahl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Steuerjahr => "steuerjahr".into(),
+            Field::Wohnviertel => "wohnviertel".into(),
+            Field::WohnviertelName => "wohnviertel_name".into(),
+            Field::N => "n".into(),
+            Field::ReineinkommenMittelwert => "reineinkommen_mittelwert".into(),
+            Field::ReineinkommenMedian => "reineinkommen_median".into(),
+            Field::ReineinkommenGinik => "reineinkommen_ginik".into(),
+            Field::EinkommenSteuerbarMittelwert => "einkommen_steuerbar_mittelwert".into(),
+            Field::EinkommenSteuerbarMedian => "einkommen_steuerbar_median".into(),
+            Field::EinkommenSteuerbetragKtgdeMittelwert => {
+                "einkommen_steuerbetrag_ktgde_mittelwert".into()
+            }
+            Field::EinkommenSteuerbetragKtgdeMedian => "einkommen_steuerbetrag_ktgde_median".into(),
+            Field::ReinvermoegenMittelwert => "reinvermoegen_mittelwert".into(),
+            Field::ReinvermoegenMedian => "reinvermoegen_median".into(),
+            Field::ReinvermoegenGinik => "reinvermoegen_ginik".into(),
+            Field::VermoegenSteuerbarMittelwert => "vermoegen_steuerbar_mittelwert".into(),
+            Field::VermoegenSteuerbarMedian => "vermoegen_steuerbar_median".into(),
+            Field::VermoegenSteuerbetragKtgdeMittelwert => {
+                "vermoegen_steuerbetrag_ktgde_mittelwert".into()
+            }
+            Field::VermoegenSteuerbetragKtgdeMedian => "vermoegen_steuerbetrag_ktgde_median".into(),
+            Field::SteuerjahrZahl => "steuerjahr_zahl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -20563,19 +28277,19 @@ pub mod steuerstatistik_basel_stadt_kennzahlen_seit_1991_nach_gemeinde_und_wohnv
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -20635,6 +28349,29 @@ pub mod eingebuergerte_auslaenderinnen_und_auslaender_nach_geschlecht_alter_gebu
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        Geschlecht,
+        Alter,
+        AlterNumm,
+        Geburtsland,
+        EhemStaaatsangehorigkeit,
+        AnzahlEingeburgerte,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Alter => "alter".into(),
+            Field::AlterNumm => "alter_numm".into(),
+            Field::Geburtsland => "geburtsland".into(),
+            Field::EhemStaaatsangehorigkeit => "ehem_staaatsangehorigkeit".into(),
+            Field::AnzahlEingeburgerte => "anzahl_eingeburgerte".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -20643,19 +28380,19 @@ pub mod eingebuergerte_auslaenderinnen_und_auslaender_nach_geschlecht_alter_gebu
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -20745,6 +28482,45 @@ pub mod schutzsuchende_im_kanton_basel_stadt_nach_geschlecht_altersklasse_staats
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Laufnummer,
+        Jahr,
+        Monat,
+        Schutzstatus,
+        Geschlecht,
+        Altersgruppen,
+        Weggezogen,
+        Wegzugsjahr,
+        Wegzugsmonat,
+        Zuzugsjahr,
+        Zuzugsmonat,
+        ValueGenderBfs,
+        NameGenderBfs,
+        MonatUndJahr,
+        Staatsangehoerigkeit,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Laufnummer => "laufnummer".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+            Field::Schutzstatus => "schutzstatus".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Altersgruppen => "altersgruppen".into(),
+            Field::Weggezogen => "weggezogen".into(),
+            Field::Wegzugsjahr => "wegzugsjahr".into(),
+            Field::Wegzugsmonat => "wegzugsmonat".into(),
+            Field::Zuzugsjahr => "zuzugsjahr".into(),
+            Field::Zuzugsmonat => "zuzugsmonat".into(),
+            Field::ValueGenderBfs => "value_gender_bfs".into(),
+            Field::NameGenderBfs => "name_gender_bfs".into(),
+            Field::MonatUndJahr => "monat_und_jahr".into(),
+            Field::Staatsangehoerigkeit => "staatsangehoerigkeit".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -20753,19 +28529,19 @@ pub mod schutzsuchende_im_kanton_basel_stadt_nach_geschlecht_altersklasse_staats
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -20837,6 +28613,35 @@ pub mod ueberwachung_luftqualitaet_sanierung_areal_walkeweg {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Messbeginn,
+        Messende,
+        Standort,
+        Parameter,
+        Messwert,
+        Interventionswert,
+        Warnwert,
+        Einheit,
+        Messmethode,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Messbeginn => "messbeginn".into(),
+            Field::Messende => "messende".into(),
+            Field::Standort => "standort".into(),
+            Field::Parameter => "parameter".into(),
+            Field::Messwert => "messwert".into(),
+            Field::Interventionswert => "interventionswert".into(),
+            Field::Warnwert => "warnwert".into(),
+            Field::Einheit => "einheit".into(),
+            Field::Messmethode => "messmethode".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -20845,19 +28650,19 @@ pub mod ueberwachung_luftqualitaet_sanierung_areal_walkeweg {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -21039,6 +28844,91 @@ pub mod resultate_der_staenderatswahlen_2023 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahlbezeichnung,
+        Amtsdauer,
+        Wahltermin,
+        AnzahlSitze,
+        WahlkreisNr,
+        WahlkreisCode,
+        BezeichnungWahlkreis,
+        StimmberechtigteManner,
+        StimmberechtigteFrauen,
+        Stimmberechtigte,
+        StimmberechtigteAuslandschweizer,
+        Wahlzettel,
+        BrieflicheStimmabgaben,
+        UngestempelteWahlzettel,
+        UngultigeWahlzettel,
+        LeereWahlzettel,
+        LeereStimmen,
+        UngultigeStimmen,
+        VereinzelteStimmen,
+        KandidatenNr,
+        PersonenId,
+        Bisher,
+        Gewahlt,
+        GanzerName,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        AlterAmJahresende2023,
+        Anrede,
+        Beruf,
+        Heimatort,
+        Stimmen,
+        TotalGultigeWahlzettel,
+        Stimmbeteiligung,
+        AnteilBrieflichWahlende,
+        Column44,
+        JahrgangNum,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahlbezeichnung => "wahlbezeichnung".into(),
+            Field::Amtsdauer => "amtsdauer".into(),
+            Field::Wahltermin => "wahltermin".into(),
+            Field::AnzahlSitze => "anzahl_sitze".into(),
+            Field::WahlkreisNr => "wahlkreis_nr".into(),
+            Field::WahlkreisCode => "wahlkreis_code".into(),
+            Field::BezeichnungWahlkreis => "bezeichnung_wahlkreis".into(),
+            Field::StimmberechtigteManner => "stimmberechtigte_manner".into(),
+            Field::StimmberechtigteFrauen => "stimmberechtigte_frauen".into(),
+            Field::Stimmberechtigte => "stimmberechtigte".into(),
+            Field::StimmberechtigteAuslandschweizer => "stimmberechtigte_auslandschweizer".into(),
+            Field::Wahlzettel => "wahlzettel".into(),
+            Field::BrieflicheStimmabgaben => "briefliche_stimmabgaben".into(),
+            Field::UngestempelteWahlzettel => "ungestempelte_wahlzettel".into(),
+            Field::UngultigeWahlzettel => "ungultige_wahlzettel".into(),
+            Field::LeereWahlzettel => "leere_wahlzettel".into(),
+            Field::LeereStimmen => "leere_stimmen".into(),
+            Field::UngultigeStimmen => "ungultige_stimmen".into(),
+            Field::VereinzelteStimmen => "vereinzelte_stimmen".into(),
+            Field::KandidatenNr => "kandidaten_nr".into(),
+            Field::PersonenId => "personen_id".into(),
+            Field::Bisher => "bisher".into(),
+            Field::Gewahlt => "gewahlt".into(),
+            Field::GanzerName => "ganzer_name".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::AlterAmJahresende2023 => "alter_am_jahresende_2023".into(),
+            Field::Anrede => "anrede".into(),
+            Field::Beruf => "beruf".into(),
+            Field::Heimatort => "heimatort".into(),
+            Field::Stimmen => "stimmen".into(),
+            Field::TotalGultigeWahlzettel => "total_gultige_wahlzettel".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::AnteilBrieflichWahlende => "anteil_brieflich_wahlende".into(),
+            Field::Column44 => "column_44".into(),
+            Field::JahrgangNum => "jahrgang_num".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -21047,19 +28937,19 @@ pub mod resultate_der_staenderatswahlen_2023 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -21123,6 +29013,31 @@ pub mod coronavirus_covid_19_erweiterte_daten_zu_impfungen_nach_altersgruppe {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        VaccDay,
+        AgeGroup,
+        VaccCount,
+        VaccCountDescription,
+        Count,
+        CountCum,
+        TotalPop,
+        CountCumPercentageOfTotalPop,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::VaccDay => "vacc_day".into(),
+            Field::AgeGroup => "age_group".into(),
+            Field::VaccCount => "vacc_count".into(),
+            Field::VaccCountDescription => "vacc_count_description".into(),
+            Field::Count => "count".into(),
+            Field::CountCum => "count_cum".into(),
+            Field::TotalPop => "total_pop".into(),
+            Field::CountCumPercentageOfTotalPop => "count_cum_percentage_of_total_pop".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -21131,19 +29046,19 @@ pub mod coronavirus_covid_19_erweiterte_daten_zu_impfungen_nach_altersgruppe {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -21203,6 +29118,29 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_primar_und_sekundarstufe
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Firstdayofweek,
+        Weekofyear,
+        Result,
+        Count,
+        Counttotal,
+        Positivityratepercent,
+        Countsamples,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Firstdayofweek => "firstdayofweek".into(),
+            Field::Weekofyear => "weekofyear".into(),
+            Field::Result => "result".into(),
+            Field::Count => "count".into(),
+            Field::Counttotal => "counttotal".into(),
+            Field::Positivityratepercent => "positivityratepercent".into(),
+            Field::Countsamples => "countsamples".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -21211,19 +29149,19 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_primar_und_sekundarstufe
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -21299,6 +29237,39 @@ pub mod gefahrenstufen_fuer_hochwasser {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        StationId,
+        StationName,
+        Gefahrenstufe1,
+        Gefahrenstufe2,
+        Gefahrenstufe3,
+        Gefahrenstufe4,
+        Gefahrenstufe5,
+        Wl1,
+        Wl2,
+        Wl3,
+        Wl4,
+        Link,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::StationId => "station_id".into(),
+            Field::StationName => "station_name".into(),
+            Field::Gefahrenstufe1 => "gefahrenstufe_1".into(),
+            Field::Gefahrenstufe2 => "gefahrenstufe_2".into(),
+            Field::Gefahrenstufe3 => "gefahrenstufe_3".into(),
+            Field::Gefahrenstufe4 => "gefahrenstufe_4".into(),
+            Field::Gefahrenstufe5 => "gefahrenstufe_5".into(),
+            Field::Wl1 => "wl1".into(),
+            Field::Wl2 => "wl2".into(),
+            Field::Wl3 => "wl3".into(),
+            Field::Wl4 => "wl4".into(),
+            Field::Link => "link".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -21307,19 +29278,19 @@ pub mod gefahrenstufen_fuer_hochwasser {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -21491,6 +29462,97 @@ pub mod resultate_der_buergergemeinderatswahlen_2023_auf_listenebene {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahlbezeichnung,
+        Amtsdauer,
+        Wahltermin,
+        AnzahlSitze,
+        WahlkreisNr,
+        WahlkreisCode,
+        Wahlkreisbezeichnung,
+        StimmberechtigteManner,
+        StimmberechtigteFrauen,
+        Stimmberechtigte,
+        StimmberechtigteAuslandschweizer,
+        Wahlzettel,
+        BrieflicheStimmabgaben,
+        UngultigeWahlzettel,
+        LeereWahlzettel,
+        UnveranderteWahlzettel,
+        VeranderteWahlzettelMitBezeichnung,
+        VeranderteWahlzettelOhneBezeichnung,
+        LeereStimmen,
+        ParteiId,
+        Parteikurzbezeichnung,
+        Parteibezeichnung,
+        AnzahlSitzeListe,
+        UnveranderteWahlzettelListe,
+        VeranderteWahlzettelListe,
+        KandidatenstimmenUnveranderteWahlzettel,
+        ZusatzstimmenUnveranderteWahlzettel,
+        KandidatenstimmenVeranderteWahlzettel,
+        ZusatzstimmenVeranderteWahlzettel,
+        UngestempelteWahlzettel,
+        ListenNr,
+        Kandidatenstimmen,
+        Zusatzstimmen,
+        Parteistimmen,
+        AnteilAnSummeIn,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahlbezeichnung => "wahlbezeichnung".into(),
+            Field::Amtsdauer => "amtsdauer".into(),
+            Field::Wahltermin => "wahltermin".into(),
+            Field::AnzahlSitze => "anzahl_sitze".into(),
+            Field::WahlkreisNr => "wahlkreis_nr".into(),
+            Field::WahlkreisCode => "wahlkreis_code".into(),
+            Field::Wahlkreisbezeichnung => "wahlkreisbezeichnung".into(),
+            Field::StimmberechtigteManner => "stimmberechtigte_manner".into(),
+            Field::StimmberechtigteFrauen => "stimmberechtigte_frauen".into(),
+            Field::Stimmberechtigte => "stimmberechtigte".into(),
+            Field::StimmberechtigteAuslandschweizer => "stimmberechtigte_auslandschweizer".into(),
+            Field::Wahlzettel => "wahlzettel".into(),
+            Field::BrieflicheStimmabgaben => "briefliche_stimmabgaben".into(),
+            Field::UngultigeWahlzettel => "ungultige_wahlzettel".into(),
+            Field::LeereWahlzettel => "leere_wahlzettel".into(),
+            Field::UnveranderteWahlzettel => "unveranderte_wahlzettel".into(),
+            Field::VeranderteWahlzettelMitBezeichnung => {
+                "veranderte_wahlzettel_mit_bezeichnung".into()
+            }
+            Field::VeranderteWahlzettelOhneBezeichnung => {
+                "veranderte_wahlzettel_ohne_bezeichnung".into()
+            }
+            Field::LeereStimmen => "leere_stimmen".into(),
+            Field::ParteiId => "partei_id".into(),
+            Field::Parteikurzbezeichnung => "parteikurzbezeichnung".into(),
+            Field::Parteibezeichnung => "parteibezeichnung".into(),
+            Field::AnzahlSitzeListe => "anzahl_sitze_liste".into(),
+            Field::UnveranderteWahlzettelListe => "unveranderte_wahlzettel_liste".into(),
+            Field::VeranderteWahlzettelListe => "veranderte_wahlzettel_liste".into(),
+            Field::KandidatenstimmenUnveranderteWahlzettel => {
+                "kandidatenstimmen_unveranderte_wahlzettel".into()
+            }
+            Field::ZusatzstimmenUnveranderteWahlzettel => {
+                "zusatzstimmen_unveranderte_wahlzettel".into()
+            }
+            Field::KandidatenstimmenVeranderteWahlzettel => {
+                "kandidatenstimmen_veranderte_wahlzettel".into()
+            }
+            Field::ZusatzstimmenVeranderteWahlzettel => {
+                "zusatzstimmen_veranderte_wahlzettel".into()
+            }
+            Field::UngestempelteWahlzettel => "ungestempelte_wahlzettel".into(),
+            Field::ListenNr => "listen_nr".into(),
+            Field::Kandidatenstimmen => "kandidatenstimmen".into(),
+            Field::Zusatzstimmen => "zusatzstimmen".into(),
+            Field::Parteistimmen => "parteistimmen".into(),
+            Field::AnteilAnSummeIn => "anteil_an_summe_in".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -21499,19 +29561,19 @@ pub mod resultate_der_buergergemeinderatswahlen_2023_auf_listenebene {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -21557,6 +29619,23 @@ pub mod coronavirus_covid_19_impfungen_nach_altersgruppe {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        VaccDay,
+        AgeGroup,
+        VaccCount,
+        Count,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::VaccDay => "vacc_day".into(),
+            Field::AgeGroup => "age_group".into(),
+            Field::VaccCount => "vacc_count".into(),
+            Field::Count => "count".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -21565,19 +29644,19 @@ pub mod coronavirus_covid_19_impfungen_nach_altersgruppe {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -21673,6 +29752,47 @@ pub mod grosser_rat_mitgliedschaften_in_gremien {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        KurznameGre,
+        NameGre,
+        Gremientyp,
+        UniNrGre,
+        UrlGremium,
+        BeginnMit,
+        EndeMit,
+        FunktionAdr,
+        Anrede,
+        NameAdr,
+        VornameAdr,
+        NameVorname,
+        ParteiKname,
+        UrlAdr,
+        UniNrAdr,
+        UrlRatsmitgliedschaften,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::KurznameGre => "kurzname_gre".into(),
+            Field::NameGre => "name_gre".into(),
+            Field::Gremientyp => "gremientyp".into(),
+            Field::UniNrGre => "uni_nr_gre".into(),
+            Field::UrlGremium => "url_gremium".into(),
+            Field::BeginnMit => "beginn_mit".into(),
+            Field::EndeMit => "ende_mit".into(),
+            Field::FunktionAdr => "funktion_adr".into(),
+            Field::Anrede => "anrede".into(),
+            Field::NameAdr => "name_adr".into(),
+            Field::VornameAdr => "vorname_adr".into(),
+            Field::NameVorname => "name_vorname".into(),
+            Field::ParteiKname => "partei_kname".into(),
+            Field::UrlAdr => "url_adr".into(),
+            Field::UniNrAdr => "uni_nr_adr".into(),
+            Field::UrlRatsmitgliedschaften => "url_ratsmitgliedschaften".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -21681,19 +29801,19 @@ pub mod grosser_rat_mitgliedschaften_in_gremien {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -21757,6 +29877,31 @@ pub mod entwicklungszusammenarbeit_unterstuetzte_projekte {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        ProjektTitel,
+        Staat,
+        Organisation,
+        BetragEntscheid,
+        Projektbeschrieb,
+        Region,
+        Sachgebiet,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::ProjektTitel => "projekt_titel".into(),
+            Field::Staat => "staat".into(),
+            Field::Organisation => "organisation".into(),
+            Field::BetragEntscheid => "betrag_entscheid".into(),
+            Field::Projektbeschrieb => "projektbeschrieb".into(),
+            Field::Region => "region".into(),
+            Field::Sachgebiet => "sachgebiet".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -21765,19 +29910,19 @@ pub mod entwicklungszusammenarbeit_unterstuetzte_projekte {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -21951,6 +30096,87 @@ pub mod resultate_der_wahl_eines_zusaetzl_strafgerichtspraesidiums_18_august_202
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahlbezeichnung,
+        Amtsdauer,
+        Wahltermin,
+        AnzahlSitze,
+        WahlkreisNr,
+        WahlkreisCode,
+        BezeichnungWahlkreis,
+        StimmberechtigteManner,
+        StimmberechtigteFrauen,
+        Stimmberechtigte,
+        StimmberechtigteAuslandschweizer,
+        Wahlzettel,
+        BrieflicheStimmabgaben,
+        UngultigeWahlzettel,
+        LeereWahlzettel,
+        LeereStimmen,
+        UngultigeStimmen,
+        VereinzelteStimmen,
+        KandidatenNr,
+        PersonenId,
+        Bisher,
+        Gewahlt,
+        GanzerName,
+        Name,
+        Vorname,
+        Geschlecht,
+        Jahrgang,
+        Anrede,
+        Beruf,
+        Heimatort,
+        Stimmen,
+        TotalGultigeWahlzettel,
+        Stimmbeteiligung,
+        AnteilBrieflichWahlende,
+        AbsolutesMehr,
+        Vereinzelte,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahlbezeichnung => "wahlbezeichnung".into(),
+            Field::Amtsdauer => "amtsdauer".into(),
+            Field::Wahltermin => "wahltermin".into(),
+            Field::AnzahlSitze => "anzahl_sitze".into(),
+            Field::WahlkreisNr => "wahlkreis_nr".into(),
+            Field::WahlkreisCode => "wahlkreis_code".into(),
+            Field::BezeichnungWahlkreis => "bezeichnung_wahlkreis".into(),
+            Field::StimmberechtigteManner => "stimmberechtigte_manner".into(),
+            Field::StimmberechtigteFrauen => "stimmberechtigte_frauen".into(),
+            Field::Stimmberechtigte => "stimmberechtigte".into(),
+            Field::StimmberechtigteAuslandschweizer => "stimmberechtigte_auslandschweizer".into(),
+            Field::Wahlzettel => "wahlzettel".into(),
+            Field::BrieflicheStimmabgaben => "briefliche_stimmabgaben".into(),
+            Field::UngultigeWahlzettel => "ungultige_wahlzettel".into(),
+            Field::LeereWahlzettel => "leere_wahlzettel".into(),
+            Field::LeereStimmen => "leere_stimmen".into(),
+            Field::UngultigeStimmen => "ungultige_stimmen".into(),
+            Field::VereinzelteStimmen => "vereinzelte_stimmen".into(),
+            Field::KandidatenNr => "kandidaten_nr".into(),
+            Field::PersonenId => "personen_id".into(),
+            Field::Bisher => "bisher".into(),
+            Field::Gewahlt => "gewahlt".into(),
+            Field::GanzerName => "ganzer_name".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Jahrgang => "jahrgang".into(),
+            Field::Anrede => "anrede".into(),
+            Field::Beruf => "beruf".into(),
+            Field::Heimatort => "heimatort".into(),
+            Field::Stimmen => "stimmen".into(),
+            Field::TotalGultigeWahlzettel => "total_gultige_wahlzettel".into(),
+            Field::Stimmbeteiligung => "stimmbeteiligung".into(),
+            Field::AnteilBrieflichWahlende => "anteil_brieflich_wahlende".into(),
+            Field::AbsolutesMehr => "absolutes_mehr".into(),
+            Field::Vereinzelte => "vereinzelte".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -21959,19 +30185,19 @@ pub mod resultate_der_wahl_eines_zusaetzl_strafgerichtspraesidiums_18_august_202
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -22019,6 +30245,23 @@ pub mod coronavirus_covid_19_positiv_getestete_personen_nach_alter_und_geschlech
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        TestDatum,
+        PersAlter,
+        Geschlecht,
+        Anzahl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::TestDatum => "test_datum".into(),
+            Field::PersAlter => "pers_alter".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Anzahl => "anzahl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -22027,19 +30270,19 @@ pub mod coronavirus_covid_19_positiv_getestete_personen_nach_alter_und_geschlech
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -22157,6 +30400,59 @@ pub mod geschwindigkeitsmonitoring_kennzahlen_pro_mess_standort {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Id,
+        Messbeginn,
+        Messende,
+        Strasse,
+        StrasseNr,
+        Ort,
+        Zone,
+        Richtung1,
+        Fzg1,
+        V501,
+        V851,
+        UeQuote1,
+        Richtung2,
+        Fzg2,
+        V502,
+        V852,
+        UeQuote2,
+        TheGeom,
+        LinkZuEinzelmessungen,
+        MessbeginnJahr,
+        DatasetId,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Id => "id".into(),
+            Field::Messbeginn => "messbeginn".into(),
+            Field::Messende => "messende".into(),
+            Field::Strasse => "strasse".into(),
+            Field::StrasseNr => "strasse_nr".into(),
+            Field::Ort => "ort".into(),
+            Field::Zone => "zone".into(),
+            Field::Richtung1 => "richtung_1".into(),
+            Field::Fzg1 => "fzg_1".into(),
+            Field::V501 => "v50_1".into(),
+            Field::V851 => "v85_1".into(),
+            Field::UeQuote1 => "ue_quote_1".into(),
+            Field::Richtung2 => "richtung_2".into(),
+            Field::Fzg2 => "fzg_2".into(),
+            Field::V502 => "v50_2".into(),
+            Field::V852 => "v85_2".into(),
+            Field::UeQuote2 => "ue_quote_2".into(),
+            Field::TheGeom => "the_geom".into(),
+            Field::LinkZuEinzelmessungen => "link_zu_einzelmessungen".into(),
+            Field::MessbeginnJahr => "messbeginn_jahr".into(),
+            Field::DatasetId => "dataset_id".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -22165,19 +30461,19 @@ pub mod geschwindigkeitsmonitoring_kennzahlen_pro_mess_standort {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -22301,6 +30597,61 @@ pub mod witterung {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        Jahr,
+        Monat,
+        Frosttag,
+        Eistag,
+        Sommertag,
+        Hitzetag,
+        Sonnenlos,
+        Regen1,
+        Regen2,
+        Regen3,
+        Schneefall,
+        Schneedecke,
+        Reif,
+        Nebel,
+        Gewitter1,
+        Gewitter2,
+        Hagel,
+        Hell,
+        Trueb,
+        Wind1,
+        Wind2,
+        Heiztage,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+            Field::Frosttag => "frosttag".into(),
+            Field::Eistag => "eistag".into(),
+            Field::Sommertag => "sommertag".into(),
+            Field::Hitzetag => "hitzetag".into(),
+            Field::Sonnenlos => "sonnenlos".into(),
+            Field::Regen1 => "regen1".into(),
+            Field::Regen2 => "regen2".into(),
+            Field::Regen3 => "regen3".into(),
+            Field::Schneefall => "schneefall".into(),
+            Field::Schneedecke => "schneedecke".into(),
+            Field::Reif => "reif".into(),
+            Field::Nebel => "nebel".into(),
+            Field::Gewitter1 => "gewitter1".into(),
+            Field::Gewitter2 => "gewitter2".into(),
+            Field::Hagel => "hagel".into(),
+            Field::Hell => "hell".into(),
+            Field::Trueb => "trueb".into(),
+            Field::Wind1 => "wind1".into(),
+            Field::Wind2 => "wind2".into(),
+            Field::Heiztage => "heiztage".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -22309,19 +30660,19 @@ pub mod witterung {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -22385,6 +30736,31 @@ pub mod smarte_strasse_aufrufe_der_microsites {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Id,
+        Timestamp,
+        DatasetId,
+        Api,
+        Nhits,
+        Sensor,
+        Microsite,
+        GeoPoint,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Id => "id".into(),
+            Field::Timestamp => "timestamp".into(),
+            Field::DatasetId => "dataset_id".into(),
+            Field::Api => "api".into(),
+            Field::Nhits => "nhits".into(),
+            Field::Sensor => "sensor".into(),
+            Field::Microsite => "microsite".into(),
+            Field::GeoPoint => "geo_point".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -22393,19 +30769,19 @@ pub mod smarte_strasse_aufrufe_der_microsites {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -22523,6 +30899,59 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        MessungId,
+        RichtungId,
+        Geschwindigkeit,
+        Zeit,
+        Datum,
+        DatumZeit,
+        Messbeginn,
+        Messende,
+        Zone,
+        Ort,
+        Richtung,
+        TheGeom,
+        UeQuote,
+        V50,
+        V85,
+        Strasse,
+        StrasseNr,
+        Fzg,
+        Fahrzeuglange,
+        LinkZuMessung,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::MessungId => "messung_id".into(),
+            Field::RichtungId => "richtung_id".into(),
+            Field::Geschwindigkeit => "geschwindigkeit".into(),
+            Field::Zeit => "zeit".into(),
+            Field::Datum => "datum".into(),
+            Field::DatumZeit => "datum_zeit".into(),
+            Field::Messbeginn => "messbeginn".into(),
+            Field::Messende => "messende".into(),
+            Field::Zone => "zone".into(),
+            Field::Ort => "ort".into(),
+            Field::Richtung => "richtung".into(),
+            Field::TheGeom => "the_geom".into(),
+            Field::UeQuote => "ue_quote".into(),
+            Field::V50 => "v50".into(),
+            Field::V85 => "v85".into(),
+            Field::Strasse => "strasse".into(),
+            Field::StrasseNr => "strasse_nr".into(),
+            Field::Fzg => "fzg".into(),
+            Field::Fahrzeuglange => "fahrzeuglange".into(),
+            Field::LinkZuMessung => "link_zu_messung".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -22531,19 +30960,19 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -22595,6 +31024,25 @@ pub mod fahrgastzahlen_bvb {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        StartdatumKalenderwocheMonat,
+        FahrgaesteEinsteiger,
+        Kalenderwoche,
+        Granularitat,
+        DatumDerMonatswerte,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::StartdatumKalenderwocheMonat => "startdatum_kalenderwoche_monat".into(),
+            Field::FahrgaesteEinsteiger => "fahrgaeste_einsteiger".into(),
+            Field::Kalenderwoche => "kalenderwoche".into(),
+            Field::Granularitat => "granularitat".into(),
+            Field::DatumDerMonatswerte => "datum_der_monatswerte".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -22603,19 +31051,19 @@ pub mod fahrgastzahlen_bvb {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -22907,6 +31355,145 @@ pub mod bevoelkerungsszenarien_basel_stadt_2024_2045 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Alter,
+        Geo,
+        Geschlecht,
+        Herkunft,
+        Jahr,
+        BestandHist,
+        BestandHoch,
+        BestandMittel,
+        BestandTief,
+        GebHist,
+        GebHoch,
+        GebMittel,
+        GebTief,
+        TodHist,
+        TodHoch,
+        TodMittel,
+        TodTief,
+        SGebTodHist,
+        SGebTodHoch,
+        SGebTodMittel,
+        SGebTodTief,
+        ZuzHist,
+        ZuzHoch,
+        ZuzMittel,
+        ZuzTief,
+        WegzHist,
+        WegzHoch,
+        WegzMittel,
+        WegzTief,
+        SInkHist,
+        SInkHoch,
+        SInkMittel,
+        SInkTief,
+        EinwHist,
+        EinwHoch,
+        EinwMittel,
+        EinwTief,
+        AuswHist,
+        AuswHoch,
+        AuswMittel,
+        AuswTief,
+        SIntHist,
+        SIntHoch,
+        SIntMittel,
+        SIntTief,
+        SWtotalHist,
+        SWtotalHoch,
+        SWtotalMittel,
+        SWtotalTief,
+        UhinHist,
+        UhinHoch,
+        UhinMittel,
+        UhinTief,
+        UwegHist,
+        UwegHoch,
+        UwegMittel,
+        UwegTief,
+        SUmzHist,
+        SUmzHoch,
+        SUmzMittel,
+        SUmzTief,
+        EinbHist,
+        EinbHoch,
+        EinbMittel,
+        EinbTief,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Alter => "alter".into(),
+            Field::Geo => "geo".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Herkunft => "herkunft".into(),
+            Field::Jahr => "jahr".into(),
+            Field::BestandHist => "bestand_hist".into(),
+            Field::BestandHoch => "bestand_hoch".into(),
+            Field::BestandMittel => "bestand_mittel".into(),
+            Field::BestandTief => "bestand_tief".into(),
+            Field::GebHist => "geb_hist".into(),
+            Field::GebHoch => "geb_hoch".into(),
+            Field::GebMittel => "geb_mittel".into(),
+            Field::GebTief => "geb_tief".into(),
+            Field::TodHist => "tod_hist".into(),
+            Field::TodHoch => "tod_hoch".into(),
+            Field::TodMittel => "tod_mittel".into(),
+            Field::TodTief => "tod_tief".into(),
+            Field::SGebTodHist => "s_geb_tod_hist".into(),
+            Field::SGebTodHoch => "s_geb_tod_hoch".into(),
+            Field::SGebTodMittel => "s_geb_tod_mittel".into(),
+            Field::SGebTodTief => "s_geb_tod_tief".into(),
+            Field::ZuzHist => "zuz_hist".into(),
+            Field::ZuzHoch => "zuz_hoch".into(),
+            Field::ZuzMittel => "zuz_mittel".into(),
+            Field::ZuzTief => "zuz_tief".into(),
+            Field::WegzHist => "wegz_hist".into(),
+            Field::WegzHoch => "wegz_hoch".into(),
+            Field::WegzMittel => "wegz_mittel".into(),
+            Field::WegzTief => "wegz_tief".into(),
+            Field::SInkHist => "s_ink_hist".into(),
+            Field::SInkHoch => "s_ink_hoch".into(),
+            Field::SInkMittel => "s_ink_mittel".into(),
+            Field::SInkTief => "s_ink_tief".into(),
+            Field::EinwHist => "einw_hist".into(),
+            Field::EinwHoch => "einw_hoch".into(),
+            Field::EinwMittel => "einw_mittel".into(),
+            Field::EinwTief => "einw_tief".into(),
+            Field::AuswHist => "ausw_hist".into(),
+            Field::AuswHoch => "ausw_hoch".into(),
+            Field::AuswMittel => "ausw_mittel".into(),
+            Field::AuswTief => "ausw_tief".into(),
+            Field::SIntHist => "s_int_hist".into(),
+            Field::SIntHoch => "s_int_hoch".into(),
+            Field::SIntMittel => "s_int_mittel".into(),
+            Field::SIntTief => "s_int_tief".into(),
+            Field::SWtotalHist => "s_wtotal_hist".into(),
+            Field::SWtotalHoch => "s_wtotal_hoch".into(),
+            Field::SWtotalMittel => "s_wtotal_mittel".into(),
+            Field::SWtotalTief => "s_wtotal_tief".into(),
+            Field::UhinHist => "uhin_hist".into(),
+            Field::UhinHoch => "uhin_hoch".into(),
+            Field::UhinMittel => "uhin_mittel".into(),
+            Field::UhinTief => "uhin_tief".into(),
+            Field::UwegHist => "uweg_hist".into(),
+            Field::UwegHoch => "uweg_hoch".into(),
+            Field::UwegMittel => "uweg_mittel".into(),
+            Field::UwegTief => "uweg_tief".into(),
+            Field::SUmzHist => "s_umz_hist".into(),
+            Field::SUmzHoch => "s_umz_hoch".into(),
+            Field::SUmzMittel => "s_umz_mittel".into(),
+            Field::SUmzTief => "s_umz_tief".into(),
+            Field::EinbHist => "einb_hist".into(),
+            Field::EinbHoch => "einb_hoch".into(),
+            Field::EinbMittel => "einb_mittel".into(),
+            Field::EinbTief => "einb_tief".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -22915,19 +31502,19 @@ pub mod bevoelkerungsszenarien_basel_stadt_2024_2045 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -23019,6 +31606,49 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_wohnviertel_und_geburtsdat
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeburtsDatum,
+        Jahr,
+        Monat,
+        WocheInJahr,
+        DatumWochenstartGeburtsdatum,
+        TagInJahr,
+        Wochentag,
+        Geschlecht,
+        AnzahlKinder,
+        Nationalitaet,
+        WohnviertelName,
+        Id,
+        WohnviertelId,
+        ValueGenderBfs,
+        NameGenderBfs,
+        ValueCitizenshipBfs,
+        NameCitizenshipBfs,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeburtsDatum => "geburts_datum".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+            Field::WocheInJahr => "woche_in_jahr".into(),
+            Field::DatumWochenstartGeburtsdatum => "datum_wochenstart_geburtsdatum".into(),
+            Field::TagInJahr => "tag_in_jahr".into(),
+            Field::Wochentag => "wochentag".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::AnzahlKinder => "anzahl_kinder".into(),
+            Field::Nationalitaet => "nationalitaet".into(),
+            Field::WohnviertelName => "wohnviertel_name".into(),
+            Field::Id => "id".into(),
+            Field::WohnviertelId => "wohnviertel_id".into(),
+            Field::ValueGenderBfs => "value_gender_bfs".into(),
+            Field::NameGenderBfs => "name_gender_bfs".into(),
+            Field::ValueCitizenshipBfs => "value_citizenship_bfs".into(),
+            Field::NameCitizenshipBfs => "name_citizenship_bfs".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -23027,19 +31657,19 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_wohnviertel_und_geburtsdat
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -23147,6 +31777,53 @@ pub mod wohnungen_gebaeude_und_wohnungsregister_gwr {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Egid,
+        Ewid,
+        Edid,
+        Whgnr,
+        Weinr,
+        Wstwk,
+        WstwkDecoded,
+        Wbez,
+        Wmehrg,
+        WmehrgDecoded,
+        Wbauj,
+        Wabbj,
+        Wstat,
+        WstatDecoded,
+        Warea,
+        Wazim,
+        Wkche,
+        WkcheDecoded,
+        Wexpdat,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Egid => "egid".into(),
+            Field::Ewid => "ewid".into(),
+            Field::Edid => "edid".into(),
+            Field::Whgnr => "whgnr".into(),
+            Field::Weinr => "weinr".into(),
+            Field::Wstwk => "wstwk".into(),
+            Field::WstwkDecoded => "wstwk_decoded".into(),
+            Field::Wbez => "wbez".into(),
+            Field::Wmehrg => "wmehrg".into(),
+            Field::WmehrgDecoded => "wmehrg_decoded".into(),
+            Field::Wbauj => "wbauj".into(),
+            Field::Wabbj => "wabbj".into(),
+            Field::Wstat => "wstat".into(),
+            Field::WstatDecoded => "wstat_decoded".into(),
+            Field::Warea => "warea".into(),
+            Field::Wazim => "wazim".into(),
+            Field::Wkche => "wkche".into(),
+            Field::WkcheDecoded => "wkche_decoded".into(),
+            Field::Wexpdat => "wexpdat".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -23155,19 +31832,19 @@ pub mod wohnungen_gebaeude_und_wohnungsregister_gwr {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -23251,6 +31928,41 @@ pub mod statistiken_der_smiley_geschwindigkeitsanzeigen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Zyklus,
+        Phase,
+        Idstandort,
+        Strassenname,
+        MessbeginnPhase,
+        V50,
+        V85,
+        Geschwindigkeit,
+        AnzahlMessungen,
+        MessdauerH,
+        Dtv,
+        LinkEinzelmessungen,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Zyklus => "zyklus".into(),
+            Field::Phase => "phase".into(),
+            Field::Idstandort => "idstandort".into(),
+            Field::Strassenname => "strassenname".into(),
+            Field::MessbeginnPhase => "messbeginn_phase".into(),
+            Field::V50 => "v_50".into(),
+            Field::V85 => "v_85".into(),
+            Field::Geschwindigkeit => "geschwindigkeit".into(),
+            Field::AnzahlMessungen => "anzahl_messungen".into(),
+            Field::MessdauerH => "messdauer_h".into(),
+            Field::Dtv => "dtv".into(),
+            Field::LinkEinzelmessungen => "link_einzelmessungen".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -23259,19 +31971,19 @@ pub mod statistiken_der_smiley_geschwindigkeitsanzeigen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -23371,6 +32083,49 @@ pub mod vorhersagen_birs_wasserstand_und_abfluss {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        Wasserstand,
+        Abfluss,
+        Methode,
+        AusgegebenAn,
+        Meteolauf,
+        GemesseneWertenBis,
+        HMin,
+        HP25,
+        HP50,
+        HP75,
+        HMax,
+        QMin,
+        QP25,
+        QP50,
+        QP75,
+        QMax,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::Wasserstand => "wasserstand".into(),
+            Field::Abfluss => "abfluss".into(),
+            Field::Methode => "methode".into(),
+            Field::AusgegebenAn => "ausgegeben_an".into(),
+            Field::Meteolauf => "meteolauf".into(),
+            Field::GemesseneWertenBis => "gemessene_werten_bis".into(),
+            Field::HMin => "h_min".into(),
+            Field::HP25 => "h_p25".into(),
+            Field::HP50 => "h_p50".into(),
+            Field::HP75 => "h_p75".into(),
+            Field::HMax => "h_max".into(),
+            Field::QMin => "q_min".into(),
+            Field::QP25 => "q_p25".into(),
+            Field::QP50 => "q_p50".into(),
+            Field::QP75 => "q_p75".into(),
+            Field::QMax => "q_max".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -23379,19 +32134,19 @@ pub mod vorhersagen_birs_wasserstand_und_abfluss {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -23451,6 +32206,29 @@ pub mod effektiver_und_erwarteter_taeglicher_gasverbrauch {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Time,
+        Gasverbrauch,
+        Forecast,
+        VglRealMinusForecast,
+        ForecastLowfi,
+        ForecastHighfi,
+        Traintestorforecast,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Time => "time".into(),
+            Field::Gasverbrauch => "gasverbrauch".into(),
+            Field::Forecast => "forecast".into(),
+            Field::VglRealMinusForecast => "vgl_real_minus_forecast".into(),
+            Field::ForecastLowfi => "forecast_lowfi".into(),
+            Field::ForecastHighfi => "forecast_highfi".into(),
+            Field::Traintestorforecast => "traintestorforecast".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -23459,19 +32237,19 @@ pub mod effektiver_und_erwarteter_taeglicher_gasverbrauch {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -23547,6 +32325,37 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_und_geburtsmonat {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        Monat,
+        Geschlecht,
+        Nationalitaet,
+        AlterMutter,
+        AlterVater,
+        NationalitaetMutter,
+        NationalitaetVater,
+        Verheiratet,
+        Geburtenfolge,
+        Id,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Nationalitaet => "nationalitaet".into(),
+            Field::AlterMutter => "alter_mutter".into(),
+            Field::AlterVater => "alter_vater".into(),
+            Field::NationalitaetMutter => "nationalitaet_mutter".into(),
+            Field::NationalitaetVater => "nationalitaet_vater".into(),
+            Field::Verheiratet => "verheiratet".into(),
+            Field::Geburtenfolge => "geburtenfolge".into(),
+            Field::Id => "id".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -23555,19 +32364,19 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_und_geburtsmonat {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -23633,6 +32442,41 @@ pub mod wohnbevoelkerung_nach_geschlecht_alter_staatsangehoerigkeit_und_wohnvier
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        Jahr,
+        Wohnviertel,
+        WohnviertelId,
+        Gemeinde,
+        Geschlecht,
+        PersonAlter,
+        Staatsangehoerigkeit,
+        ValueGenderBfs,
+        NameGenderBfs,
+        ValueCitizenshipBfs,
+        NameCitizenshipBfs,
+        Anzahl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Wohnviertel => "wohnviertel".into(),
+            Field::WohnviertelId => "wohnviertel_id".into(),
+            Field::Gemeinde => "gemeinde".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::PersonAlter => "person_alter".into(),
+            Field::Staatsangehoerigkeit => "staatsangehoerigkeit".into(),
+            Field::ValueGenderBfs => "value_gender_bfs".into(),
+            Field::NameGenderBfs => "name_gender_bfs".into(),
+            Field::ValueCitizenshipBfs => "value_citizenship_bfs".into(),
+            Field::NameCitizenshipBfs => "name_citizenship_bfs".into(),
+            Field::Anzahl => "anzahl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -23641,19 +32485,19 @@ pub mod wohnbevoelkerung_nach_geschlecht_alter_staatsangehoerigkeit_und_wohnvier
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -23701,6 +32545,27 @@ pub mod wohnbevoelkerung_nach_geschlecht_und_staatsangehoerigkeit {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        Gemeinde,
+        Geschlecht,
+        Staatsangehoerigkeit,
+        Anzahl,
+        Jahr,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::Gemeinde => "gemeinde".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Staatsangehoerigkeit => "staatsangehoerigkeit".into(),
+            Field::Anzahl => "anzahl".into(),
+            Field::Jahr => "jahr".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -23709,19 +32574,19 @@ pub mod wohnbevoelkerung_nach_geschlecht_und_staatsangehoerigkeit {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -23785,6 +32650,31 @@ pub mod kantonales_leistungsverzeichnis_gebuehren {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Departement,
+        Diensstelle,
+        GegenstandDerGebuhr,
+        RechtlicheGrundlage,
+        HoheDerGebuhrEnChf,
+        Benchmark,
+        Leistung,
+        Weiteregliederungoe,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Departement => "departement".into(),
+            Field::Diensstelle => "diensstelle".into(),
+            Field::GegenstandDerGebuhr => "gegenstand_der_gebuhr".into(),
+            Field::RechtlicheGrundlage => "rechtliche_grundlage".into(),
+            Field::HoheDerGebuhrEnChf => "hohe_der_gebuhr_en_chf".into(),
+            Field::Benchmark => "benchmark".into(),
+            Field::Leistung => "leistung".into(),
+            Field::Weiteregliederungoe => "weiteregliederungoe".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -23793,19 +32683,19 @@ pub mod kantonales_leistungsverzeichnis_gebuehren {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -23851,6 +32741,23 @@ pub mod treppen_und_ausstiegsleitern_an_gewaessern {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        TypBez,
+        AusstiegMoeglich,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::TypBez => "typ_bez".into(),
+            Field::AusstiegMoeglich => "ausstieg_moeglich".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -23859,19 +32766,19 @@ pub mod treppen_und_ausstiegsleitern_an_gewaessern {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -23939,6 +32846,37 @@ pub mod schuelerprognose_basel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Schuljahr,
+        Nummer,
+        Perimeter,
+        Schulstufe,
+        Sus,
+        UnteresPrognoseintervall,
+        OberesPrognoseintervall,
+        Typ,
+        GeoShape,
+        GeoPoint2d,
+        PerimeterId,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Schuljahr => "schuljahr".into(),
+            Field::Nummer => "nummer".into(),
+            Field::Perimeter => "perimeter".into(),
+            Field::Schulstufe => "schulstufe".into(),
+            Field::Sus => "sus".into(),
+            Field::UnteresPrognoseintervall => "unteres_prognoseintervall".into(),
+            Field::OberesPrognoseintervall => "oberes_prognoseintervall".into(),
+            Field::Typ => "typ".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::PerimeterId => "perimeter_id".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -23947,19 +32885,19 @@ pub mod schuelerprognose_basel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -24001,6 +32939,25 @@ pub mod velo_fahrverbote_allgemein_oder_temporaer {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        IdVerbot,
+        Geometry1,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::IdVerbot => "id_verbot".into(),
+            Field::Geometry1 => "geometry1".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -24009,19 +32966,19 @@ pub mod velo_fahrverbote_allgemein_oder_temporaer {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -24091,6 +33048,37 @@ pub mod elternberatung {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdEl,
+        StdName,
+        StrasseNr,
+        Plz,
+        Ort,
+        Kanton,
+        Telefon,
+        LinkHp,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdEl => "id_el".into(),
+            Field::StdName => "std_name".into(),
+            Field::StrasseNr => "strasse_nr".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::Kanton => "kanton".into(),
+            Field::Telefon => "telefon".into(),
+            Field::LinkHp => "link_hp".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -24099,19 +33087,19 @@ pub mod elternberatung {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -24221,6 +33209,55 @@ pub mod temperatur_grundwasser_langjaehrige_statistiken {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Stationnr,
+        Stationid,
+        Stationname,
+        Sensornr,
+        Sensname,
+        Lat,
+        Lon,
+        GeoPoint2d,
+        Xcoord,
+        Ycoord,
+        Topterrain,
+        Refpoint,
+        X10ymin,
+        X10ymean,
+        X10ymax,
+        Startstatist,
+        Endstatist,
+        BohrkatasterLink,
+        StatStartTimestamp,
+        StatEndTimestamp,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Stationnr => "stationnr".into(),
+            Field::Stationid => "stationid".into(),
+            Field::Stationname => "stationname".into(),
+            Field::Sensornr => "sensornr".into(),
+            Field::Sensname => "sensname".into(),
+            Field::Lat => "lat".into(),
+            Field::Lon => "lon".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Xcoord => "xcoord".into(),
+            Field::Ycoord => "ycoord".into(),
+            Field::Topterrain => "topterrain".into(),
+            Field::Refpoint => "refpoint".into(),
+            Field::X10ymin => "10ymin".into(),
+            Field::X10ymean => "10ymean".into(),
+            Field::X10ymax => "10ymax".into(),
+            Field::Startstatist => "startstatist".into(),
+            Field::Endstatist => "endstatist".into(),
+            Field::BohrkatasterLink => "bohrkataster_link".into(),
+            Field::StatStartTimestamp => "stat_start_timestamp".into(),
+            Field::StatEndTimestamp => "stat_end_timestamp".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -24229,19 +33266,19 @@ pub mod temperatur_grundwasser_langjaehrige_statistiken {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -24349,6 +33386,57 @@ pub mod kennzahlen_der_abstimmung_vom_13_februar_2022 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GemeinName,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AbstTitel,
+        AbstArt,
+        AbstDatum,
+        ResultArt,
+        AbstId,
+        AnteilJaStimmen,
+        GemeinId,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+        StimmberAnzM,
+        StimmberAnzF,
+        AbstTyp,
+        AbstIdTitel,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GemeinName => "gemein_name".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::AbstDatum => "abst_datum".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -24357,19 +33445,19 @@ pub mod kennzahlen_der_abstimmung_vom_13_februar_2022 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -24429,6 +33517,43 @@ pub mod entsorgungsstellen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdEntsorg,
+        Kategorie,
+        Name,
+        Beschreibu,
+        Adresse,
+        Plz,
+        Ortschaft,
+        Telefon,
+        Oeffnungsz,
+        WwwLink,
+        Zustaendig,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdEntsorg => "id_entsorg".into(),
+            Field::Kategorie => "kategorie".into(),
+            Field::Name => "name".into(),
+            Field::Beschreibu => "beschreibu".into(),
+            Field::Adresse => "adresse".into(),
+            Field::Plz => "plz".into(),
+            Field::Ortschaft => "ortschaft".into(),
+            Field::Telefon => "telefon".into(),
+            Field::Oeffnungsz => "oeffnungsz".into(),
+            Field::WwwLink => "www_link".into(),
+            Field::Zustaendig => "zustaendig".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -24437,19 +33562,19 @@ pub mod entsorgungsstellen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -24509,6 +33634,31 @@ pub mod hundesignalisation_orte_mit_leinenpflicht_oder_hundeverbot {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Id,
+        Einschraen,
+        Einschrnr,
+        Datumvon,
+        Datumbis,
+        Bemerkung,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Id => "id".into(),
+            Field::Einschraen => "einschraen".into(),
+            Field::Einschrnr => "einschrnr".into(),
+            Field::Datumvon => "datumvon".into(),
+            Field::Datumbis => "datumbis".into(),
+            Field::Bemerkung => "bemerkung".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -24517,19 +33667,19 @@ pub mod hundesignalisation_orte_mit_leinenpflicht_oder_hundeverbot {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -24609,6 +33759,41 @@ pub mod scheidungen_nach_scheidungsdatum_ehedauer_sowie_alter_und_staatsangehoer
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Scheidungsdatum,
+        Jahr,
+        Monat,
+        WocheInJahr,
+        DatumWochenstartScheidungsdatum,
+        TagInJahr,
+        Wochentag,
+        PersalterFrauVollendet,
+        PersalterMannVollendet,
+        NationalitaetFrau,
+        NationalitaetMann,
+        JahreehedauerVollendet,
+        Anzahl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Scheidungsdatum => "scheidungsdatum".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+            Field::WocheInJahr => "woche_in_jahr".into(),
+            Field::DatumWochenstartScheidungsdatum => "datum_wochenstart_scheidungsdatum".into(),
+            Field::TagInJahr => "tag_in_jahr".into(),
+            Field::Wochentag => "wochentag".into(),
+            Field::PersalterFrauVollendet => "persalter_frau_vollendet".into(),
+            Field::PersalterMannVollendet => "persalter_mann_vollendet".into(),
+            Field::NationalitaetFrau => "nationalitaet_frau".into(),
+            Field::NationalitaetMann => "nationalitaet_mann".into(),
+            Field::JahreehedauerVollendet => "jahreehedauer_vollendet".into(),
+            Field::Anzahl => "anzahl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -24617,19 +33802,19 @@ pub mod scheidungen_nach_scheidungsdatum_ehedauer_sowie_alter_und_staatsangehoer
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -24683,6 +33868,27 @@ pub mod buvetten_in_gewaessernaehe {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Id,
+        Status,
+        SichtbarVon,
+        SichtbarBis,
+        Name,
+        Shape,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Id => "id".into(),
+            Field::Status => "status".into(),
+            Field::SichtbarVon => "sichtbar_von".into(),
+            Field::SichtbarBis => "sichtbar_bis".into(),
+            Field::Name => "name".into(),
+            Field::Shape => "shape".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -24691,19 +33897,19 @@ pub mod buvetten_in_gewaessernaehe {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -24761,6 +33967,41 @@ pub mod kinder_und_jugendangebote {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdKj,
+        KiAngebot,
+        JuAngebot,
+        Traeger,
+        Angebot,
+        StrasseNr,
+        Plz,
+        Ort,
+        Kanton,
+        Link,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdKj => "id_kj".into(),
+            Field::KiAngebot => "ki_angebot".into(),
+            Field::JuAngebot => "ju_angebot".into(),
+            Field::Traeger => "traeger".into(),
+            Field::Angebot => "angebot".into(),
+            Field::StrasseNr => "strasse_nr".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::Kanton => "kanton".into(),
+            Field::Link => "link".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -24769,19 +34010,19 @@ pub mod kinder_und_jugendangebote {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -24861,6 +34102,47 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_bezirk {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        BezName,
+        Bezirk,
+        BezLabel,
+        WovId,
+        WovName,
+        GeoShape,
+        GeoPoint2d,
+        Jahr,
+        AnteilAl,
+        AnteilBs,
+        AnteilBsanch,
+        AnteilCh,
+        AnzahlAl,
+        AnzahlBs,
+        AnzahlCh,
+        GesbevF,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::BezName => "bez_name".into(),
+            Field::Bezirk => "bezirk".into(),
+            Field::BezLabel => "bez_label".into(),
+            Field::WovId => "wov_id".into(),
+            Field::WovName => "wov_name".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Jahr => "jahr".into(),
+            Field::AnteilAl => "anteil_al".into(),
+            Field::AnteilBs => "anteil_bs".into(),
+            Field::AnteilBsanch => "anteil_bsanch".into(),
+            Field::AnteilCh => "anteil_ch".into(),
+            Field::AnzahlAl => "anzahl_al".into(),
+            Field::AnzahlBs => "anzahl_bs".into(),
+            Field::AnzahlCh => "anzahl_ch".into(),
+            Field::GesbevF => "gesbev_f".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -24869,19 +34151,19 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_bezirk {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -24981,6 +34263,61 @@ pub mod coronavirus_covid_19_fallzahlen_ganze_schweiz {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Date,
+        Update,
+        Name,
+        NcumulTested,
+        NcumulConf,
+        NewHosp,
+        CurrentHosp,
+        CurrentIcu,
+        CurrentVent,
+        NcumulReleased,
+        NcumulDeceased,
+        NcumulIcu,
+        NcumulHosp,
+        NcumulVent,
+        CurrentIsolated,
+        CurrentQuarantined,
+        Source,
+        GeoPoint2d,
+        AbbreviationCantonAndFl,
+        CurrentQuarantinedRiskareatravel,
+        CurrentQuarantinedTotal,
+        KanCode,
+        KanName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Date => "date".into(),
+            Field::Update => "update".into(),
+            Field::Name => "name".into(),
+            Field::NcumulTested => "ncumul_tested".into(),
+            Field::NcumulConf => "ncumul_conf".into(),
+            Field::NewHosp => "new_hosp".into(),
+            Field::CurrentHosp => "current_hosp".into(),
+            Field::CurrentIcu => "current_icu".into(),
+            Field::CurrentVent => "current_vent".into(),
+            Field::NcumulReleased => "ncumul_released".into(),
+            Field::NcumulDeceased => "ncumul_deceased".into(),
+            Field::NcumulIcu => "ncumul_icu".into(),
+            Field::NcumulHosp => "ncumul_hosp".into(),
+            Field::NcumulVent => "ncumul_vent".into(),
+            Field::CurrentIsolated => "current_isolated".into(),
+            Field::CurrentQuarantined => "current_quarantined".into(),
+            Field::Source => "source".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::AbbreviationCantonAndFl => "abbreviation_canton_and_fl".into(),
+            Field::CurrentQuarantinedRiskareatravel => "current_quarantined_riskareatravel".into(),
+            Field::CurrentQuarantinedTotal => "current_quarantined_total".into(),
+            Field::KanCode => "kan_code".into(),
+            Field::KanName => "kan_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -24989,19 +34326,19 @@ pub mod coronavirus_covid_19_fallzahlen_ganze_schweiz {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -25045,6 +34382,27 @@ pub mod statistische_raumeinheiten_bezirke {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        BezId,
+        BezLabel,
+        BezName,
+        WovId,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::BezId => "bez_id".into(),
+            Field::BezLabel => "bez_label".into(),
+            Field::BezName => "bez_name".into(),
+            Field::WovId => "wov_id".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -25053,19 +34411,19 @@ pub mod statistische_raumeinheiten_bezirke {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -25183,6 +34541,59 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        MessungId,
+        RichtungId,
+        Geschwindigkeit,
+        Zeit,
+        Datum,
+        DatumZeit,
+        Messbeginn,
+        Messende,
+        Zone,
+        Ort,
+        Richtung,
+        TheGeom,
+        UeQuote,
+        V50,
+        V85,
+        Strasse,
+        StrasseNr,
+        Fzg,
+        Fahrzeuglange,
+        LinkZuMessung,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::MessungId => "messung_id".into(),
+            Field::RichtungId => "richtung_id".into(),
+            Field::Geschwindigkeit => "geschwindigkeit".into(),
+            Field::Zeit => "zeit".into(),
+            Field::Datum => "datum".into(),
+            Field::DatumZeit => "datum_zeit".into(),
+            Field::Messbeginn => "messbeginn".into(),
+            Field::Messende => "messende".into(),
+            Field::Zone => "zone".into(),
+            Field::Ort => "ort".into(),
+            Field::Richtung => "richtung".into(),
+            Field::TheGeom => "the_geom".into(),
+            Field::UeQuote => "ue_quote".into(),
+            Field::V50 => "v50".into(),
+            Field::V85 => "v85".into(),
+            Field::Strasse => "strasse".into(),
+            Field::StrasseNr => "strasse_nr".into(),
+            Field::Fzg => "fzg".into(),
+            Field::Fahrzeuglange => "fahrzeuglange".into(),
+            Field::LinkZuMessung => "link_zu_messung".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -25191,19 +34602,19 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -25275,6 +34686,37 @@ pub mod fischereistatistik_basel_stadt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        Monat,
+        Fischereikarte,
+        Gewasser,
+        Fischart,
+        Lange,
+        Kesslergrundel,
+        Schwarzmundgrundel,
+        GeoShape,
+        Laufnummer,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+            Field::Fischereikarte => "fischereikarte".into(),
+            Field::Gewasser => "gewasser".into(),
+            Field::Fischart => "fischart".into(),
+            Field::Lange => "lange".into(),
+            Field::Kesslergrundel => "kesslergrundel".into(),
+            Field::Schwarzmundgrundel => "schwarzmundgrundel".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Laufnummer => "laufnummer".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -25283,19 +34725,19 @@ pub mod fischereistatistik_basel_stadt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -25377,6 +34819,49 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_block {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Block,
+        BloLabel,
+        BezId,
+        BezName,
+        WovId,
+        WovName,
+        GeoShape,
+        GeoPoint2d,
+        Jahr,
+        AnteilAl,
+        AnteilBs,
+        AnteilBsanch,
+        AnteilCh,
+        AnzahlAl,
+        AnzahlBs,
+        AnzahlCh,
+        GesbevF,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Block => "block".into(),
+            Field::BloLabel => "blo_label".into(),
+            Field::BezId => "bez_id".into(),
+            Field::BezName => "bez_name".into(),
+            Field::WovId => "wov_id".into(),
+            Field::WovName => "wov_name".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Jahr => "jahr".into(),
+            Field::AnteilAl => "anteil_al".into(),
+            Field::AnteilBs => "anteil_bs".into(),
+            Field::AnteilBsanch => "anteil_bsanch".into(),
+            Field::AnteilCh => "anteil_ch".into(),
+            Field::AnzahlAl => "anzahl_al".into(),
+            Field::AnzahlBs => "anzahl_bs".into(),
+            Field::AnzahlCh => "anzahl_ch".into(),
+            Field::GesbevF => "gesbev_f".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -25385,19 +34870,19 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_block {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -25561,6 +35046,93 @@ pub mod kantonsblatt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        RubricDe,
+        Rubric,
+        SubrubricDe,
+        Subrubric,
+        Publicationdate,
+        Expirationdate,
+        Language,
+        Registrationofficedisplayname,
+        Registrationofficeid,
+        Registrationofficestreet,
+        Registrationofficestreetnumber,
+        Registrationofficeswisszipcode,
+        Registrationofficetown,
+        Registrationofficecontainspostofficebox,
+        Registrationofficepostofficeboxnumber,
+        Registrationofficepostofficeboxswisszipcode,
+        Registrationofficepostofficeboxtown,
+        Id,
+        Publicationnumber,
+        Publicationstate,
+        Primarytenantcode,
+        Primarytenantname,
+        Onbehalfof,
+        Legalremedy,
+        Cantons,
+        Secondarytenantstenantcode,
+        Secondarytenantstenantname,
+        Secondarytenantspublicationdate,
+        Repeatedpublicationspublicationnumber,
+        Repeatedpublicationspublicationdate,
+        UrlKantonsblatt,
+        UrlPdf,
+        UrlXml,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::RubricDe => "rubric_de".into(),
+            Field::Rubric => "rubric".into(),
+            Field::SubrubricDe => "subrubric_de".into(),
+            Field::Subrubric => "subrubric".into(),
+            Field::Publicationdate => "publicationdate".into(),
+            Field::Expirationdate => "expirationdate".into(),
+            Field::Language => "language".into(),
+            Field::Registrationofficedisplayname => "registrationofficedisplayname".into(),
+            Field::Registrationofficeid => "registrationofficeid".into(),
+            Field::Registrationofficestreet => "registrationofficestreet".into(),
+            Field::Registrationofficestreetnumber => "registrationofficestreetnumber".into(),
+            Field::Registrationofficeswisszipcode => "registrationofficeswisszipcode".into(),
+            Field::Registrationofficetown => "registrationofficetown".into(),
+            Field::Registrationofficecontainspostofficebox => {
+                "registrationofficecontainspostofficebox".into()
+            }
+            Field::Registrationofficepostofficeboxnumber => {
+                "registrationofficepostofficeboxnumber".into()
+            }
+            Field::Registrationofficepostofficeboxswisszipcode => {
+                "registrationofficepostofficeboxswisszipcode".into()
+            }
+            Field::Registrationofficepostofficeboxtown => {
+                "registrationofficepostofficeboxtown".into()
+            }
+            Field::Id => "id".into(),
+            Field::Publicationnumber => "publicationnumber".into(),
+            Field::Publicationstate => "publicationstate".into(),
+            Field::Primarytenantcode => "primarytenantcode".into(),
+            Field::Primarytenantname => "primarytenantname".into(),
+            Field::Onbehalfof => "onbehalfof".into(),
+            Field::Legalremedy => "legalremedy".into(),
+            Field::Cantons => "cantons".into(),
+            Field::Secondarytenantstenantcode => "secondarytenantstenantcode".into(),
+            Field::Secondarytenantstenantname => "secondarytenantstenantname".into(),
+            Field::Secondarytenantspublicationdate => "secondarytenantspublicationdate".into(),
+            Field::Repeatedpublicationspublicationnumber => {
+                "repeatedpublicationspublicationnumber".into()
+            }
+            Field::Repeatedpublicationspublicationdate => {
+                "repeatedpublicationspublicationdate".into()
+            }
+            Field::UrlKantonsblatt => "url_kantonsblatt".into(),
+            Field::UrlPdf => "url_pdf".into(),
+            Field::UrlXml => "url_xml".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -25569,19 +35141,19 @@ pub mod kantonsblatt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -25659,6 +35231,41 @@ pub mod kunst_im_oeffentlichen_raum {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdInvnr,
+        Gruppe,
+        Fotonummer,
+        KuName,
+        Werktitel,
+        Datierung,
+        Standort,
+        Pdf,
+        Rueckbau,
+        MapLinks,
+        FotoDownloadlink,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdInvnr => "id_invnr".into(),
+            Field::Gruppe => "gruppe".into(),
+            Field::Fotonummer => "fotonummer".into(),
+            Field::KuName => "ku_name".into(),
+            Field::Werktitel => "werktitel".into(),
+            Field::Datierung => "datierung".into(),
+            Field::Standort => "standort".into(),
+            Field::Pdf => "pdf".into(),
+            Field::Rueckbau => "rueckbau".into(),
+            Field::MapLinks => "map_links".into(),
+            Field::FotoDownloadlink => "foto_downloadlink".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -25667,19 +35274,19 @@ pub mod kunst_im_oeffentlichen_raum {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -25936,6 +35543,127 @@ pub mod umfrage_digitale_mitwirkung_2020 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Altersgruppe,
+        W92a,
+        Partei,
+        Verhal,
+        Bildung,
+        Gewdef,
+        S11,
+        Stimm,
+        Bast1,
+        Bast2,
+        Bast3,
+        Bast51,
+        Bast52,
+        Bast53,
+        Bast61,
+        Bast62,
+        Bast63,
+        Bast65,
+        Bast66,
+        Bast67,
+        Bast68,
+        Bast69,
+        Bast610,
+        Bast611,
+        Bast71,
+        Bast72,
+        Bast73,
+        Bast75,
+        Bast76,
+        Bast81,
+        Bast82,
+        Bast83,
+        Bast10,
+        Bast1101,
+        Bast1102,
+        Bast1103,
+        Bast1104,
+        Bast1201,
+        Bast1202,
+        Bast1203,
+        Bast1204,
+        Bast1205,
+        Bast13,
+        Bast1401,
+        Bast1402,
+        Bast1403,
+        Bast1501,
+        Bast1502,
+        Bast1503,
+        Bast1504,
+        Bast16,
+        Bast1701,
+        Bast1702,
+        Bast1703,
+        Bast1704,
+        Bast1705,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Altersgruppe => "altersgruppe".into(),
+            Field::W92a => "w92a".into(),
+            Field::Partei => "partei".into(),
+            Field::Verhal => "verhal".into(),
+            Field::Bildung => "bildung".into(),
+            Field::Gewdef => "gewdef".into(),
+            Field::S11 => "s11".into(),
+            Field::Stimm => "stimm".into(),
+            Field::Bast1 => "bast1".into(),
+            Field::Bast2 => "bast2".into(),
+            Field::Bast3 => "bast3".into(),
+            Field::Bast51 => "bast5_1".into(),
+            Field::Bast52 => "bast5_2".into(),
+            Field::Bast53 => "bast5_3".into(),
+            Field::Bast61 => "bast6_1".into(),
+            Field::Bast62 => "bast6_2".into(),
+            Field::Bast63 => "bast6_3".into(),
+            Field::Bast65 => "bast6_5".into(),
+            Field::Bast66 => "bast6_6".into(),
+            Field::Bast67 => "bast6_7".into(),
+            Field::Bast68 => "bast6_8".into(),
+            Field::Bast69 => "bast6_9".into(),
+            Field::Bast610 => "bast6_10".into(),
+            Field::Bast611 => "bast6_11".into(),
+            Field::Bast71 => "bast7_1".into(),
+            Field::Bast72 => "bast7_2".into(),
+            Field::Bast73 => "bast7_3".into(),
+            Field::Bast75 => "bast7_5".into(),
+            Field::Bast76 => "bast7_6".into(),
+            Field::Bast81 => "bast8_1".into(),
+            Field::Bast82 => "bast8_2".into(),
+            Field::Bast83 => "bast8_3".into(),
+            Field::Bast10 => "bast10".into(),
+            Field::Bast1101 => "bast11_01".into(),
+            Field::Bast1102 => "bast11_02".into(),
+            Field::Bast1103 => "bast11_03".into(),
+            Field::Bast1104 => "bast11_04".into(),
+            Field::Bast1201 => "bast12_01".into(),
+            Field::Bast1202 => "bast12_02".into(),
+            Field::Bast1203 => "bast12_03".into(),
+            Field::Bast1204 => "bast12_04".into(),
+            Field::Bast1205 => "bast12_05".into(),
+            Field::Bast13 => "bast13".into(),
+            Field::Bast1401 => "bast14_01".into(),
+            Field::Bast1402 => "bast14_02".into(),
+            Field::Bast1403 => "bast14_03".into(),
+            Field::Bast1501 => "bast15_01".into(),
+            Field::Bast1502 => "bast15_02".into(),
+            Field::Bast1503 => "bast15_03".into(),
+            Field::Bast1504 => "bast15_04".into(),
+            Field::Bast16 => "bast16".into(),
+            Field::Bast1701 => "bast17_01".into(),
+            Field::Bast1702 => "bast17_02".into(),
+            Field::Bast1703 => "bast17_03".into(),
+            Field::Bast1704 => "bast17_04".into(),
+            Field::Bast1705 => "bast17_05".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -25944,19 +35672,19 @@ pub mod umfrage_digitale_mitwirkung_2020 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -26000,6 +35728,27 @@ pub mod statistische_raumeinheiten_wohnviertel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        WovId,
+        WovLabel,
+        WovName,
+        GemeindeName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::WovId => "wov_id".into(),
+            Field::WovLabel => "wov_label".into(),
+            Field::WovName => "wov_name".into(),
+            Field::GemeindeName => "gemeinde_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -26008,19 +35757,19 @@ pub mod statistische_raumeinheiten_wohnviertel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -26144,6 +35893,61 @@ pub mod wanderungen_zuzug_wegzug_und_umzug_kanton_basel_stadt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        EreignisTyp,
+        Datum,
+        Jahr,
+        Monat,
+        WocheInJahr,
+        DatumWochenstart,
+        TagInJahr,
+        Wochentag,
+        Nationalitaet,
+        Geschlecht,
+        Alter,
+        AufenthaltsdauerInJahren,
+        VonKontinent,
+        VonLand,
+        VonKanton,
+        VonGemeinde,
+        VonWohnviertel,
+        NachKontinent,
+        NachLand,
+        NachKanton,
+        NachGemeinde,
+        NachWohnviertel,
+        Anzahl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::EreignisTyp => "ereignis_typ".into(),
+            Field::Datum => "datum".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+            Field::WocheInJahr => "woche_in_jahr".into(),
+            Field::DatumWochenstart => "datum_wochenstart".into(),
+            Field::TagInJahr => "tag_in_jahr".into(),
+            Field::Wochentag => "wochentag".into(),
+            Field::Nationalitaet => "nationalitaet".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Alter => "alter".into(),
+            Field::AufenthaltsdauerInJahren => "aufenthaltsdauer_in_jahren".into(),
+            Field::VonKontinent => "von_kontinent".into(),
+            Field::VonLand => "von_land".into(),
+            Field::VonKanton => "von_kanton".into(),
+            Field::VonGemeinde => "von_gemeinde".into(),
+            Field::VonWohnviertel => "von_wohnviertel".into(),
+            Field::NachKontinent => "nach_kontinent".into(),
+            Field::NachLand => "nach_land".into(),
+            Field::NachKanton => "nach_kanton".into(),
+            Field::NachGemeinde => "nach_gemeinde".into(),
+            Field::NachWohnviertel => "nach_wohnviertel".into(),
+            Field::Anzahl => "anzahl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -26152,19 +35956,19 @@ pub mod wanderungen_zuzug_wegzug_und_umzug_kanton_basel_stadt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -26210,6 +36014,23 @@ pub mod kandidierende_der_grossratswahlen_nach_berufsgruppe_seit_2020 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Wahljahr,
+        Berufsgruppe,
+        Anzahl,
+        Anteil,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Wahljahr => "wahljahr".into(),
+            Field::Berufsgruppe => "berufsgruppe".into(),
+            Field::Anzahl => "anzahl".into(),
+            Field::Anteil => "anteil".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -26218,19 +36039,19 @@ pub mod kandidierende_der_grossratswahlen_nach_berufsgruppe_seit_2020 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -26272,6 +36093,23 @@ pub mod nachnamen_der_baselstaedtischen_bevoelkerung {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        Nachname,
+        Anzahl,
+        Jahr,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::Nachname => "nachname".into(),
+            Field::Anzahl => "anzahl".into(),
+            Field::Jahr => "jahr".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -26280,19 +36118,19 @@ pub mod nachnamen_der_baselstaedtischen_bevoelkerung {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -26384,6 +36222,47 @@ pub mod baumkataster_faell_und_baumersatzliste {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        Baumnr,
+        Art,
+        BaumartLateinisch,
+        BaumartDeutsch,
+        IdSchutzs,
+        Schutzstat,
+        Strasse,
+        Ersatzart,
+        Ersatzdatu,
+        Ersatzort,
+        Stammumfan,
+        Faellgrund,
+        Faellgrun1,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::Baumnr => "baumnr".into(),
+            Field::Art => "art".into(),
+            Field::BaumartLateinisch => "baumart_lateinisch".into(),
+            Field::BaumartDeutsch => "baumart_deutsch".into(),
+            Field::IdSchutzs => "id_schutzs".into(),
+            Field::Schutzstat => "schutzstat".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Ersatzart => "ersatzart".into(),
+            Field::Ersatzdatu => "ersatzdatu".into(),
+            Field::Ersatzort => "ersatzort".into(),
+            Field::Stammumfan => "stammumfan".into(),
+            Field::Faellgrund => "faellgrund".into(),
+            Field::Faellgrun1 => "faellgrun1".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -26392,19 +36271,19 @@ pub mod baumkataster_faell_und_baumersatzliste {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -26616,6 +36495,107 @@ pub mod leerstehende_wohnungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        WovId,
+        WovName,
+        WohnbezirkId,
+        BezLabel,
+        BezName,
+        Total,
+        ZimmerzahlGanzzahlig,
+        WflMin30m2,
+        Wfl31m250m2,
+        Wfl51m270m2,
+        Wfl71m290m2,
+        Wfl91m2110m2,
+        Wfl111m2130m2,
+        Wfl131m2Max,
+        WflUnbekannt,
+        GbEfh,
+        GbMfh,
+        GbGemischteNutzung,
+        GbAndere,
+        PdMin1920,
+        Pd19211950,
+        Pd19511980,
+        Pd19812010,
+        Pd2011Max,
+        RnRenoviert,
+        RnNichtRenoviert,
+        RnNeuGebaut,
+        AngMiete,
+        AngKauf,
+        AngMieteKauf,
+        PMin1000,
+        P10011250,
+        P12511500,
+        P15011750,
+        P17512000,
+        P20012250,
+        P22512500,
+        P25012750,
+        P27513000,
+        P30013250,
+        P32513500,
+        PUnbekannt,
+        P3501Max,
+        GeoShape,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::WovId => "wov_id".into(),
+            Field::WovName => "wov_name".into(),
+            Field::WohnbezirkId => "wohnbezirk_id".into(),
+            Field::BezLabel => "bez_label".into(),
+            Field::BezName => "bez_name".into(),
+            Field::Total => "total".into(),
+            Field::ZimmerzahlGanzzahlig => "zimmerzahl_ganzzahlig".into(),
+            Field::WflMin30m2 => "wfl_min_30m2".into(),
+            Field::Wfl31m250m2 => "wfl_31m2_50m2".into(),
+            Field::Wfl51m270m2 => "wfl_51m2_70m2".into(),
+            Field::Wfl71m290m2 => "wfl_71m2_90m2".into(),
+            Field::Wfl91m2110m2 => "wfl_91m2_110m2".into(),
+            Field::Wfl111m2130m2 => "wfl_111m2_130m2".into(),
+            Field::Wfl131m2Max => "wfl_131m2_max".into(),
+            Field::WflUnbekannt => "wfl_unbekannt".into(),
+            Field::GbEfh => "gb_efh".into(),
+            Field::GbMfh => "gb_mfh".into(),
+            Field::GbGemischteNutzung => "gb_gemischte_nutzung".into(),
+            Field::GbAndere => "gb_andere".into(),
+            Field::PdMin1920 => "pd_min_1920".into(),
+            Field::Pd19211950 => "pd_1921_1950".into(),
+            Field::Pd19511980 => "pd_1951_1980".into(),
+            Field::Pd19812010 => "pd_1981_2010".into(),
+            Field::Pd2011Max => "pd_2011_max".into(),
+            Field::RnRenoviert => "rn_renoviert".into(),
+            Field::RnNichtRenoviert => "rn_nicht_renoviert".into(),
+            Field::RnNeuGebaut => "rn_neu_gebaut".into(),
+            Field::AngMiete => "ang_miete".into(),
+            Field::AngKauf => "ang_kauf".into(),
+            Field::AngMieteKauf => "ang_miete_kauf".into(),
+            Field::PMin1000 => "p_min_1000".into(),
+            Field::P10011250 => "p_1001_1250".into(),
+            Field::P12511500 => "p_1251_1500".into(),
+            Field::P15011750 => "p_1501_1750".into(),
+            Field::P17512000 => "p_1751_2000".into(),
+            Field::P20012250 => "p_2001_2250".into(),
+            Field::P22512500 => "p_2251_2500".into(),
+            Field::P25012750 => "p_2501_2750".into(),
+            Field::P27513000 => "p_2751_3000".into(),
+            Field::P30013250 => "p_3001_3250".into(),
+            Field::P32513500 => "p_3251_3500".into(),
+            Field::PUnbekannt => "p_unbekannt".into(),
+            Field::P3501Max => "p_3501_max".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -26624,19 +36604,19 @@ pub mod leerstehende_wohnungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -26710,6 +36690,37 @@ pub mod gesundheitsversorgung_gsv_pflegeheime {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        Id,
+        Name,
+        AnzahlPflegeplaetze,
+        AnzahlPensionsPflegetage,
+        Auslastung,
+        Pflegestufe,
+        KostenPensionBetreuung,
+        KvgPflegekosten,
+        ErtraegeTaxeinnahmen,
+        Geopunkte,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::Id => "id".into(),
+            Field::Name => "name".into(),
+            Field::AnzahlPflegeplaetze => "anzahl_pflegeplaetze".into(),
+            Field::AnzahlPensionsPflegetage => "anzahl_pensions_pflegetage".into(),
+            Field::Auslastung => "auslastung".into(),
+            Field::Pflegestufe => "pflegestufe".into(),
+            Field::KostenPensionBetreuung => "kosten_pension_betreuung".into(),
+            Field::KvgPflegekosten => "kvg_pflegekosten".into(),
+            Field::ErtraegeTaxeinnahmen => "ertraege_taxeinnahmen".into(),
+            Field::Geopunkte => "geopunkte".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -26718,19 +36729,19 @@ pub mod gesundheitsversorgung_gsv_pflegeheime {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -26810,6 +36821,39 @@ pub mod gestorbene_nach_altersklasse_geschlecht_und_sterbedatum {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        Monat,
+        WocheInJahr,
+        DatumWochenstartSterbedatum,
+        TagInJahr,
+        Wochentag,
+        Sterbedatum,
+        AnzMaenner064,
+        AnzMaenner65Plus,
+        AnzFrauen064,
+        AnzFrauen65Plus,
+        AnzTotal,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+            Field::WocheInJahr => "woche_in_jahr".into(),
+            Field::DatumWochenstartSterbedatum => "datum_wochenstart_sterbedatum".into(),
+            Field::TagInJahr => "tag_in_jahr".into(),
+            Field::Wochentag => "wochentag".into(),
+            Field::Sterbedatum => "sterbedatum".into(),
+            Field::AnzMaenner064 => "anz_maenner_0_64".into(),
+            Field::AnzMaenner65Plus => "anz_maenner_65_plus".into(),
+            Field::AnzFrauen064 => "anz_frauen_0_64".into(),
+            Field::AnzFrauen65Plus => "anz_frauen_65_plus".into(),
+            Field::AnzTotal => "anz_total".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -26818,19 +36862,19 @@ pub mod gestorbene_nach_altersklasse_geschlecht_und_sterbedatum {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -26910,6 +36954,39 @@ pub mod grosser_rat_dokumente {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Dokudatum,
+        DokLaufnr,
+        SignaturDok,
+        TitelDok,
+        UrlDok,
+        LaufnrGes,
+        SignaturGes,
+        StatusGes,
+        TitelGes,
+        GaRrGr,
+        UrlGes,
+        UrlGeschaeftOds,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Dokudatum => "dokudatum".into(),
+            Field::DokLaufnr => "dok_laufnr".into(),
+            Field::SignaturDok => "signatur_dok".into(),
+            Field::TitelDok => "titel_dok".into(),
+            Field::UrlDok => "url_dok".into(),
+            Field::LaufnrGes => "laufnr_ges".into(),
+            Field::SignaturGes => "signatur_ges".into(),
+            Field::StatusGes => "status_ges".into(),
+            Field::TitelGes => "titel_ges".into(),
+            Field::GaRrGr => "ga_rr_gr".into(),
+            Field::UrlGes => "url_ges".into(),
+            Field::UrlGeschaeftOds => "url_geschaeft_ods".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -26918,19 +36995,19 @@ pub mod grosser_rat_dokumente {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -27004,6 +37081,37 @@ pub mod monatliche_sterberaten_nach_geschlecht_und_altersgruppe {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        Monat,
+        JahrMonat,
+        Geschlecht,
+        Altersgruppen,
+        BeobachtetTote,
+        MittlereBev,
+        Sterberate1000Roh,
+        ErwartetTote,
+        MittlereBevReferenz,
+        Smr1000,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+            Field::JahrMonat => "jahr_monat".into(),
+            Field::Geschlecht => "geschlecht".into(),
+            Field::Altersgruppen => "altersgruppen".into(),
+            Field::BeobachtetTote => "beobachtet_tote".into(),
+            Field::MittlereBev => "mittlere_bev".into(),
+            Field::Sterberate1000Roh => "sterberate_1000_roh".into(),
+            Field::ErwartetTote => "erwartet_tote".into(),
+            Field::MittlereBevReferenz => "mittlere_bev_referenz".into(),
+            Field::Smr1000 => "smr_1000".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -27012,19 +37120,19 @@ pub mod monatliche_sterberaten_nach_geschlecht_und_altersgruppe {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -27124,6 +37232,51 @@ pub mod baumkataster_baumbestand {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        Baumnr,
+        Art,
+        BaumartLateinisch,
+        BaumartDeutsch,
+        Pflanzdatu,
+        Baumalter,
+        Standjahr,
+        IdSchutzs,
+        Schutzstat,
+        Strasse,
+        Kreis,
+        IdGruppe,
+        Gruppe,
+        Gemeinde,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::Baumnr => "baumnr".into(),
+            Field::Art => "art".into(),
+            Field::BaumartLateinisch => "baumart_lateinisch".into(),
+            Field::BaumartDeutsch => "baumart_deutsch".into(),
+            Field::Pflanzdatu => "pflanzdatu".into(),
+            Field::Baumalter => "baumalter".into(),
+            Field::Standjahr => "standjahr".into(),
+            Field::IdSchutzs => "id_schutzs".into(),
+            Field::Schutzstat => "schutzstat".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Kreis => "kreis".into(),
+            Field::IdGruppe => "id_gruppe".into(),
+            Field::Gruppe => "gruppe".into(),
+            Field::Gemeinde => "gemeinde".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -27132,19 +37285,19 @@ pub mod baumkataster_baumbestand {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -27324,6 +37477,145 @@ pub mod coronavirus_covid_19_in_basel_stadt_verabreichte_impfungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        TotalVerabreichteImpfungen,
+        TotalPersonenMitErsterDosis,
+        TotalPersonenMitAusschliesslichErsterDosis,
+        TotalPersonenMitZweiterDosis,
+        TotalPersonenMitDritterDosis,
+        TotalPersonenMitVierterDosis,
+        TotalPersonenMitFuenfterDosis,
+        ImImpfzentrumVerabreichteImpfungenProTag,
+        ImImpfzentrumMitErsterDosisGeimpftePersonenProTag,
+        ImImpfzentrumMitZweiterDosisGeimpftePersonenProTag,
+        ImImpfzentrumMitDritterDosisGeimpftePersonenProTag,
+        ImImpfzentrumMitVierterDosisGeimpftePersonenProTag,
+        ImImpfzentrumMitFuenfterDosisGeimpftePersonenProTag,
+        InAphVerabreichteImpfungenProTag,
+        ImAphMitErsterDosisGeimpftePersonenProTag,
+        ImAphMitZweiterDosisGeimpftePersonenProTag,
+        ImAphMitDritterDosisGeimpftePersonenProTag,
+        ImAphMitVierterDosisGeimpftePersonenProTag,
+        ImAphMitFuenfterDosisGeimpftePersonenProTag,
+        TotalVerabreichteImpfungenProTag,
+        ImSpitalVerabreichteImpfungenProTag,
+        ImSpitalMitErsterDosisGeimpftePersonenProTag,
+        ImSpitalMitZweiterDosisGeimpftePersonenProTag,
+        ImSpitalMitDritterDosisGeimpftePersonenProTag,
+        ImSpitalMitVierterDosisGeimpftePersonenProTag,
+        ImSpitalMitFuenfterDosisGeimpftePersonenProTag,
+        AnderswoVerabreichteImpfungenProTag,
+        AnderswoMitErsterDosisGeimpftePersonenProTag,
+        AnderswoMitZweiterDosisGeimpftePersonenProTag,
+        AnderswoMitDritterDosisGeimpftePersonenProTag,
+        AnderswoMitVierterDosisGeimpftePersonenProTag,
+        AnderswoMitFuenfterDosisGeimpftePersonenProTag,
+        TotalAuffrischimpfungen,
+        AuffrischimpfungenProTag,
+        TotalDrittimpfungenUMGrundimmunisierung,
+        DrittimpfungenUMGrundimmunisierungProTag,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::TotalVerabreichteImpfungen => "total_verabreichte_impfungen".into(),
+            Field::TotalPersonenMitErsterDosis => "total_personen_mit_erster_dosis".into(),
+            Field::TotalPersonenMitAusschliesslichErsterDosis => {
+                "total_personen_mit_ausschliesslich_erster_dosis".into()
+            }
+            Field::TotalPersonenMitZweiterDosis => "total_personen_mit_zweiter_dosis".into(),
+            Field::TotalPersonenMitDritterDosis => "total_personen_mit_dritter_dosis".into(),
+            Field::TotalPersonenMitVierterDosis => "total_personen_mit_vierter_dosis".into(),
+            Field::TotalPersonenMitFuenfterDosis => "total_personen_mit_fuenfter_dosis".into(),
+            Field::ImImpfzentrumVerabreichteImpfungenProTag => {
+                "im_impfzentrum_verabreichte_impfungen_pro_tag".into()
+            }
+            Field::ImImpfzentrumMitErsterDosisGeimpftePersonenProTag => {
+                "im_impfzentrum_mit_erster_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::ImImpfzentrumMitZweiterDosisGeimpftePersonenProTag => {
+                "im_impfzentrum_mit_zweiter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::ImImpfzentrumMitDritterDosisGeimpftePersonenProTag => {
+                "im_impfzentrum_mit_dritter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::ImImpfzentrumMitVierterDosisGeimpftePersonenProTag => {
+                "im_impfzentrum_mit_vierter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::ImImpfzentrumMitFuenfterDosisGeimpftePersonenProTag => {
+                "im_impfzentrum_mit_fuenfter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::InAphVerabreichteImpfungenProTag => {
+                "in_aph_verabreichte_impfungen_pro_tag".into()
+            }
+            Field::ImAphMitErsterDosisGeimpftePersonenProTag => {
+                "im_aph_mit_erster_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::ImAphMitZweiterDosisGeimpftePersonenProTag => {
+                "im_aph_mit_zweiter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::ImAphMitDritterDosisGeimpftePersonenProTag => {
+                "im_aph_mit_dritter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::ImAphMitVierterDosisGeimpftePersonenProTag => {
+                "im_aph_mit_vierter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::ImAphMitFuenfterDosisGeimpftePersonenProTag => {
+                "im_aph_mit_fuenfter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::TotalVerabreichteImpfungenProTag => {
+                "total_verabreichte_impfungen_pro_tag".into()
+            }
+            Field::ImSpitalVerabreichteImpfungenProTag => {
+                "im_spital_verabreichte_impfungen_pro_tag".into()
+            }
+            Field::ImSpitalMitErsterDosisGeimpftePersonenProTag => {
+                "im_spital_mit_erster_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::ImSpitalMitZweiterDosisGeimpftePersonenProTag => {
+                "im_spital_mit_zweiter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::ImSpitalMitDritterDosisGeimpftePersonenProTag => {
+                "im_spital_mit_dritter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::ImSpitalMitVierterDosisGeimpftePersonenProTag => {
+                "im_spital_mit_vierter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::ImSpitalMitFuenfterDosisGeimpftePersonenProTag => {
+                "im_spital_mit_fuenfter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::AnderswoVerabreichteImpfungenProTag => {
+                "anderswo_verabreichte_impfungen_pro_tag".into()
+            }
+            Field::AnderswoMitErsterDosisGeimpftePersonenProTag => {
+                "anderswo_mit_erster_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::AnderswoMitZweiterDosisGeimpftePersonenProTag => {
+                "anderswo_mit_zweiter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::AnderswoMitDritterDosisGeimpftePersonenProTag => {
+                "anderswo_mit_dritter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::AnderswoMitVierterDosisGeimpftePersonenProTag => {
+                "anderswo_mit_vierter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::AnderswoMitFuenfterDosisGeimpftePersonenProTag => {
+                "anderswo_mit_fuenfter_dosis_geimpfte_personen_pro_tag".into()
+            }
+            Field::TotalAuffrischimpfungen => "total_auffrischimpfungen".into(),
+            Field::AuffrischimpfungenProTag => "auffrischimpfungen_pro_tag".into(),
+            Field::TotalDrittimpfungenUMGrundimmunisierung => {
+                "total_drittimpfungen_u_m_grundimmunisierung".into()
+            }
+            Field::DrittimpfungenUMGrundimmunisierungProTag => {
+                "drittimpfungen_u_m_grundimmunisierung_pro_tag".into()
+            }
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -27332,19 +37624,19 @@ pub mod coronavirus_covid_19_in_basel_stadt_verabreichte_impfungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -27516,6 +37808,85 @@ pub mod grosser_rat_tagesordnungen_und_traktandenlisten_der_grossratssitzungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        TagesordnungIdnr,
+        Versand,
+        Tag1,
+        Text1,
+        Tag2,
+        Text2,
+        Tag3,
+        Text3,
+        Bemerkung,
+        UrlTagesordnungDok,
+        UrlGeschaeftsverzeichnis,
+        UrlSammelmappe,
+        UrlAlleDokumente,
+        UrlVollprotokoll,
+        UrlAudioprotokollTag1,
+        UrlAudioprotokollTag2,
+        UrlAudioprotokollTag3,
+        Gruppennummer,
+        Gruppentitel,
+        GruppentitelPos,
+        TraktandenIdnr,
+        Laufnr,
+        Laufnr2,
+        Status,
+        Titel,
+        Kommission,
+        Departement,
+        Signatur,
+        UrlGes,
+        UrlGeschaeftOds,
+        UrlDok,
+        UrlDokumentOds,
+        Abstimmung,
+        Anr,
+        UrlAbstimmungen,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::TagesordnungIdnr => "tagesordnung_idnr".into(),
+            Field::Versand => "versand".into(),
+            Field::Tag1 => "tag1".into(),
+            Field::Text1 => "text1".into(),
+            Field::Tag2 => "tag2".into(),
+            Field::Text2 => "text2".into(),
+            Field::Tag3 => "tag3".into(),
+            Field::Text3 => "text3".into(),
+            Field::Bemerkung => "bemerkung".into(),
+            Field::UrlTagesordnungDok => "url_tagesordnung_dok".into(),
+            Field::UrlGeschaeftsverzeichnis => "url_geschaeftsverzeichnis".into(),
+            Field::UrlSammelmappe => "url_sammelmappe".into(),
+            Field::UrlAlleDokumente => "url_alle_dokumente".into(),
+            Field::UrlVollprotokoll => "url_vollprotokoll".into(),
+            Field::UrlAudioprotokollTag1 => "url_audioprotokoll_tag1".into(),
+            Field::UrlAudioprotokollTag2 => "url_audioprotokoll_tag2".into(),
+            Field::UrlAudioprotokollTag3 => "url_audioprotokoll_tag3".into(),
+            Field::Gruppennummer => "gruppennummer".into(),
+            Field::Gruppentitel => "gruppentitel".into(),
+            Field::GruppentitelPos => "gruppentitel_pos".into(),
+            Field::TraktandenIdnr => "traktanden_idnr".into(),
+            Field::Laufnr => "laufnr".into(),
+            Field::Laufnr2 => "laufnr_2".into(),
+            Field::Status => "status".into(),
+            Field::Titel => "titel".into(),
+            Field::Kommission => "kommission".into(),
+            Field::Departement => "departement".into(),
+            Field::Signatur => "signatur".into(),
+            Field::UrlGes => "url_ges".into(),
+            Field::UrlGeschaeftOds => "url_geschaeft_ods".into(),
+            Field::UrlDok => "url_dok".into(),
+            Field::UrlDokumentOds => "url_dokument_ods".into(),
+            Field::Abstimmung => "abstimmung".into(),
+            Field::Anr => "anr".into(),
+            Field::UrlAbstimmungen => "url_abstimmungen".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -27524,19 +37895,19 @@ pub mod grosser_rat_tagesordnungen_und_traktandenlisten_der_grossratssitzungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -27648,6 +38019,55 @@ pub mod grosser_rat_zuweisungen_von_geschaeften {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        KurznameAn,
+        NameAn,
+        UniNrAn,
+        UrlGremiumAn,
+        Erledigt,
+        StatusZuw,
+        Termin,
+        TitelZuw,
+        Bem,
+        LaufnrGes,
+        SignaturGes,
+        StatusGes,
+        TitelGes,
+        GaRrGr,
+        UrlGes,
+        UrlGeschaeftOds,
+        KurznameVon,
+        NameVon,
+        UniNrVon,
+        UrlGremiumVon,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::KurznameAn => "kurzname_an".into(),
+            Field::NameAn => "name_an".into(),
+            Field::UniNrAn => "uni_nr_an".into(),
+            Field::UrlGremiumAn => "url_gremium_an".into(),
+            Field::Erledigt => "erledigt".into(),
+            Field::StatusZuw => "status_zuw".into(),
+            Field::Termin => "termin".into(),
+            Field::TitelZuw => "titel_zuw".into(),
+            Field::Bem => "bem".into(),
+            Field::LaufnrGes => "laufnr_ges".into(),
+            Field::SignaturGes => "signatur_ges".into(),
+            Field::StatusGes => "status_ges".into(),
+            Field::TitelGes => "titel_ges".into(),
+            Field::GaRrGr => "ga_rr_gr".into(),
+            Field::UrlGes => "url_ges".into(),
+            Field::UrlGeschaeftOds => "url_geschaeft_ods".into(),
+            Field::KurznameVon => "kurzname_von".into(),
+            Field::NameVon => "name_von".into(),
+            Field::UniNrVon => "uni_nr_von".into(),
+            Field::UrlGremiumVon => "url_gremium_von".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -27656,19 +38076,19 @@ pub mod grosser_rat_zuweisungen_von_geschaeften {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -27718,6 +38138,25 @@ pub mod euroairport_taegliche_flugbewegungen_passagiere_und_fracht {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Date,
+        Kategorie,
+        Pax,
+        Fret,
+        Mvt,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Date => "date".into(),
+            Field::Kategorie => "kategorie".into(),
+            Field::Pax => "pax".into(),
+            Field::Fret => "fret".into(),
+            Field::Mvt => "mvt".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -27726,19 +38165,19 @@ pub mod euroairport_taegliche_flugbewegungen_passagiere_und_fracht {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -27794,6 +38233,37 @@ pub mod wohnbevoelkerung_nach_bezirk {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        Wohnviertel,
+        WovId,
+        Wohnbezirk,
+        BezId,
+        Gemeinde,
+        Anzahl,
+        Jahr,
+        Monat,
+        GeoShape,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::Wohnviertel => "wohnviertel".into(),
+            Field::WovId => "wov_id".into(),
+            Field::Wohnbezirk => "wohnbezirk".into(),
+            Field::BezId => "bez_id".into(),
+            Field::Gemeinde => "gemeinde".into(),
+            Field::Anzahl => "anzahl".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -27802,19 +38272,19 @@ pub mod wohnbevoelkerung_nach_bezirk {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -27876,6 +38346,29 @@ pub mod feinstaubmessungen_auf_bvb_trams {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Time,
+        Sensornr,
+        Pm25,
+        Pm10,
+        Column7,
+        Longitude,
+        Latitude,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Time => "time".into(),
+            Field::Sensornr => "sensornr".into(),
+            Field::Pm25 => "pm25".into(),
+            Field::Pm10 => "pm10".into(),
+            Field::Column7 => "column_7".into(),
+            Field::Longitude => "longitude".into(),
+            Field::Latitude => "latitude".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -27884,19 +38377,19 @@ pub mod feinstaubmessungen_auf_bvb_trams {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -27950,6 +38443,27 @@ pub mod bachapp_extras {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        SichtbarVon,
+        SichtbarBis,
+        Status,
+        Titel,
+        Untertitel,
+        Shape,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::SichtbarVon => "sichtbar_von".into(),
+            Field::SichtbarBis => "sichtbar_bis".into(),
+            Field::Status => "status".into(),
+            Field::Titel => "titel".into(),
+            Field::Untertitel => "untertitel".into(),
+            Field::Shape => "shape".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -27958,19 +38472,19 @@ pub mod bachapp_extras {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -28126,6 +38640,77 @@ pub mod veranstaltungen_mit_potenziellem_einfluss_auf_veloverkehr {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        TerminKey,
+        VeranstaltungKey,
+        Name,
+        Code,
+        KategorieName,
+        AktivCode,
+        WiederkehrendCode,
+        ErfasstAb,
+        TagDatum,
+        JahrNummer,
+        DauerInTagen,
+        DatumVon,
+        DatumBis,
+        EingangIdBlockseite,
+        GeoPoint2d,
+        GebaeudeKoordinateX,
+        GebaeudeKoordinateY,
+        StrasseNameKanton,
+        EingangHausnummer,
+        WohnblockIdKdmVzbbb,
+        WohnbezirkIdKdm,
+        WohnbezirkName,
+        WohnviertelIdKdm,
+        WohnviertelName,
+        GemeindeName,
+        Wiederkehrend,
+        Aktiv,
+        Beschreibung,
+        VeranstaltungBemerkung,
+        TerminBemerkung,
+        KategorieBeschreibung,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::TerminKey => "termin_key".into(),
+            Field::VeranstaltungKey => "veranstaltung_key".into(),
+            Field::Name => "name".into(),
+            Field::Code => "code".into(),
+            Field::KategorieName => "kategorie_name".into(),
+            Field::AktivCode => "aktiv_code".into(),
+            Field::WiederkehrendCode => "wiederkehrend_code".into(),
+            Field::ErfasstAb => "erfasst_ab".into(),
+            Field::TagDatum => "tag_datum".into(),
+            Field::JahrNummer => "jahr_nummer".into(),
+            Field::DauerInTagen => "dauer_in_tagen".into(),
+            Field::DatumVon => "datum_von".into(),
+            Field::DatumBis => "datum_bis".into(),
+            Field::EingangIdBlockseite => "eingang_id_blockseite".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GebaeudeKoordinateX => "gebaeude_koordinate_x".into(),
+            Field::GebaeudeKoordinateY => "gebaeude_koordinate_y".into(),
+            Field::StrasseNameKanton => "strasse_name_kanton".into(),
+            Field::EingangHausnummer => "eingang_hausnummer".into(),
+            Field::WohnblockIdKdmVzbbb => "wohnblock_id_kdm_vzbbb".into(),
+            Field::WohnbezirkIdKdm => "wohnbezirk_id_kdm".into(),
+            Field::WohnbezirkName => "wohnbezirk_name".into(),
+            Field::WohnviertelIdKdm => "wohnviertel_id_kdm".into(),
+            Field::WohnviertelName => "wohnviertel_name".into(),
+            Field::GemeindeName => "gemeinde_name".into(),
+            Field::Wiederkehrend => "wiederkehrend".into(),
+            Field::Aktiv => "aktiv".into(),
+            Field::Beschreibung => "beschreibung".into(),
+            Field::VeranstaltungBemerkung => "veranstaltung_bemerkung".into(),
+            Field::TerminBemerkung => "termin_bemerkung".into(),
+            Field::KategorieBeschreibung => "kategorie_beschreibung".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -28134,19 +38719,19 @@ pub mod veranstaltungen_mit_potenziellem_einfluss_auf_veloverkehr {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -28242,6 +38827,47 @@ pub mod gebaeudeadressen_und_informationen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objid,
+        Gebadrlauf,
+        Geblaufnr,
+        StrCode,
+        StrId,
+        StrName,
+        Hausnr,
+        HausnrZus,
+        HausnrIdx,
+        Plz,
+        Ort,
+        Eidgident,
+        Abfuhrzone,
+        Gebstatus,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objid => "objid".into(),
+            Field::Gebadrlauf => "gebadrlauf".into(),
+            Field::Geblaufnr => "geblaufnr".into(),
+            Field::StrCode => "str_code".into(),
+            Field::StrId => "str_id".into(),
+            Field::StrName => "str_name".into(),
+            Field::Hausnr => "hausnr".into(),
+            Field::HausnrZus => "hausnr_zus".into(),
+            Field::HausnrIdx => "hausnr_idx".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::Eidgident => "eidgident".into(),
+            Field::Abfuhrzone => "abfuhrzone".into(),
+            Field::Gebstatus => "gebstatus".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -28250,19 +38876,19 @@ pub mod gebaeudeadressen_und_informationen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -28358,6 +38984,47 @@ pub mod parkflaechen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Id,
+        Strasse,
+        AnzahlParkfelder,
+        Typ,
+        TarifGebiet,
+        SopfgGeb,
+        TarifId,
+        TarifCode,
+        Gebpflicht,
+        Maxparkz,
+        Keinl,
+        Plz,
+        WovId,
+        WovName,
+        BezId,
+        BezName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Id => "id".into(),
+            Field::Strasse => "strasse".into(),
+            Field::AnzahlParkfelder => "anzahl_parkfelder".into(),
+            Field::Typ => "typ".into(),
+            Field::TarifGebiet => "tarif_gebiet".into(),
+            Field::SopfgGeb => "sopfg_geb".into(),
+            Field::TarifId => "tarif_id".into(),
+            Field::TarifCode => "tarif_code".into(),
+            Field::Gebpflicht => "gebpflicht".into(),
+            Field::Maxparkz => "maxparkz".into(),
+            Field::Keinl => "keinl".into(),
+            Field::Plz => "plz".into(),
+            Field::WovId => "wov_id".into(),
+            Field::WovName => "wov_name".into(),
+            Field::BezId => "bez_id".into(),
+            Field::BezName => "bez_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -28366,19 +39033,19 @@ pub mod parkflaechen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -28496,6 +39163,59 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        MessungId,
+        RichtungId,
+        Geschwindigkeit,
+        Zeit,
+        Datum,
+        DatumZeit,
+        Messbeginn,
+        Messende,
+        Zone,
+        Ort,
+        Richtung,
+        TheGeom,
+        UeQuote,
+        V50,
+        V85,
+        Strasse,
+        StrasseNr,
+        Fzg,
+        Fahrzeuglange,
+        LinkZuMessung,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::MessungId => "messung_id".into(),
+            Field::RichtungId => "richtung_id".into(),
+            Field::Geschwindigkeit => "geschwindigkeit".into(),
+            Field::Zeit => "zeit".into(),
+            Field::Datum => "datum".into(),
+            Field::DatumZeit => "datum_zeit".into(),
+            Field::Messbeginn => "messbeginn".into(),
+            Field::Messende => "messende".into(),
+            Field::Zone => "zone".into(),
+            Field::Ort => "ort".into(),
+            Field::Richtung => "richtung".into(),
+            Field::TheGeom => "the_geom".into(),
+            Field::UeQuote => "ue_quote".into(),
+            Field::V50 => "v50".into(),
+            Field::V85 => "v85".into(),
+            Field::Strasse => "strasse".into(),
+            Field::StrasseNr => "strasse_nr".into(),
+            Field::Fzg => "fzg".into(),
+            Field::Fahrzeuglange => "fahrzeuglange".into(),
+            Field::LinkZuMessung => "link_zu_messung".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -28504,19 +39224,19 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -28572,6 +39292,29 @@ pub mod abfuhrtermine {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Termin,
+        Art,
+        Wochentag,
+        Dayofweek,
+        Zone,
+        GeoShape,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Termin => "termin".into(),
+            Field::Art => "art".into(),
+            Field::Wochentag => "wochentag".into(),
+            Field::Dayofweek => "dayofweek".into(),
+            Field::Zone => "zone".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -28580,19 +39323,19 @@ pub mod abfuhrtermine {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -28664,6 +39407,35 @@ pub mod liegenschaften_parzellen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        R1ArtTxt,
+        Flaechenma,
+        R1EgrisE,
+        Parzellennummer,
+        R1Sektion,
+        R1Nbident,
+        R1Nummer,
+        R1Art,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::R1ArtTxt => "r1_art_txt".into(),
+            Field::Flaechenma => "flaechenma".into(),
+            Field::R1EgrisE => "r1_egris_e".into(),
+            Field::Parzellennummer => "parzellennummer".into(),
+            Field::R1Sektion => "r1_sektion".into(),
+            Field::R1Nbident => "r1_nbident".into(),
+            Field::R1Nummer => "r1_nummer".into(),
+            Field::R1Art => "r1_art".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -28672,19 +39444,19 @@ pub mod liegenschaften_parzellen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -28752,6 +39524,51 @@ pub mod standorte_der_zaehlstellen_fuer_verkehrszaehldaten {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdZst,
+        Name,
+        Gemeinde,
+        Klasse,
+        Kombiniert,
+        Art,
+        Arme,
+        Fahrstreif,
+        Zweck,
+        Typ,
+        Strtyp,
+        Eigentum,
+        Betriebnah,
+        Betriebzus,
+        Link,
+        Format,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdZst => "id_zst".into(),
+            Field::Name => "name".into(),
+            Field::Gemeinde => "gemeinde".into(),
+            Field::Klasse => "klasse".into(),
+            Field::Kombiniert => "kombiniert".into(),
+            Field::Art => "art".into(),
+            Field::Arme => "arme".into(),
+            Field::Fahrstreif => "fahrstreif".into(),
+            Field::Zweck => "zweck".into(),
+            Field::Typ => "typ".into(),
+            Field::Strtyp => "strtyp".into(),
+            Field::Eigentum => "eigentum".into(),
+            Field::Betriebnah => "betriebnah".into(),
+            Field::Betriebzus => "betriebzus".into(),
+            Field::Link => "link".into(),
+            Field::Format => "format".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -28760,19 +39577,19 @@ pub mod standorte_der_zaehlstellen_fuer_verkehrszaehldaten {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -28812,6 +39629,23 @@ pub mod gueteklassen_oeffentlicher_verkehr {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Objectid,
+        Oevgkl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Objectid => "objectid".into(),
+            Field::Oevgkl => "oevgkl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -28820,19 +39654,19 @@ pub mod gueteklassen_oeffentlicher_verkehr {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -28894,6 +39728,31 @@ pub mod taegliche_logiernaechte_verfuegbare_und_belegte_zimmer {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        Hotelkategorie,
+        Anzlogiernaechte,
+        Anzzimmerverfuegbarundgeoeffnet,
+        Anzzimmerbelegungen,
+        Jahr,
+        Monat,
+        Tag,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::Hotelkategorie => "hotelkategorie".into(),
+            Field::Anzlogiernaechte => "anzlogiernaechte".into(),
+            Field::Anzzimmerverfuegbarundgeoeffnet => "anzzimmerverfuegbarundgeoeffnet".into(),
+            Field::Anzzimmerbelegungen => "anzzimmerbelegungen".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Monat => "monat".into(),
+            Field::Tag => "tag".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -28902,19 +39761,19 @@ pub mod taegliche_logiernaechte_verfuegbare_und_belegte_zimmer {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -28958,6 +39817,27 @@ pub mod bade_trinkwasser_und_zierbrunnen_in_basel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Name,
+        Desc,
+        GxMediaLinks,
+        PictureLink,
+        Geometry,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Name => "name".into(),
+            Field::Desc => "desc".into(),
+            Field::GxMediaLinks => "gx_media_links".into(),
+            Field::PictureLink => "picture_link".into(),
+            Field::Geometry => "geometry".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -28966,19 +39846,19 @@ pub mod bade_trinkwasser_und_zierbrunnen_in_basel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -29119,6 +39999,69 @@ pub mod coronavirus_covid_19_geimpfte_personen_mit_wohnsitz_in_basel_stadt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        VaccDay,
+        VollstaendigGeimpft,
+        TeilweiseGeimpft,
+        MitMindestensEinerDosisGeimpft,
+        ImpfungAufgefrischt,
+        NeuTeilweiseGeimpft,
+        NeuVollstaendigGeimpft,
+        NeuImpfungAufgefrischt,
+        AnteilVollstaendigGeimpftAnWohnbevoelkerung,
+        AnteilTeilweiseGeimpftAnWohnbevoelkerung,
+        AnteilImpfungAufgefrischtAnWohnbevoelkerung,
+        AnteilMitMindestensEinerDosisGeimpft,
+        X11ErsteDosisEinerMehrdosisimpfungGrundimmunisierung,
+        X12ZweiteDosisEinerMehrdosisimpfungGrundimmunisierung,
+        X101GenesenMitErsterDosisEinerMehrdosisimpfung,
+        X29MindestensDritteDosisEinerMehrdosisimpfungAuffrischimpfung,
+        X19MindestensDritteDosisEinerMehrdosisimpfungGrundimmunisierung,
+        X1ImpfungMitEinmaldosisGrundimmunisierung,
+        X100GenesenMitEinmaldosis,
+        X22ZweiteDosisMitEinerMehrdosisimpfungAuffrischimpfungEinerImpfungMitEinmaldosis,
+        X1Andere,
+        BevoelkerungszahlStatpop,
+        AnteilMitMindestensDritterDosisGeimpftAnWohnbevoelkerung,
+        AnteilMitMindestensZweiterAuffrischimpfungGeimpftAnWohnbevoelkerung,
+        X102GenesenMitZweiterDosisEinerMehrdosisimpfungGrundimmunisierung,
+        X202GenesenMitZweiterDosisEinerMehrdosisimpfungAuffrischimpfung,
+        X39MindestensZweiteAuffrischimpfung,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+Field::VaccDay => "vacc_day".into(),
+Field::VollstaendigGeimpft => "vollstaendig_geimpft".into(),
+Field::TeilweiseGeimpft => "teilweise_geimpft".into(),
+Field::MitMindestensEinerDosisGeimpft => "mit_mindestens_einer_dosis_geimpft".into(),
+Field::ImpfungAufgefrischt => "impfung_aufgefrischt".into(),
+Field::NeuTeilweiseGeimpft => "neu_teilweise_geimpft".into(),
+Field::NeuVollstaendigGeimpft => "neu_vollstaendig_geimpft".into(),
+Field::NeuImpfungAufgefrischt => "neu_impfung_aufgefrischt".into(),
+Field::AnteilVollstaendigGeimpftAnWohnbevoelkerung => "anteil_vollstaendig_geimpft_an_wohnbevoelkerung".into(),
+Field::AnteilTeilweiseGeimpftAnWohnbevoelkerung => "anteil_teilweise_geimpft_an_wohnbevoelkerung".into(),
+Field::AnteilImpfungAufgefrischtAnWohnbevoelkerung => "anteil_impfung_aufgefrischt_an_wohnbevoelkerung".into(),
+Field::AnteilMitMindestensEinerDosisGeimpft => "anteil_mit_mindestens_einer_dosis_geimpft".into(),
+Field::X11ErsteDosisEinerMehrdosisimpfungGrundimmunisierung => "11_erste_dosis_einer_mehrdosisimpfung_grundimmunisierung".into(),
+Field::X12ZweiteDosisEinerMehrdosisimpfungGrundimmunisierung => "12_zweite_dosis_einer_mehrdosisimpfung_grundimmunisierung".into(),
+Field::X101GenesenMitErsterDosisEinerMehrdosisimpfung => "101_genesen_mit_erster_dosis_einer_mehrdosisimpfung".into(),
+Field::X29MindestensDritteDosisEinerMehrdosisimpfungAuffrischimpfung => "29_mindestens_dritte_dosis_einer_mehrdosisimpfung_auffrischimpfung".into(),
+Field::X19MindestensDritteDosisEinerMehrdosisimpfungGrundimmunisierung => "19_mindestens_dritte_dosis_einer_mehrdosisimpfung_grundimmunisierung".into(),
+Field::X1ImpfungMitEinmaldosisGrundimmunisierung => "1_impfung_mit_einmaldosis_grundimmunisierung".into(),
+Field::X100GenesenMitEinmaldosis => "100_genesen_mit_einmaldosis".into(),
+Field::X22ZweiteDosisMitEinerMehrdosisimpfungAuffrischimpfungEinerImpfungMitEinmaldosis => "22_zweite_dosis_mit_einer_mehrdosisimpfung_auffrischimpfung_einer_impfung_mit_einmaldosis".into(),
+Field::X1Andere => "1_andere".into(),
+Field::BevoelkerungszahlStatpop => "bevoelkerungszahl_statpop".into(),
+Field::AnteilMitMindestensDritterDosisGeimpftAnWohnbevoelkerung => "anteil_mit_mindestens_dritter_dosis_geimpft_an_wohnbevoelkerung".into(),
+Field::AnteilMitMindestensZweiterAuffrischimpfungGeimpftAnWohnbevoelkerung => "anteil_mit_mindestens_zweiter_auffrischimpfung_geimpft_an_wohnbevoelkerung".into(),
+Field::X102GenesenMitZweiterDosisEinerMehrdosisimpfungGrundimmunisierung => "102_genesen_mit_zweiter_dosis_einer_mehrdosisimpfung_grundimmunisierung".into(),
+Field::X202GenesenMitZweiterDosisEinerMehrdosisimpfungAuffrischimpfung => "202_genesen_mit_zweiter_dosis_einer_mehrdosisimpfung_auffrischimpfung".into(),
+Field::X39MindestensZweiteAuffrischimpfung => "39_mindestens_zweite_auffrischimpfung".into(),
+}
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -29127,19 +40070,19 @@ pub mod coronavirus_covid_19_geimpfte_personen_mit_wohnsitz_in_basel_stadt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -29249,6 +40192,55 @@ pub mod wasserstand_grundwasser_langjaehrige_statistiken {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Stationnr,
+        Stationid,
+        Stationname,
+        Sensornr,
+        Sensname,
+        Lat,
+        Lon,
+        GeoPoint2d,
+        Xcoord,
+        Ycoord,
+        Topterrain,
+        Refpoint,
+        X10ymin,
+        X10ymean,
+        X10ymax,
+        Startstatist,
+        Endstatist,
+        BohrkatasterLink,
+        StatStartTimestamp,
+        StatEndTimestamp,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Stationnr => "stationnr".into(),
+            Field::Stationid => "stationid".into(),
+            Field::Stationname => "stationname".into(),
+            Field::Sensornr => "sensornr".into(),
+            Field::Sensname => "sensname".into(),
+            Field::Lat => "lat".into(),
+            Field::Lon => "lon".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Xcoord => "xcoord".into(),
+            Field::Ycoord => "ycoord".into(),
+            Field::Topterrain => "topterrain".into(),
+            Field::Refpoint => "refpoint".into(),
+            Field::X10ymin => "10ymin".into(),
+            Field::X10ymean => "10ymean".into(),
+            Field::X10ymax => "10ymax".into(),
+            Field::Startstatist => "startstatist".into(),
+            Field::Endstatist => "endstatist".into(),
+            Field::BohrkatasterLink => "bohrkataster_link".into(),
+            Field::StatStartTimestamp => "stat_start_timestamp".into(),
+            Field::StatEndTimestamp => "stat_end_timestamp".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -29257,19 +40249,19 @@ pub mod wasserstand_grundwasser_langjaehrige_statistiken {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -29329,6 +40321,31 @@ pub mod sauberkeitsindex_pro_monat_und_strassenabschnitt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datenstand,
+        Id,
+        Strasse,
+        Cci,
+        AnzahlMessungen,
+        LetzteMessung,
+        Geometry,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datenstand => "datenstand".into(),
+            Field::Id => "id".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Cci => "cci".into(),
+            Field::AnzahlMessungen => "anzahl_messungen".into(),
+            Field::LetzteMessung => "letzte_messung".into(),
+            Field::Geometry => "geometry".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -29337,19 +40354,19 @@ pub mod sauberkeitsindex_pro_monat_und_strassenabschnitt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -29433,6 +40450,43 @@ pub mod nutzungsplan_zonenplan_stadt_basel_ueberlagernde_festlegungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Idueberfes,
+        Festueber,
+        GeoPoint2d,
+        GeoShape,
+        Verbindli,
+        Schutzzwec,
+        Rekurshaen,
+        Bezeichnng,
+        Idgeschae,
+        Geschaesta,
+        Datumstat,
+        Geolink,
+        Geschaebez,
+        Bemerkung,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Idueberfes => "idueberfes".into(),
+            Field::Festueber => "festueber".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Verbindli => "verbindli".into(),
+            Field::Schutzzwec => "schutzzwec".into(),
+            Field::Rekurshaen => "rekurshaen".into(),
+            Field::Bezeichnng => "bezeichnng".into(),
+            Field::Idgeschae => "idgeschae".into(),
+            Field::Geschaesta => "geschaesta".into(),
+            Field::Datumstat => "datumstat".into(),
+            Field::Geolink => "geolink".into(),
+            Field::Geschaebez => "geschaebez".into(),
+            Field::Bemerkung => "bemerkung".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -29441,19 +40495,19 @@ pub mod nutzungsplan_zonenplan_stadt_basel_ueberlagernde_festlegungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -29609,6 +40663,79 @@ pub mod bohrkataster {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Art,
+        GeoPoint2d,
+        Grundwasserdaten,
+        Flurabstand,
+        GeoShape,
+        IdBohrung,
+        Geothermal,
+        Catnum45,
+        Xkoord,
+        Ykoord,
+        Schraeg,
+        Erstellung,
+        Strasse,
+        Hausnummer,
+        Hoehestart,
+        Hoehefels,
+        Artfels,
+        Hoehesole,
+        Jahrbuch,
+        Zuststelle,
+        Hoehegelae,
+        Bohgeplant,
+        Rohrdurchm,
+        Rohrhoehet,
+        Rohrhoeheb,
+        Heohegwl,
+        Datumforma,
+        Datumgwl,
+        Dokbohrpro,
+        Doksituat,
+        Bildbohrun,
+        Gwlmesssta,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Art => "art".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Grundwasserdaten => "grundwasserdaten".into(),
+            Field::Flurabstand => "flurabstand".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdBohrung => "id_bohrung".into(),
+            Field::Geothermal => "geothermal".into(),
+            Field::Catnum45 => "catnum45".into(),
+            Field::Xkoord => "xkoord".into(),
+            Field::Ykoord => "ykoord".into(),
+            Field::Schraeg => "schraeg".into(),
+            Field::Erstellung => "erstellung".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Hausnummer => "hausnummer".into(),
+            Field::Hoehestart => "hoehestart".into(),
+            Field::Hoehefels => "hoehefels".into(),
+            Field::Artfels => "artfels".into(),
+            Field::Hoehesole => "hoehesole".into(),
+            Field::Jahrbuch => "jahrbuch".into(),
+            Field::Zuststelle => "zuststelle".into(),
+            Field::Hoehegelae => "hoehegelae".into(),
+            Field::Bohgeplant => "bohgeplant".into(),
+            Field::Rohrdurchm => "rohrdurchm".into(),
+            Field::Rohrhoehet => "rohrhoehet".into(),
+            Field::Rohrhoeheb => "rohrhoeheb".into(),
+            Field::Heohegwl => "heohegwl".into(),
+            Field::Datumforma => "datumforma".into(),
+            Field::Datumgwl => "datumgwl".into(),
+            Field::Dokbohrpro => "dokbohrpro".into(),
+            Field::Doksituat => "doksituat".into(),
+            Field::Bildbohrun => "bildbohrun".into(),
+            Field::Gwlmesssta => "gwlmesssta".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -29617,19 +40744,19 @@ pub mod bohrkataster {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -29703,6 +40830,41 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_gemeinde {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Gemeindename,
+        Gemeinde,
+        GeoPoint2d,
+        GeoShape,
+        Jahr,
+        AnteilAl,
+        AnteilBs,
+        AnteilBsanch,
+        AnteilCh,
+        AnzahlAl,
+        AnzahlBs,
+        AnzahlCh,
+        GesbevF,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Gemeindename => "gemeindename".into(),
+            Field::Gemeinde => "gemeinde".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Jahr => "jahr".into(),
+            Field::AnteilAl => "anteil_al".into(),
+            Field::AnteilBs => "anteil_bs".into(),
+            Field::AnteilBsanch => "anteil_bsanch".into(),
+            Field::AnteilCh => "anteil_ch".into(),
+            Field::AnzahlAl => "anzahl_al".into(),
+            Field::AnzahlBs => "anzahl_bs".into(),
+            Field::AnzahlCh => "anzahl_ch".into(),
+            Field::GesbevF => "gesbev_f".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -29711,19 +40873,19 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_gemeinde {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -29791,6 +40953,35 @@ pub mod unfallschwerpunkte {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        IdUfsp,
+        Kategorie,
+        Kategoriebeschreibung,
+        Jahr,
+        Strasse,
+        Anlagetyp,
+        Lichtsign,
+        Ortschaft,
+        GeoPoint2d,
+        GeoShape,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::IdUfsp => "id_ufsp".into(),
+            Field::Kategorie => "kategorie".into(),
+            Field::Kategoriebeschreibung => "kategoriebeschreibung".into(),
+            Field::Jahr => "jahr".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Anlagetyp => "anlagetyp".into(),
+            Field::Lichtsign => "lichtsign".into(),
+            Field::Ortschaft => "ortschaft".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -29799,19 +40990,19 @@ pub mod unfallschwerpunkte {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -29947,6 +41138,73 @@ pub mod allmendbewilligungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Begehrenid,
+        Lokalitaid,
+        Belegungid,
+        Bezeichng,
+        ArtbegId,
+        ArtbegBez,
+        Eingangsdatum,
+        EntscheidDatum,
+        EntschId,
+        EntschBez,
+        Strassenid,
+        Belgartid,
+        Belgartbez,
+        Belaartid,
+        Belaartbez,
+        MerkmalId,
+        Merkmalbez,
+        Merkmalwrt,
+        EinheitId,
+        Einheitbez,
+        Belestatid,
+        Belestatbe,
+        Idunique,
+        Datumeing,
+        Datuments,
+        DatumVon,
+        DatumBis,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Begehrenid => "begehrenid".into(),
+            Field::Lokalitaid => "lokalitaid".into(),
+            Field::Belegungid => "belegungid".into(),
+            Field::Bezeichng => "bezeichng".into(),
+            Field::ArtbegId => "artbeg_id".into(),
+            Field::ArtbegBez => "artbeg_bez".into(),
+            Field::Eingangsdatum => "eingangsdatum".into(),
+            Field::EntscheidDatum => "entscheid_datum".into(),
+            Field::EntschId => "entsch_id".into(),
+            Field::EntschBez => "entsch_bez".into(),
+            Field::Strassenid => "strassenid".into(),
+            Field::Belgartid => "belgartid".into(),
+            Field::Belgartbez => "belgartbez".into(),
+            Field::Belaartid => "belaartid".into(),
+            Field::Belaartbez => "belaartbez".into(),
+            Field::MerkmalId => "merkmal_id".into(),
+            Field::Merkmalbez => "merkmalbez".into(),
+            Field::Merkmalwrt => "merkmalwrt".into(),
+            Field::EinheitId => "einheit_id".into(),
+            Field::Einheitbez => "einheitbez".into(),
+            Field::Belestatid => "belestatid".into(),
+            Field::Belestatbe => "belestatbe".into(),
+            Field::Idunique => "idunique".into(),
+            Field::Datumeing => "datumeing".into(),
+            Field::Datuments => "datuments".into(),
+            Field::DatumVon => "datum_von".into(),
+            Field::DatumBis => "datum_bis".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -29955,19 +41213,19 @@ pub mod allmendbewilligungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -30095,6 +41353,63 @@ pub mod coronavirus_covid_19_fallzahlen_und_inzidenzen_basel_stadt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        TestDatum,
+        FaelleBs,
+        FaelleBsKum,
+        FaelleBasel,
+        FaelleBaselKum,
+        FaelleRiehen,
+        FaelleRiehenKum,
+        FaelleBettingen,
+        FaelleBettingenKum,
+        Inzidenz07Bs,
+        Inzidenz14Bs,
+        Summe07TageBs,
+        Summe14TageBs,
+        Mittel07TageBs,
+        Mittel14TageBs,
+        InzidenzBasel07,
+        InzidenzBasel14,
+        InzidenzRiehen07,
+        InzidenzRiehen14,
+        InzidenzBettingen07,
+        InzidenzBettingen14,
+        WeekdayNr,
+        Weekday,
+        Wochentag,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::TestDatum => "test_datum".into(),
+            Field::FaelleBs => "faelle_bs".into(),
+            Field::FaelleBsKum => "faelle_bs_kum".into(),
+            Field::FaelleBasel => "faelle_basel".into(),
+            Field::FaelleBaselKum => "faelle_basel_kum".into(),
+            Field::FaelleRiehen => "faelle_riehen".into(),
+            Field::FaelleRiehenKum => "faelle_riehen_kum".into(),
+            Field::FaelleBettingen => "faelle_bettingen".into(),
+            Field::FaelleBettingenKum => "faelle_bettingen_kum".into(),
+            Field::Inzidenz07Bs => "inzidenz07_bs".into(),
+            Field::Inzidenz14Bs => "inzidenz14_bs".into(),
+            Field::Summe07TageBs => "summe_07_tage_bs".into(),
+            Field::Summe14TageBs => "summe_14_tage_bs".into(),
+            Field::Mittel07TageBs => "mittel_07_tage_bs".into(),
+            Field::Mittel14TageBs => "mittel_14_tage_bs".into(),
+            Field::InzidenzBasel07 => "inzidenz_basel_07".into(),
+            Field::InzidenzBasel14 => "inzidenz_basel_14".into(),
+            Field::InzidenzRiehen07 => "inzidenz_riehen_07".into(),
+            Field::InzidenzRiehen14 => "inzidenz_riehen_14".into(),
+            Field::InzidenzBettingen07 => "inzidenz_bettingen_07".into(),
+            Field::InzidenzBettingen14 => "inzidenz_bettingen_14".into(),
+            Field::WeekdayNr => "weekday_nr".into(),
+            Field::Weekday => "weekday".into(),
+            Field::Wochentag => "wochentag".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -30103,19 +41418,19 @@ pub mod coronavirus_covid_19_fallzahlen_und_inzidenzen_basel_stadt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -30273,6 +41588,79 @@ pub mod smarte_strasse_verkehrslaerm {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        GeneralLevel,
+        Level00025,
+        Level000315,
+        Level00040,
+        Level00050,
+        Level00063,
+        Level00080,
+        Level00100,
+        Level00125,
+        Level00160,
+        Level00200,
+        Level00250,
+        Level00315,
+        Level00400,
+        Level00500,
+        Level00630,
+        Level00800,
+        Level01000,
+        Level01250,
+        Level01600,
+        Level02000,
+        Level02500,
+        Level03150,
+        Level04000,
+        Level05000,
+        Level06300,
+        Level08000,
+        Level10000,
+        Level12500,
+        Level16000,
+        TimestampText,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::GeneralLevel => "general_level".into(),
+            Field::Level00025 => "level_00025".into(),
+            Field::Level000315 => "level_00031_5".into(),
+            Field::Level00040 => "level_00040".into(),
+            Field::Level00050 => "level_00050".into(),
+            Field::Level00063 => "level_00063".into(),
+            Field::Level00080 => "level_00080".into(),
+            Field::Level00100 => "level_00100".into(),
+            Field::Level00125 => "level_00125".into(),
+            Field::Level00160 => "level_00160".into(),
+            Field::Level00200 => "level_00200".into(),
+            Field::Level00250 => "level_00250".into(),
+            Field::Level00315 => "level_00315".into(),
+            Field::Level00400 => "level_00400".into(),
+            Field::Level00500 => "level_00500".into(),
+            Field::Level00630 => "level_00630".into(),
+            Field::Level00800 => "level_00800".into(),
+            Field::Level01000 => "level_01000".into(),
+            Field::Level01250 => "level_01250".into(),
+            Field::Level01600 => "level_01600".into(),
+            Field::Level02000 => "level_02000".into(),
+            Field::Level02500 => "level_02500".into(),
+            Field::Level03150 => "level_03150".into(),
+            Field::Level04000 => "level_04000".into(),
+            Field::Level05000 => "level_05000".into(),
+            Field::Level06300 => "level_06300".into(),
+            Field::Level08000 => "level_08000".into(),
+            Field::Level10000 => "level_10000".into(),
+            Field::Level12500 => "level_12500".into(),
+            Field::Level16000 => "level_16000".into(),
+            Field::TimestampText => "timestamp_text".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -30281,19 +41669,19 @@ pub mod smarte_strasse_verkehrslaerm {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -30357,6 +41745,33 @@ pub mod smarte_strasse_geschwindigkeitsmessungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        LocaldatetimeIntervalStart,
+        LocaldatetimeIntervalEnd,
+        Speed,
+        Level,
+        VehicleRandNumber,
+        IntervalLengthString,
+        IntervalLengthSeconds,
+        LocaldatetimeIntervalStartText,
+        LocaldatetimeIntervalEndText,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::LocaldatetimeIntervalStart => "localdatetime_interval_start".into(),
+            Field::LocaldatetimeIntervalEnd => "localdatetime_interval_end".into(),
+            Field::Speed => "speed".into(),
+            Field::Level => "level".into(),
+            Field::VehicleRandNumber => "vehicle_rand_number".into(),
+            Field::IntervalLengthString => "interval_length_string".into(),
+            Field::IntervalLengthSeconds => "interval_length_seconds".into(),
+            Field::LocaldatetimeIntervalStartText => "localdatetime_interval_start_text".into(),
+            Field::LocaldatetimeIntervalEndText => "localdatetime_interval_end_text".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -30365,19 +41780,19 @@ pub mod smarte_strasse_geschwindigkeitsmessungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -30539,6 +41954,83 @@ pub mod verkehrszaehldaten_motorisierter_individualverkehr {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        ZstNr,
+        Sitecode,
+        Sitename,
+        Datetimefrom,
+        Datetimeto,
+        Directionname,
+        Lanecode,
+        Lanename,
+        Valuesapproved,
+        Valuesedited,
+        Traffictype,
+        Total,
+        Mr,
+        Pw,
+        Pw0,
+        Lief,
+        Lief0,
+        LiefAufl,
+        Lw,
+        Lw0,
+        Sattelzug,
+        Bus,
+        Andere,
+        Year,
+        Month,
+        Day,
+        Weekday,
+        Hourfrom,
+        Date,
+        Timefrom,
+        Timeto,
+        Dayofyear,
+        ZstId,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::ZstNr => "zst_nr".into(),
+            Field::Sitecode => "sitecode".into(),
+            Field::Sitename => "sitename".into(),
+            Field::Datetimefrom => "datetimefrom".into(),
+            Field::Datetimeto => "datetimeto".into(),
+            Field::Directionname => "directionname".into(),
+            Field::Lanecode => "lanecode".into(),
+            Field::Lanename => "lanename".into(),
+            Field::Valuesapproved => "valuesapproved".into(),
+            Field::Valuesedited => "valuesedited".into(),
+            Field::Traffictype => "traffictype".into(),
+            Field::Total => "total".into(),
+            Field::Mr => "mr".into(),
+            Field::Pw => "pw".into(),
+            Field::Pw0 => "pw0".into(),
+            Field::Lief => "lief".into(),
+            Field::Lief0 => "lief0".into(),
+            Field::LiefAufl => "lief_aufl".into(),
+            Field::Lw => "lw".into(),
+            Field::Lw0 => "lw0".into(),
+            Field::Sattelzug => "sattelzug".into(),
+            Field::Bus => "bus".into(),
+            Field::Andere => "andere".into(),
+            Field::Year => "year".into(),
+            Field::Month => "month".into(),
+            Field::Day => "day".into(),
+            Field::Weekday => "weekday".into(),
+            Field::Hourfrom => "hourfrom".into(),
+            Field::Date => "date".into(),
+            Field::Timefrom => "timefrom".into(),
+            Field::Timeto => "timeto".into(),
+            Field::Dayofyear => "dayofyear".into(),
+            Field::ZstId => "zst_id".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -30547,19 +42039,19 @@ pub mod verkehrszaehldaten_motorisierter_individualverkehr {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -30615,6 +42107,29 @@ pub mod strassen_und_wege_durchgangsstrassen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdDgstr,
+        Strassennr,
+        Strtyp,
+        Strecke,
+        Bemerkung,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdDgstr => "id_dgstr".into(),
+            Field::Strassennr => "strassennr".into(),
+            Field::Strtyp => "strtyp".into(),
+            Field::Strecke => "strecke".into(),
+            Field::Bemerkung => "bemerkung".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -30623,19 +42138,19 @@ pub mod strassen_und_wege_durchgangsstrassen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -30679,6 +42194,23 @@ pub mod coronavirus_covid_19_sars_cov_2_im_abwasser_und_positiv_auf_sars_cov_2_g
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        X7TagemedianOfEN1N2ProTag100000Pers,
+        X7tMedianBsBl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::X7TagemedianOfEN1N2ProTag100000Pers => {
+                "7_tagemedian_of_e_n1_n2_pro_tag_100_000_pers".into()
+            }
+            Field::X7tMedianBsBl => "7t_median_bs_bl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -30687,19 +42219,19 @@ pub mod coronavirus_covid_19_sars_cov_2_im_abwasser_und_positiv_auf_sars_cov_2_g
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -30759,6 +42291,31 @@ pub mod verkehrsberuhigte_zonen_tempo_30_zone {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdTempo30,
+        Regime,
+        Regimenr,
+        Name,
+        Umdatum,
+        Umjahr,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdTempo30 => "id_tempo30".into(),
+            Field::Regime => "regime".into(),
+            Field::Regimenr => "regimenr".into(),
+            Field::Name => "name".into(),
+            Field::Umdatum => "umdatum".into(),
+            Field::Umjahr => "umjahr".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -30767,19 +42324,19 @@ pub mod verkehrsberuhigte_zonen_tempo_30_zone {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -30841,6 +42398,33 @@ pub mod verkehrsberuhigte_zonen_begegnungszone {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        IdBegegnu,
+        Regime,
+        Regimenr,
+        Name,
+        Umdatum,
+        Umjahr,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::IdBegegnu => "id_begegnu".into(),
+            Field::Regime => "regime".into(),
+            Field::Regimenr => "regimenr".into(),
+            Field::Name => "name".into(),
+            Field::Umdatum => "umdatum".into(),
+            Field::Umjahr => "umjahr".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -30849,19 +42433,19 @@ pub mod verkehrsberuhigte_zonen_begegnungszone {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -30929,6 +42513,37 @@ pub mod bachapp_am_fluss {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Id,
+        Status,
+        SichtbarVon,
+        SichtbarBis,
+        Kategorie,
+        TitelKurz,
+        Titel,
+        Text,
+        Icon,
+        ImageTop,
+        Shape,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Id => "id".into(),
+            Field::Status => "status".into(),
+            Field::SichtbarVon => "sichtbar_von".into(),
+            Field::SichtbarBis => "sichtbar_bis".into(),
+            Field::Kategorie => "kategorie".into(),
+            Field::TitelKurz => "titel_kurz".into(),
+            Field::Titel => "titel".into(),
+            Field::Text => "text".into(),
+            Field::Icon => "icon".into(),
+            Field::ImageTop => "image_top".into(),
+            Field::Shape => "shape".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -30937,19 +42552,19 @@ pub mod bachapp_am_fluss {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -31017,6 +42632,33 @@ pub mod lohntabelle_des_kantons_basel_stadt {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Jahr,
+        Gueltigkeit,
+        Lohnklassen,
+        Lohnstufe,
+        Jahrbruttolohnohne13,
+        Monatbruttoohne13,
+        Stundenbruttoohne13,
+        Jahrbruttolohnmit13,
+        Sortiervariable,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Jahr => "jahr".into(),
+            Field::Gueltigkeit => "gueltigkeit".into(),
+            Field::Lohnklassen => "lohnklassen".into(),
+            Field::Lohnstufe => "lohnstufe".into(),
+            Field::Jahrbruttolohnohne13 => "jahrbruttolohnohne13".into(),
+            Field::Monatbruttoohne13 => "monatbruttoohne13".into(),
+            Field::Stundenbruttoohne13 => "stundenbruttoohne13".into(),
+            Field::Jahrbruttolohnmit13 => "jahrbruttolohnmit13".into(),
+            Field::Sortiervariable => "sortiervariable".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -31025,19 +42667,19 @@ pub mod lohntabelle_des_kantons_basel_stadt {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -31095,6 +42737,41 @@ pub mod basel_info_interessante_orte_poi {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Tid,
+        Name,
+        Subkatgeo,
+        Kategorie,
+        Beschreibg,
+        Art,
+        Strasse,
+        Ort,
+        Telefon,
+        WwwLink,
+        MapLinks,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Tid => "tid".into(),
+            Field::Name => "name".into(),
+            Field::Subkatgeo => "subkatgeo".into(),
+            Field::Kategorie => "kategorie".into(),
+            Field::Beschreibg => "beschreibg".into(),
+            Field::Art => "art".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Ort => "ort".into(),
+            Field::Telefon => "telefon".into(),
+            Field::WwwLink => "www_link".into(),
+            Field::MapLinks => "map_links".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -31103,19 +42780,19 @@ pub mod basel_info_interessante_orte_poi {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -31191,6 +42868,39 @@ pub mod smarte_strasse_luftqualitaet_vergleichsmessungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        A2hardNo2,
+        A2hardO3,
+        A2hardPm25,
+        Feldbergstr2No2,
+        Feldbergstr2O3,
+        Feldbergstr2Pm25,
+        Stjohann2No2,
+        Stjohann2O3,
+        Stjohann2Pm25,
+        TimestampText,
+        Anfangszeit,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::A2hardNo2 => "a2hard_no2".into(),
+            Field::A2hardO3 => "a2hard_o3".into(),
+            Field::A2hardPm25 => "a2hard_pm25".into(),
+            Field::Feldbergstr2No2 => "feldbergstr2_no2".into(),
+            Field::Feldbergstr2O3 => "feldbergstr2_o3".into(),
+            Field::Feldbergstr2Pm25 => "feldbergstr2_pm25".into(),
+            Field::Stjohann2No2 => "stjohann2_no2".into(),
+            Field::Stjohann2O3 => "stjohann2_o3".into(),
+            Field::Stjohann2Pm25 => "stjohann2_pm25".into(),
+            Field::TimestampText => "timestamp_text".into(),
+            Field::Anfangszeit => "anfangszeit".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -31199,19 +42909,19 @@ pub mod smarte_strasse_luftqualitaet_vergleichsmessungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -31275,6 +42985,33 @@ pub mod flaechen_der_schulstandorte_gemeinde_basel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Schulstand,
+        Schultyp,
+        Strasse,
+        Hausnr,
+        Plz,
+        Ort,
+        Link,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Schulstand => "schulstand".into(),
+            Field::Schultyp => "schultyp".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Hausnr => "hausnr".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::Link => "link".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -31283,19 +43020,19 @@ pub mod flaechen_der_schulstandorte_gemeinde_basel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -31339,6 +43076,21 @@ pub mod rheintruebung_kontinuierlich {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Startzeitpunkt,
+        Endezeitpunkt,
+        RusWOMsTr,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Startzeitpunkt => "startzeitpunkt".into(),
+            Field::Endezeitpunkt => "endezeitpunkt".into(),
+            Field::RusWOMsTr => "rus_w_o_ms_tr".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -31347,19 +43099,19 @@ pub mod rheintruebung_kontinuierlich {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -31399,6 +43151,23 @@ pub mod luftqualitaet_station_chrischona {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        DatumZeit,
+        TimestampText,
+        O3StundenmittelwerteUgM3,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::DatumZeit => "datum_zeit".into(),
+            Field::TimestampText => "timestamp_text".into(),
+            Field::O3StundenmittelwerteUgM3 => "o3_stundenmittelwerte_ug_m3".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -31407,19 +43176,19 @@ pub mod luftqualitaet_station_chrischona {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -31547,6 +43316,63 @@ pub mod grosser_rat_ratsmitgliedschaften {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        IstAktuellGrossrat,
+        Anrede,
+        Titel,
+        Name,
+        Vorname,
+        NameVorname,
+        Gebdatum,
+        GrSitzplatz,
+        GrWahlkreis,
+        Partei,
+        ParteiKname,
+        GrBeginn,
+        GrEnde,
+        Url,
+        UniNr,
+        Strasse,
+        Plz,
+        Ort,
+        GrBeruf,
+        GrArbeitgeber,
+        Homepage,
+        UrlGremiumsmitgliedschaften,
+        UrlInteressensbindungen,
+        UrlUrheber,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::IstAktuellGrossrat => "ist_aktuell_grossrat".into(),
+            Field::Anrede => "anrede".into(),
+            Field::Titel => "titel".into(),
+            Field::Name => "name".into(),
+            Field::Vorname => "vorname".into(),
+            Field::NameVorname => "name_vorname".into(),
+            Field::Gebdatum => "gebdatum".into(),
+            Field::GrSitzplatz => "gr_sitzplatz".into(),
+            Field::GrWahlkreis => "gr_wahlkreis".into(),
+            Field::Partei => "partei".into(),
+            Field::ParteiKname => "partei_kname".into(),
+            Field::GrBeginn => "gr_beginn".into(),
+            Field::GrEnde => "gr_ende".into(),
+            Field::Url => "url".into(),
+            Field::UniNr => "uni_nr".into(),
+            Field::Strasse => "strasse".into(),
+            Field::Plz => "plz".into(),
+            Field::Ort => "ort".into(),
+            Field::GrBeruf => "gr_beruf".into(),
+            Field::GrArbeitgeber => "gr_arbeitgeber".into(),
+            Field::Homepage => "homepage".into(),
+            Field::UrlGremiumsmitgliedschaften => "url_gremiumsmitgliedschaften".into(),
+            Field::UrlInteressensbindungen => "url_interessensbindungen".into(),
+            Field::UrlUrheber => "url_urheber".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -31555,19 +43381,19 @@ pub mod grosser_rat_ratsmitgliedschaften {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -31645,6 +43471,45 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_wohnviertel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        WovName,
+        Wohnviertel,
+        WovLabel,
+        GeoShape,
+        GeoPoint2d,
+        Jahr,
+        AnteilAl,
+        AnteilBs,
+        AnteilBsanch,
+        AnteilCh,
+        AnzahlAl,
+        AnzahlBs,
+        AnzahlCh,
+        GesbevF,
+        GemeindeName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::WovName => "wov_name".into(),
+            Field::Wohnviertel => "wohnviertel".into(),
+            Field::WovLabel => "wov_label".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Jahr => "jahr".into(),
+            Field::AnteilAl => "anteil_al".into(),
+            Field::AnteilBs => "anteil_bs".into(),
+            Field::AnteilBsanch => "anteil_bsanch".into(),
+            Field::AnteilCh => "anteil_ch".into(),
+            Field::AnzahlAl => "anzahl_al".into(),
+            Field::AnzahlBs => "anzahl_bs".into(),
+            Field::AnzahlCh => "anzahl_ch".into(),
+            Field::GesbevF => "gesbev_f".into(),
+            Field::GemeindeName => "gemeinde_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -31653,19 +43518,19 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_wohnviertel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -31703,6 +43568,21 @@ pub mod einzugsgebiet_der_ara_basel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Name,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Name => "name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -31711,19 +43591,19 @@ pub mod einzugsgebiet_der_ara_basel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -31767,6 +43647,23 @@ pub mod fischereiverbotszonen_rhein {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Id,
+        Beschreibung,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Id => "id".into(),
+            Field::Beschreibung => "beschreibung".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -31775,19 +43672,19 @@ pub mod fischereiverbotszonen_rhein {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -31835,6 +43732,23 @@ pub mod rhein_wasserstand_pegel_und_abfluss {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        Abfluss,
+        Pegelhoehe,
+        Pegel,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::Abfluss => "abfluss".into(),
+            Field::Pegelhoehe => "pegelhoehe".into(),
+            Field::Pegel => "pegel".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -31843,19 +43757,19 @@ pub mod rhein_wasserstand_pegel_und_abfluss {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -31913,6 +43827,29 @@ pub mod rohdaten_zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Addresse,
+        Power,
+        Location,
+        Parkingfield,
+        Totalparkings,
+        Status,
+        Timestamp,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Addresse => "addresse".into(),
+            Field::Power => "power".into(),
+            Field::Location => "location".into(),
+            Field::Parkingfield => "parkingfield".into(),
+            Field::Totalparkings => "totalparkings".into(),
+            Field::Status => "status".into(),
+            Field::Timestamp => "timestamp".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -31921,19 +43858,19 @@ pub mod rohdaten_zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -31981,6 +43918,23 @@ pub mod kandidierende_der_grossratswahlen_2024_nach_haeufigkeit_der_kandidatur_s
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Haufigkeit,
+        Kandidaturen,
+        Gewahlt,
+        Anzahl,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Haufigkeit => "haufigkeit".into(),
+            Field::Kandidaturen => "kandidaturen".into(),
+            Field::Gewahlt => "gewahlt".into(),
+            Field::Anzahl => "anzahl".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -31989,19 +43943,19 @@ pub mod kandidierende_der_grossratswahlen_2024_nach_haeufigkeit_der_kandidatur_s
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -32157,6 +44111,83 @@ pub mod kennzahlen_der_abstimmungen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        AbstDatum,
+        AbstId,
+        AbstTitel,
+        AbstIdTitel,
+        AbstArt,
+        GemeinId,
+        GemeinName,
+        Id,
+        ResultArt,
+        StimmberAnz,
+        StimmberAnzM,
+        StimmberAnzF,
+        StimmrAnz,
+        DurchschnStimmbetProAbstArt,
+        DurchschnBrieflAntProAbstArt,
+        AnzElektrProAbstArt,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AnteilJaStimmen,
+        AbstTyp,
+        GegeJaAnz,
+        GegeNeinAnz,
+        StiInitiativeAnz,
+        StiGegenvorschlagAnz,
+        GegeAnteilJaStimmen,
+        StiAnteilInitStimmen,
+        InitOgaAnz,
+        GegeOgaAnz,
+        StiOgaAnz,
+        AbstDatumText,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::AbstDatum => "abst_datum".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+            Field::Id => "id".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::StimmberAnz => "stimmber_anz".into(),
+            Field::StimmberAnzM => "stimmber_anz_m".into(),
+            Field::StimmberAnzF => "stimmber_anz_f".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::DurchschnStimmbetProAbstArt => "durchschn_stimmbet_pro_abst_art".into(),
+            Field::DurchschnBrieflAntProAbstArt => "durchschn_briefl_ant_pro_abst_art".into(),
+            Field::AnzElektrProAbstArt => "anz_elektr_pro_abst_art".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::GegeJaAnz => "gege_ja_anz".into(),
+            Field::GegeNeinAnz => "gege_nein_anz".into(),
+            Field::StiInitiativeAnz => "sti_initiative_anz".into(),
+            Field::StiGegenvorschlagAnz => "sti_gegenvorschlag_anz".into(),
+            Field::GegeAnteilJaStimmen => "gege_anteil_ja_stimmen".into(),
+            Field::StiAnteilInitStimmen => "sti_anteil_init_stimmen".into(),
+            Field::InitOgaAnz => "init_oga_anz".into(),
+            Field::GegeOgaAnz => "gege_oga_anz".into(),
+            Field::StiOgaAnz => "sti_oga_anz".into(),
+            Field::AbstDatumText => "abst_datum_text".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -32165,19 +44196,19 @@ pub mod kennzahlen_der_abstimmungen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -32305,6 +44336,63 @@ pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonito
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        MessungId,
+        Strasse,
+        StrasseNr,
+        Ort,
+        TheGeom,
+        ExtraordinaryTrafficRouting,
+        MinTimestamp,
+        MaxTimestamp,
+        MessdauerH,
+        RichtungId,
+        Richtung,
+        Count,
+        CountLt35m,
+        Count35ToLt8m,
+        CountGte8m,
+        Dtv,
+        DtvLt35m,
+        Dtv35ToLt8m,
+        DtvGte8m,
+        DatasetId,
+        LinkZuEinzelmessungen,
+        MinTimestampText,
+        MaxTimestampText,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::MessungId => "messung_id".into(),
+            Field::Strasse => "strasse".into(),
+            Field::StrasseNr => "strasse_nr".into(),
+            Field::Ort => "ort".into(),
+            Field::TheGeom => "the_geom".into(),
+            Field::ExtraordinaryTrafficRouting => "extraordinary_traffic_routing".into(),
+            Field::MinTimestamp => "min_timestamp".into(),
+            Field::MaxTimestamp => "max_timestamp".into(),
+            Field::MessdauerH => "messdauer_h".into(),
+            Field::RichtungId => "richtung_id".into(),
+            Field::Richtung => "richtung".into(),
+            Field::Count => "count".into(),
+            Field::CountLt35m => "count_lt_3_5m".into(),
+            Field::Count35ToLt8m => "count_3_5_to_lt_8m".into(),
+            Field::CountGte8m => "count_gte_8m".into(),
+            Field::Dtv => "dtv".into(),
+            Field::DtvLt35m => "dtv_lt_3_5m".into(),
+            Field::Dtv35ToLt8m => "dtv_3_5_to_lt_8m".into(),
+            Field::DtvGte8m => "dtv_gte_8m".into(),
+            Field::DatasetId => "dataset_id".into(),
+            Field::LinkZuEinzelmessungen => "link_zu_einzelmessungen".into(),
+            Field::MinTimestampText => "min_timestamp_text".into(),
+            Field::MaxTimestampText => "max_timestamp_text".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -32313,19 +44401,19 @@ pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonito
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -32369,6 +44457,21 @@ pub mod wiese_wasserstand_und_abfluss {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        Abfluss,
+        Pegel,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::Abfluss => "abfluss".into(),
+            Field::Pegel => "pegel".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -32377,19 +44480,19 @@ pub mod wiese_wasserstand_und_abfluss {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -32451,6 +44554,31 @@ pub mod smarte_strasse_parkplatzbelegung {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        BlueTotal,
+        BlueAvailable,
+        BlueOccupied,
+        YellowTotal,
+        YellowAvailable,
+        YellowOccupied,
+        TimestampText,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::BlueTotal => "blue_total".into(),
+            Field::BlueAvailable => "blue_available".into(),
+            Field::BlueOccupied => "blue_occupied".into(),
+            Field::YellowTotal => "yellow_total".into(),
+            Field::YellowAvailable => "yellow_available".into(),
+            Field::YellowOccupied => "yellow_occupied".into(),
+            Field::TimestampText => "timestamp_text".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -32459,19 +44587,19 @@ pub mod smarte_strasse_parkplatzbelegung {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -32580,6 +44708,55 @@ pub mod temperatur_grundwasser {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        Stationnr,
+        Stationname,
+        Sensornr,
+        Sensname,
+        Value,
+        GeoPoint2d,
+        Xcoord,
+        Ycoord,
+        Topterrain,
+        Refpoint,
+        Status,
+        OnOffline,
+        Date,
+        Time,
+        TimestampText,
+        Stationid,
+        Lat,
+        Lon,
+        BohrkatasterLink,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::Stationnr => "stationnr".into(),
+            Field::Stationname => "stationname".into(),
+            Field::Sensornr => "sensornr".into(),
+            Field::Sensname => "sensname".into(),
+            Field::Value => "value".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Xcoord => "xcoord".into(),
+            Field::Ycoord => "ycoord".into(),
+            Field::Topterrain => "topterrain".into(),
+            Field::Refpoint => "refpoint".into(),
+            Field::Status => "status".into(),
+            Field::OnOffline => "on_offline".into(),
+            Field::Date => "date".into(),
+            Field::Time => "time".into(),
+            Field::TimestampText => "timestamp_text".into(),
+            Field::Stationid => "stationid".into(),
+            Field::Lat => "lat".into(),
+            Field::Lon => "lon".into(),
+            Field::BohrkatasterLink => "bohrkataster_link".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -32588,19 +44765,19 @@ pub mod temperatur_grundwasser {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -32648,6 +44825,31 @@ pub mod belegung_der_elektroauto_ladestationen_der_iwb {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Addresse,
+        Power,
+        Location,
+        GeoPoint2d,
+        Parkingfield,
+        Totalparkings,
+        Status,
+        Timestamp,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Addresse => "addresse".into(),
+            Field::Power => "power".into(),
+            Field::Location => "location".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Parkingfield => "parkingfield".into(),
+            Field::Totalparkings => "totalparkings".into(),
+            Field::Status => "status".into(),
+            Field::Timestamp => "timestamp".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -32656,19 +44858,19 @@ pub mod belegung_der_elektroauto_ladestationen_der_iwb {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -32816,6 +45018,75 @@ pub mod abstimmungen_details {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        AbstDatum,
+        AbstId,
+        AbstTitel,
+        AbstIdTitel,
+        AbstArt,
+        GemeinId,
+        GemeinName,
+        WahllokId,
+        WahllokName,
+        Id,
+        ResultArt,
+        StimmrAnz,
+        EingelAnz,
+        LeerAnz,
+        UngueltAnz,
+        GueltAnz,
+        JaAnz,
+        NeinAnz,
+        AnteilJaStimmen,
+        AbstTyp,
+        GegeJaAnz,
+        GegeNeinAnz,
+        StiInitiativeAnz,
+        StiGegenvorschlagAnz,
+        GegeAnteilJaStimmen,
+        StiAnteilInitStimmen,
+        InitOgaAnz,
+        GegeOgaAnz,
+        StiOgaAnz,
+        AbstDatumText,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::AbstDatum => "abst_datum".into(),
+            Field::AbstId => "abst_id".into(),
+            Field::AbstTitel => "abst_titel".into(),
+            Field::AbstIdTitel => "abst_id_titel".into(),
+            Field::AbstArt => "abst_art".into(),
+            Field::GemeinId => "gemein_id".into(),
+            Field::GemeinName => "gemein_name".into(),
+            Field::WahllokId => "wahllok_id".into(),
+            Field::WahllokName => "wahllok_name".into(),
+            Field::Id => "id".into(),
+            Field::ResultArt => "result_art".into(),
+            Field::StimmrAnz => "stimmr_anz".into(),
+            Field::EingelAnz => "eingel_anz".into(),
+            Field::LeerAnz => "leer_anz".into(),
+            Field::UngueltAnz => "unguelt_anz".into(),
+            Field::GueltAnz => "guelt_anz".into(),
+            Field::JaAnz => "ja_anz".into(),
+            Field::NeinAnz => "nein_anz".into(),
+            Field::AnteilJaStimmen => "anteil_ja_stimmen".into(),
+            Field::AbstTyp => "abst_typ".into(),
+            Field::GegeJaAnz => "gege_ja_anz".into(),
+            Field::GegeNeinAnz => "gege_nein_anz".into(),
+            Field::StiInitiativeAnz => "sti_initiative_anz".into(),
+            Field::StiGegenvorschlagAnz => "sti_gegenvorschlag_anz".into(),
+            Field::GegeAnteilJaStimmen => "gege_anteil_ja_stimmen".into(),
+            Field::StiAnteilInitStimmen => "sti_anteil_init_stimmen".into(),
+            Field::InitOgaAnz => "init_oga_anz".into(),
+            Field::GegeOgaAnz => "gege_oga_anz".into(),
+            Field::StiOgaAnz => "sti_oga_anz".into(),
+            Field::AbstDatumText => "abst_datum_text".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -32824,19 +45095,19 @@ pub mod abstimmungen_details {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -32876,6 +45147,19 @@ pub mod temperatur_wiese {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        TimestampText,
+        Temperatur,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::TimestampText => "timestamp_text".into(),
+            Field::Temperatur => "temperatur".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -32884,19 +45168,19 @@ pub mod temperatur_wiese {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -32956,6 +45240,29 @@ pub mod wetterstation_rosental_mitte {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Timestamp,
+        Precipitation,
+        Relativehumidityhc,
+        Solarradiation,
+        Airtemperaturehc,
+        Windspeedultrasonic,
+        Winddirultrasonic,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Timestamp => "timestamp".into(),
+            Field::Precipitation => "precipitation".into(),
+            Field::Relativehumidityhc => "relativehumidityhc".into(),
+            Field::Solarradiation => "solarradiation".into(),
+            Field::Airtemperaturehc => "airtemperaturehc".into(),
+            Field::Windspeedultrasonic => "windspeedultrasonic".into(),
+            Field::Winddirultrasonic => "winddirultrasonic".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -32964,19 +45271,19 @@ pub mod wetterstation_rosental_mitte {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -33016,6 +45323,23 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_standorte {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Name,
+        XCoord,
+        YCoord,
+        GeoPoint2d,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Name => "name".into(),
+            Field::XCoord => "x_coord".into(),
+            Field::YCoord => "y_coord".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -33024,19 +45348,19 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_standorte {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -33138,6 +45462,85 @@ pub mod abwassermonitoring_influenza_und_rsv {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Datum,
+        Kw,
+        SampleBaNr,
+        InfaGcPcr,
+        InfbGcPcr,
+        RsvGcPcr,
+        InfaGcL,
+        InfbGcL,
+        RsvGcL,
+        InfaGcL7DMedian,
+        InfbGcL7DMedian,
+        RsvGcL7DMedian,
+        InfaGc100000P,
+        InfbGc100000P,
+        RsvGc100000P,
+        InfaGc100000P7DMedian,
+        InfbGc100000P7DMedian,
+        RsvGc100000P7DMedian,
+        InfaGcPmmov,
+        InfbGcPmmov,
+        RsvGcPmmov,
+        InfaGcPmmov7DMedian,
+        InfbGcPmmov7DMedian,
+        RsvGcPmmov7DMedian,
+        KwAnzPosRsvUsb,
+        AnzPosABs,
+        AnzPosBBs,
+        AnzPosH1Bs,
+        AnzPosABl,
+        AnzPosBBl,
+        AnzPosAllBl,
+        InfaBsBl,
+        InfbBsBl,
+        X7tMedianInfa,
+        X7tMedianInfb,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Datum => "datum".into(),
+            Field::Kw => "kw".into(),
+            Field::SampleBaNr => "sample_ba_nr".into(),
+            Field::InfaGcPcr => "infa_gc_pcr".into(),
+            Field::InfbGcPcr => "infb_gc_pcr".into(),
+            Field::RsvGcPcr => "rsv_gc_pcr".into(),
+            Field::InfaGcL => "infa_gc_l".into(),
+            Field::InfbGcL => "infb_gc_l".into(),
+            Field::RsvGcL => "rsv_gc_l".into(),
+            Field::InfaGcL7DMedian => "infa_gc_l_7_d_median".into(),
+            Field::InfbGcL7DMedian => "infb_gc_l_7_d_median".into(),
+            Field::RsvGcL7DMedian => "rsv_gc_l_7_d_median".into(),
+            Field::InfaGc100000P => "infa_gc_100_000_p".into(),
+            Field::InfbGc100000P => "infb_gc_100_000_p".into(),
+            Field::RsvGc100000P => "rsv_gc_100_000_p".into(),
+            Field::InfaGc100000P7DMedian => "infa_gc_100_000_p_7_d_median".into(),
+            Field::InfbGc100000P7DMedian => "infb_gc_100_000_p_7_d_median".into(),
+            Field::RsvGc100000P7DMedian => "rsv_gc_100_000_p_7_d_median".into(),
+            Field::InfaGcPmmov => "infa_gc_pmmov".into(),
+            Field::InfbGcPmmov => "infb_gc_pmmov".into(),
+            Field::RsvGcPmmov => "rsv_gc_pmmov".into(),
+            Field::InfaGcPmmov7DMedian => "infa_gc_pmmov_7_d_median".into(),
+            Field::InfbGcPmmov7DMedian => "infb_gc_pmmov_7_d_median".into(),
+            Field::RsvGcPmmov7DMedian => "rsv_gc_pmmov_7_d_median".into(),
+            Field::KwAnzPosRsvUsb => "kw_anz_pos_rsv_usb".into(),
+            Field::AnzPosABs => "anz_pos_a_bs".into(),
+            Field::AnzPosBBs => "anz_pos_b_bs".into(),
+            Field::AnzPosH1Bs => "anz_pos_h1_bs".into(),
+            Field::AnzPosABl => "anz_pos_a_bl".into(),
+            Field::AnzPosBBl => "anz_pos_b_bl".into(),
+            Field::AnzPosAllBl => "anz_pos_all_bl".into(),
+            Field::InfaBsBl => "infa_bs_bl".into(),
+            Field::InfbBsBl => "infb_bs_bl".into(),
+            Field::X7tMedianInfa => "7t_median_infa".into(),
+            Field::X7tMedianInfb => "7t_median_infb".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -33146,19 +45549,19 @@ pub mod abwassermonitoring_influenza_und_rsv {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -33226,6 +45629,35 @@ pub mod wilde_abfall_deponien {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Id,
+        BearbeitungszeitMeldung,
+        Abfallkategorie,
+        GeoPoint2d,
+        WovName,
+        BezName,
+        WovIdBez,
+        BezId,
+        BezLabel,
+        GemeindeName,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Id => "id".into(),
+            Field::BearbeitungszeitMeldung => "bearbeitungszeit_meldung".into(),
+            Field::Abfallkategorie => "abfallkategorie".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::WovName => "wov_name".into(),
+            Field::BezName => "bez_name".into(),
+            Field::WovIdBez => "wov_id_bez".into(),
+            Field::BezId => "bez_id".into(),
+            Field::BezLabel => "bez_label".into(),
+            Field::GemeindeName => "gemeinde_name".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -33234,19 +45666,19 @@ pub mod wilde_abfall_deponien {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -33326,6 +45758,43 @@ pub mod smarte_strasse_elektroauto_ladestationen {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Starttime,
+        Stoptime,
+        Duration,
+        Watthour,
+        Kilowatthour,
+        StationCapacity,
+        Connectorid,
+        StationLocationCoordinatesLat,
+        StationLocationCoordinatesLng,
+        StationConnectortype,
+        StationLocation,
+        Starttimetext,
+        Stoptimetext,
+        TimeMeasured,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Starttime => "starttime".into(),
+            Field::Stoptime => "stoptime".into(),
+            Field::Duration => "duration".into(),
+            Field::Watthour => "watthour".into(),
+            Field::Kilowatthour => "kilowatthour".into(),
+            Field::StationCapacity => "station_capacity".into(),
+            Field::Connectorid => "connectorid".into(),
+            Field::StationLocationCoordinatesLat => "station_location_coordinates_lat".into(),
+            Field::StationLocationCoordinatesLng => "station_location_coordinates_lng".into(),
+            Field::StationConnectortype => "station_connectortype".into(),
+            Field::StationLocation => "station_location".into(),
+            Field::Starttimetext => "starttimetext".into(),
+            Field::Stoptimetext => "stoptimetext".into(),
+            Field::TimeMeasured => "time_measured".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -33334,19 +45803,19 @@ pub mod smarte_strasse_elektroauto_ladestationen {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -33424,6 +45893,39 @@ pub mod zeitreihe_der_belegung_oeffentlicher_parkhaeuser_basel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Published,
+        Free,
+        Total,
+        Auslastungen,
+        Id,
+        Id2,
+        Title,
+        Name,
+        Address,
+        Link,
+        GeoPoint2d,
+        Description,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Published => "published".into(),
+            Field::Free => "free".into(),
+            Field::Total => "total".into(),
+            Field::Auslastungen => "auslastungen".into(),
+            Field::Id => "id".into(),
+            Field::Id2 => "id2".into(),
+            Field::Title => "title".into(),
+            Field::Name => "name".into(),
+            Field::Address => "address".into(),
+            Field::Link => "link".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Description => "description".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -33432,19 +45934,19 @@ pub mod zeitreihe_der_belegung_oeffentlicher_parkhaeuser_basel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -33544,6 +46046,51 @@ pub mod solarkataster_solarpotenzial {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        GeoPoint2d,
+        GeoShape,
+        Idgebaeude,
+        Gebaeudenr,
+        PvBestEi,
+        PvGuteEi,
+        FGuteEi,
+        StBestEi,
+        StGuteEi,
+        PvErtrgJ,
+        PvErtrgW,
+        PvErtrgS,
+        FErtrgJ,
+        FErtrgW,
+        FErtrgS,
+        StErtrgJ,
+        StErtrgW,
+        StErtrgS,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::GeoShape => "geo_shape".into(),
+            Field::Idgebaeude => "idgebaeude".into(),
+            Field::Gebaeudenr => "gebaeudenr".into(),
+            Field::PvBestEi => "pv_best_ei".into(),
+            Field::PvGuteEi => "pv_gute_ei".into(),
+            Field::FGuteEi => "f_gute_ei".into(),
+            Field::StBestEi => "st_best_ei".into(),
+            Field::StGuteEi => "st_gute_ei".into(),
+            Field::PvErtrgJ => "pv_ertrg_j".into(),
+            Field::PvErtrgW => "pv_ertrg_w".into(),
+            Field::PvErtrgS => "pv_ertrg_s".into(),
+            Field::FErtrgJ => "f_ertrg_j".into(),
+            Field::FErtrgW => "f_ertrg_w".into(),
+            Field::FErtrgS => "f_ertrg_s".into(),
+            Field::StErtrgJ => "st_ertrg_j".into(),
+            Field::StErtrgW => "st_ertrg_w".into(),
+            Field::StErtrgS => "st_ertrg_s".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -33552,19 +46099,19 @@ pub mod solarkataster_solarpotenzial {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -33624,6 +46171,31 @@ pub mod standorte_mess_stationen_smart_climate_luftklima {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        NameOriginal,
+        NameCustom,
+        DatesMinDate,
+        DatesMaxDate,
+        Coords,
+        Lon,
+        Lat,
+        StadtklimaBaselLink,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::NameOriginal => "name_original".into(),
+            Field::NameCustom => "name_custom".into(),
+            Field::DatesMinDate => "dates_min_date".into(),
+            Field::DatesMaxDate => "dates_max_date".into(),
+            Field::Coords => "coords".into(),
+            Field::Lon => "lon".into(),
+            Field::Lat => "lat".into(),
+            Field::StadtklimaBaselLink => "stadtklima_basel_link".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -33632,19 +46204,19 @@ pub mod standorte_mess_stationen_smart_climate_luftklima {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -33712,6 +46284,35 @@ pub mod smart_climate_luftklima {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        NameOriginal,
+        NameCustom,
+        DatesMaxDate,
+        MetaAirtemp,
+        MetaRain1hVal,
+        MetaRain24hSum,
+        MetaRain48hSum,
+        Coords,
+        StadtklimaBaselLink,
+        UnixTimestamp,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::NameOriginal => "name_original".into(),
+            Field::NameCustom => "name_custom".into(),
+            Field::DatesMaxDate => "dates_max_date".into(),
+            Field::MetaAirtemp => "meta_airtemp".into(),
+            Field::MetaRain1hVal => "meta_rain_1h_val".into(),
+            Field::MetaRain24hSum => "meta_rain24h_sum".into(),
+            Field::MetaRain48hSum => "meta_rain48h_sum".into(),
+            Field::Coords => "coords".into(),
+            Field::StadtklimaBaselLink => "stadtklima_basel_link".into(),
+            Field::UnixTimestamp => "unix_timestamp".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -33720,19 +46321,19 @@ pub mod smart_climate_luftklima {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -33824,6 +46425,45 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_staubgebundene_
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Messbeginn,
+        Messende,
+        Standort,
+        Parameter,
+        Messwert,
+        MesswertZahlenformat,
+        X3DezimalstellenMesswert,
+        X4DezimalstellenMesswert,
+        X5DezimalstellenMesswert,
+        Interventionswert,
+        Interventionswert3Dez,
+        Warnwert,
+        Warnwert3Dez,
+        Einheit,
+        Messmethode,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Messbeginn => "messbeginn".into(),
+            Field::Messende => "messende".into(),
+            Field::Standort => "standort".into(),
+            Field::Parameter => "parameter".into(),
+            Field::Messwert => "messwert".into(),
+            Field::MesswertZahlenformat => "messwert_zahlenformat".into(),
+            Field::X3DezimalstellenMesswert => "3_dezimalstellen_messwert".into(),
+            Field::X4DezimalstellenMesswert => "4_dezimalstellen_messwert".into(),
+            Field::X5DezimalstellenMesswert => "5_dezimalstellen_messwert".into(),
+            Field::Interventionswert => "interventionswert".into(),
+            Field::Interventionswert3Dez => "interventionswert_3_dez".into(),
+            Field::Warnwert => "warnwert".into(),
+            Field::Warnwert3Dez => "warnwert_3_dez".into(),
+            Field::Einheit => "einheit".into(),
+            Field::Messmethode => "messmethode".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -33832,19 +46472,19 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_staubgebundene_
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
@@ -33920,6 +46560,39 @@ pub mod aktuelle_belegung_der_oeffentlichen_parkhaeuser_basel {
         pub results: Vec<Record>,
     }
 
+    #[derive(Clone, Copy)]
+    pub enum Field {
+        Title,
+        Published,
+        Free,
+        Total,
+        AnteilFrei,
+        Auslastung,
+        AuslastungProzent,
+        Link,
+        GeoPoint2d,
+        Description,
+        Name,
+        Id2,
+    }
+
+    fn field_name(field: Field) -> String {
+        match field {
+            Field::Title => "title".into(),
+            Field::Published => "published".into(),
+            Field::Free => "free".into(),
+            Field::Total => "total".into(),
+            Field::AnteilFrei => "anteil_frei".into(),
+            Field::Auslastung => "auslastung".into(),
+            Field::AuslastungProzent => "auslastung_prozent".into(),
+            Field::Link => "link".into(),
+            Field::GeoPoint2d => "geo_point_2d".into(),
+            Field::Description => "description".into(),
+            Field::Name => "name".into(),
+            Field::Id2 => "id2".into(),
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct Order(String);
 
@@ -33928,19 +46601,19 @@ pub mod aktuelle_belegung_der_oeffentlichen_parkhaeuser_basel {
             Self("".into())
         }
 
-        pub fn ascending(mut self, field: &str) -> Self {
+        pub fn ascending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(field);
+            self.0.push_str(&format!("`{}`", field_name(field)));
             self
         }
 
-        pub fn descending(mut self, field: &str) -> Self {
+        pub fn descending(mut self, field: Field) -> Self {
             if !self.0.is_empty() {
                 self.0.push_str(", ");
             }
-            self.0.push_str(&format!("{field} desc"));
+            self.0.push_str(&format!("`{}` desc", field_name(field)));
             self
         }
     }
