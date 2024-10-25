@@ -1,6 +1,7 @@
 use geojson::GeoJson;
-use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use time::macros::format_description;
+use time::{Date, OffsetDateTime};
 
 #[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 pub struct GeoPoint2d {
@@ -15,13 +16,35 @@ pub struct File {
     pub height: u16,
 }
 
-pub type Date = String;
+fn deserialize_date<'de, D>(deserializer: D) -> Result<Option<Date>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    let format = format_description!("[year]-[month]-[day]");
+    let date = time::Date::parse(&s, format).unwrap();
+    Ok(Some(date))
+}
 
+fn serialize_date<S: Serializer>(date: &Option<Date>, serializer: S) -> Result<S::Ok, S::Error> {
+    if let Some(date) = date {
+        serializer.serialize_some(&format!(
+            "{:04}-{:02}-{:02}",
+            date.year(),
+            date.month(),
+            date.day()
+        ))
+    } else {
+        serializer.serialize_none()
+    }
+}
 fn escape(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
-/// Wahl von sieben Präsidentinnen oder Präsidenten des Strafgerichts
+#[doc = "Wahl von sieben Pr\u{e4}sidentinnen oder Pr\u{e4}sidenten des Strafgerichts"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt die Resultate des 1. Wahlgangs der Wahl zu sieben Pr\u{e4}sidentinnen oder Pr\u{e4}sidenten des Strafgerichts Basel-Stadt vom 9. Mai 2021.\u{a0}</p>"]
 pub mod wahl_von_sieben_praesidentinnen_oder_praesidenten_des_strafgerichts {
     use super::*;
 
@@ -42,6 +65,10 @@ pub mod wahl_von_sieben_praesidentinnen_oder_praesidenten_des_strafgerichts {
         /// Datum
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Anzahl Sitze
         ///
@@ -129,7 +156,7 @@ pub mod wahl_von_sieben_praesidentinnen_oder_praesidenten_des_strafgerichts {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahlTitel,
         Wahlgang,
@@ -190,7 +217,7 @@ pub mod wahl_von_sieben_praesidentinnen_oder_praesidenten_des_strafgerichts {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -215,7 +242,7 @@ pub mod wahl_von_sieben_praesidentinnen_oder_praesidenten_des_strafgerichts {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -301,7 +328,9 @@ pub mod wahl_von_sieben_praesidentinnen_oder_praesidenten_des_strafgerichts {
     }
 }
 
-/// Coronavirus (Covid-19): Massentests an Schulen
+#[doc = "Coronavirus (Covid-19): Massentests an Schulen"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die SARS-CoV-2-Tests, welche ab Mitte M\u{e4}rz 2022 an Sch\u{fc}lerinnen und Sch\u{fc}lern (SuS) sowie Lehrpersonen an baselst\u{e4}dtischen Schulen durchgef\u{fc}hrt wurden. Es werden die Anzahl durchgef\u{fc}hrter Tests sowie die Test-Positivit\u{e4}tsrate pro Woche aufgef\u{fc}hrt. Weitere Informationen zum Coronavirus im Kanton Basel-Stadt:\u{a0}<a href=\"https://www.bs.ch/gd/md/gesundheitsschutz/uebertragbarekrankheiten/grippe-corona-und-co\" target=\"_blank\">https://www.bs.ch/gd/md/gesundheitsschutz/uebertragbarekrankheiten/grippe-corona-und-co</a><a href=\"https://www.coronavirus.bs.ch/testen/testen-in-schulen.html\" target=\"_blank\"></a></p><p>Daten zu Massentests an Schulen vor Mitte M\u{e4}rz 2022, sowie in Betrieben im Kanton Basel-Stadt sind hier zu finden:\u{a0}<a href=\"https://data.bs.ch/explore/?sort=modified&amp;q=massentests\" target=\"_blank\">https://data.bs.ch/explore/?sort=modified&amp;q=massentests</a></p>"]
 pub mod coronavirus_covid_19_massentests_an_schulen {
     use super::*;
 
@@ -310,6 +339,10 @@ pub mod coronavirus_covid_19_massentests_an_schulen {
         /// Datum Wochenstart
         ///
         /// Datum des Montags der Woche
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub firstdayofweek: Option<Date>,
         /// Kalenderwoche
         ///
@@ -339,7 +372,7 @@ pub mod coronavirus_covid_19_massentests_an_schulen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Firstdayofweek,
         Weekofyear,
@@ -362,7 +395,7 @@ pub mod coronavirus_covid_19_massentests_an_schulen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -387,7 +420,7 @@ pub mod coronavirus_covid_19_massentests_an_schulen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -473,7 +506,9 @@ pub mod coronavirus_covid_19_massentests_an_schulen {
     }
 }
 
-/// Smarte Strasse: Parkplatz-Zonen
+#[doc = "Smarte Strasse: Parkplatz-Zonen"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">Der Datensatz zeigt die Standorte der Parkpl\u{e4}tze, die im Rahmen des Projekts \u{ab}Smarte Strasse\u{bb} f\u{fc}r die Testung der Sensoren einbezogen werden.<br/>Zus\u{e4}tzlich relevante Datens\u{e4}tze f\u{fc}r die Parkplatzbelegung:</p><ul><li style=\"\"><a href=\"https://data.bs.ch/explore/dataset/100171/\" target=\"_blank\">Zu- und Wegfahrten, Parkplatzauslastung</a></li><li style=\"\"><a href=\"https://data.bs.ch/explore/dataset/100160/\" target=\"_blank\">Parkplatzbelegung</a><br/></li></ul><p class=\"\" style=\"font-family: sans-serif;\">Weitere Informationen und Daten rund um das Projekt \u{ab}Smarte Strasse\u{bb} finden Sie unter den folgenden Links:</p><ul><li>Weitere Informationen zum Projekt\u{a0}\u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html\" target=\"_blank\">https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html</a>\u{a0}</li><li>Genaue Standorte aller Sensoren:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100114/table/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100114/table/</a>\u{a0}</li><li>Weitere Datens\u{e4}tze rund um das Thema \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://data.bs.ch/explore/?refine.tags=smarte+strasse\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=smarte+strasse</a>\u{a0}</li></ul><p><b>Hinweis:<br/>Die Parkplatz-Kamera an der Gundeldingerstrasse wurde am Dienstag 4.10.2022 abmontiert. Es werden keine Daten mehr erhoben.</b><br/></p>"]
 pub mod smarte_strasse_parkplatz_zonen {
     use super::*;
 
@@ -503,7 +538,7 @@ pub mod smarte_strasse_parkplatz_zonen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Id,
         Lat,
@@ -524,7 +559,7 @@ pub mod smarte_strasse_parkplatz_zonen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -549,7 +584,7 @@ pub mod smarte_strasse_parkplatz_zonen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -635,7 +670,9 @@ pub mod smarte_strasse_parkplatz_zonen {
     }
 }
 
-/// Standorte Mess-Stationen Smart Climate Schallpegelmessungen
+#[doc = "Standorte Mess-Stationen Smart Climate Schallpegelmessungen"]
+#[doc = ""]
+#[doc = "Der Datensatz zeigt die Standorte der Mess-Stationen f\u{fc}r den Datensatz <a href=\"https://data.bs.ch/explore/dataset/100087\" target=\"_blank\">\u{ab}Smart Climate Schallpegelmessungen\u{bb}</a>."]
 pub mod standorte_mess_stationen_smart_climate_schallpegelmessungen {
     use super::*;
 
@@ -665,7 +702,7 @@ pub mod standorte_mess_stationen_smart_climate_schallpegelmessungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         StationId,
         Eui,
@@ -684,7 +721,7 @@ pub mod standorte_mess_stationen_smart_climate_schallpegelmessungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -709,7 +746,7 @@ pub mod standorte_mess_stationen_smart_climate_schallpegelmessungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -795,7 +832,9 @@ pub mod standorte_mess_stationen_smart_climate_schallpegelmessungen {
     }
 }
 
-/// Kennzahlen der Abstimmung vom 27. November 2022
+#[doc = "Kennzahlen der Abstimmung vom 27. November 2022"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 27. November 2022 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_27_november_2022 {
     use super::*;
 
@@ -846,6 +885,10 @@ pub mod kennzahlen_der_abstimmung_vom_27_november_2022 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -927,7 +970,7 @@ pub mod kennzahlen_der_abstimmung_vom_27_november_2022 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -1002,7 +1045,7 @@ pub mod kennzahlen_der_abstimmung_vom_27_november_2022 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -1027,7 +1070,7 @@ pub mod kennzahlen_der_abstimmung_vom_27_november_2022 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -1113,7 +1156,9 @@ pub mod kennzahlen_der_abstimmung_vom_27_november_2022 {
     }
 }
 
-/// Staatsarchiv: Neuzugänge im öffentlichen Archivkatalog
+#[doc = "Staatsarchiv: Neuzug\u{e4}nge im \u{f6}ffentlichen Archivkatalog"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz enth\u{e4}lt die j\u{e4}hrlich neu im Archivkatalog\nverzeichneten und \u{f6}ffentlich zug\u{e4}nglich gemachten Unterlagen (Akten, Pl\u{e4}ne,\nBilder, etc.). Diese sind damit im <a href=\"https://dls.staatsarchiv.bs.ch/\" target=\"_blank\">Digitalen Lesesaal</a> (https://dls.staatsarchiv.bs.ch/) recherchierbar und\nk\u{f6}nnen eingesehen werden. </p><p>Der Datensatz umfasst Informationen zum Inhalt der\nUnterlagen und deren Zeitraum, zur abliefernden Stelle, zum Umfang sowie zur\nArchivsignatur. </p><p>Er bildet die laufende Erschliessungsarbeit des\nStaatsarchivs ab. Mit der Erschliessung wird der Entstehungszusammenhang der\nUnterlagen nachvollziehbar gemacht und ihre Auffindbarkeit erm\u{f6}glicht. Zur\nErschliessungsarbeit geh\u{f6}ren das Ordnen der Unterlagen, das Verzeichnen im\nOnline-Archivkatalog, Verpacken, Etikettieren und Magazinieren.</p>"]
 pub mod staatsarchiv_neuzugaenge_im_oeffentlichen_archivkatalog {
     use super::*;
 
@@ -1171,7 +1216,7 @@ pub mod staatsarchiv_neuzugaenge_im_oeffentlichen_archivkatalog {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Abteilung,
@@ -1204,7 +1249,7 @@ pub mod staatsarchiv_neuzugaenge_im_oeffentlichen_archivkatalog {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -1229,7 +1274,7 @@ pub mod staatsarchiv_neuzugaenge_im_oeffentlichen_archivkatalog {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -1315,7 +1360,9 @@ pub mod staatsarchiv_neuzugaenge_im_oeffentlichen_archivkatalog {
     }
 }
 
-/// Resultate der Nationalratswahlen 2023 (aggregierte Daten)
+#[doc = "Resultate der Nationalratswahlen 2023 (aggregierte Daten)"]
+#[doc = ""]
+#[doc = "<p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Dieser Datensatz zeigt die aggregierten Resultate der Nationalratswahl vom 22. Oktober 2023.<o:p></o:p></p><p style=\"font-family: sans-serif;\"></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod resultate_der_nationalratswahlen_2023_aggregierte_daten {
     use super::*;
 
@@ -1332,6 +1379,10 @@ pub mod resultate_der_nationalratswahlen_2023_aggregierte_daten {
         /// Wahltermin
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wahltermin: Option<Date>,
         /// Anzahl Sitze
         ///
@@ -1479,7 +1530,7 @@ pub mod resultate_der_nationalratswahlen_2023_aggregierte_daten {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         Amtsdauer,
@@ -1578,7 +1629,7 @@ pub mod resultate_der_nationalratswahlen_2023_aggregierte_daten {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -1603,7 +1654,7 @@ pub mod resultate_der_nationalratswahlen_2023_aggregierte_daten {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -1689,7 +1740,9 @@ pub mod resultate_der_nationalratswahlen_2023_aggregierte_daten {
     }
 }
 
-/// Einzelmessungen der Smiley-Geschwindigkeitsanzeigen
+#[doc = "Einzelmessungen der Smiley-Geschwindigkeitsanzeigen"]
+#[doc = ""]
+#[doc = "<p>Einzelmessungen der Smiley-Geschwindigkeitsanzeigen der Kantonspolizei Basel-Stadt ab 2023 (Zeitpunkt des Beginns der Messung). Die Smiley-Geschwindigkeitsanzeigen sind nicht geeicht und entsprechend k\u{f6}nnen die Werte von der tats\u{e4}chlich gefahrenen Geschwindigkeit abweichen. Hinweis: Die Messungen sind nicht repr\u{e4}sentativ f\u{fc}r das ganze Jahr und m\u{fc}ssen im Kontext des Erhebungsdatums betrachtet werden. Dar\u{fc}ber hinaus wurden gewisse Messungen w\u{e4}hrend einer ausserordentlichen Verkehrsf\u{fc}hrung (z.B. Umleitungsverkehr infolge von Baustellent\u{e4}tigkeiten etc.) erhoben. Manipulationen an Ger\u{e4}ten k\u{f6}nnen zu fehlerhaften Messungen f\u{fc}hren.</p><p class=\"MsoNormal\"><span class=\"ui-provider\">Die Geschwindigkeitsmessungen\ndurchlaufen vier Phasen: <b>Vormessung</b>, <b>Betrieb</b>, <b>Nachmessung</b> und <b>nach Ende</b>. In der\nVormessungsphase wird die Geschwindigkeit der Fahrzeuge an den\nSmiley-Geschwindigkeitsanzeigen gemessen, wobei die Anzeigen nicht aktiviert\nsind. In der Betriebsphase sind die Smiley-Geschwindigkeitsanzeigen hingegen\neingeschaltet. Nachfolgend werden die Anzeigen ausgeschaltet und die\nGeschwindigkeit der Fahrzeuge an den Smiley-Geschwindigkeitsanzeigen wird\nerneut gemessen. Die letzte Phase \"nach Ende\" sind Messungen, die\nausserhalb des im Projekt definierten Zeitraums vorfallen.\u{a0}<o:p></o:p></span></p>"]
 pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
     use super::*;
 
@@ -1723,6 +1776,10 @@ pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
         /// Messung Datum
         ///
         /// Datum der Messung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messung_datum: Option<Date>,
         /// Messung Zeit
         ///
@@ -1784,7 +1841,7 @@ pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Zyklus,
         Phase,
@@ -1833,7 +1890,7 @@ pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -1858,7 +1915,7 @@ pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -1944,7 +2001,9 @@ pub mod einzelmessungen_der_smiley_geschwindigkeitsanzeigen {
     }
 }
 
-/// Kennzahlen der Abstimmung vom  28. November 2021
+#[doc = "Kennzahlen der Abstimmung vom  28. November 2021"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 28. November 2021 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.<br></p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_28_november_2021 {
     use super::*;
 
@@ -1991,6 +2050,10 @@ pub mod kennzahlen_der_abstimmung_vom_28_november_2021 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -2032,7 +2095,7 @@ pub mod kennzahlen_der_abstimmung_vom_28_november_2021 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -2083,7 +2146,7 @@ pub mod kennzahlen_der_abstimmung_vom_28_november_2021 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -2108,7 +2171,7 @@ pub mod kennzahlen_der_abstimmung_vom_28_november_2021 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -2194,7 +2257,9 @@ pub mod kennzahlen_der_abstimmung_vom_28_november_2021 {
     }
 }
 
-/// Kennzahlen der Abstimmung vom  26. September 2021
+#[doc = "Kennzahlen der Abstimmung vom  26. September 2021"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 26. September 2021 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_26_september_2021 {
     use super::*;
 
@@ -2241,6 +2306,10 @@ pub mod kennzahlen_der_abstimmung_vom_26_september_2021 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -2282,7 +2351,7 @@ pub mod kennzahlen_der_abstimmung_vom_26_september_2021 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -2333,7 +2402,7 @@ pub mod kennzahlen_der_abstimmung_vom_26_september_2021 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -2358,7 +2427,7 @@ pub mod kennzahlen_der_abstimmung_vom_26_september_2021 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -2444,7 +2513,9 @@ pub mod kennzahlen_der_abstimmung_vom_26_september_2021 {
     }
 }
 
-/// Kennzahlen der Abstimmung vom 15. Mai 2022
+#[doc = "Kennzahlen der Abstimmung vom 15. Mai 2022"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 15. Mai 2022 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p><a href=\"https://data.bs.ch/explore/dataset/100071\"></a></p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_15_mai_2022 {
     use super::*;
 
@@ -2491,6 +2562,10 @@ pub mod kennzahlen_der_abstimmung_vom_15_mai_2022 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -2533,7 +2608,7 @@ pub mod kennzahlen_der_abstimmung_vom_15_mai_2022 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -2586,7 +2661,7 @@ pub mod kennzahlen_der_abstimmung_vom_15_mai_2022 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -2611,7 +2686,7 @@ pub mod kennzahlen_der_abstimmung_vom_15_mai_2022 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -2697,7 +2772,9 @@ pub mod kennzahlen_der_abstimmung_vom_15_mai_2022 {
     }
 }
 
-/// Kennzahlen der Abstimmung vom 25. September 2022
+#[doc = "Kennzahlen der Abstimmung vom 25. September 2022"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 25. September 2022 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p><a href=\"https://data.bs.ch/explore/dataset/100071\"></a></p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_25_september_2022 {
     use super::*;
 
@@ -2744,6 +2821,10 @@ pub mod kennzahlen_der_abstimmung_vom_25_september_2022 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -2786,7 +2867,7 @@ pub mod kennzahlen_der_abstimmung_vom_25_september_2022 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -2839,7 +2920,7 @@ pub mod kennzahlen_der_abstimmung_vom_25_september_2022 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -2864,7 +2945,7 @@ pub mod kennzahlen_der_abstimmung_vom_25_september_2022 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -2950,7 +3031,9 @@ pub mod kennzahlen_der_abstimmung_vom_25_september_2022 {
     }
 }
 
-/// Abstimmung vom 26. November 2023 Details
+#[doc = "Abstimmung vom 26. November 2023 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 26. November 2023 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_vom_26_november_2023_details {
     use super::*;
 
@@ -2997,6 +3080,10 @@ pub mod abstimmung_vom_26_november_2023_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -3030,7 +3117,7 @@ pub mod abstimmung_vom_26_november_2023_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -3079,7 +3166,7 @@ pub mod abstimmung_vom_26_november_2023_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -3104,7 +3191,7 @@ pub mod abstimmung_vom_26_november_2023_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -3190,7 +3277,9 @@ pub mod abstimmung_vom_26_november_2023_details {
     }
 }
 
-/// Abstimmung vom 25. September 2022 Details
+#[doc = "Abstimmung vom 25. September 2022 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 25. September 2022 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_vom_25_september_2022_details {
     use super::*;
 
@@ -3237,6 +3326,10 @@ pub mod abstimmung_vom_25_september_2022_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -3267,7 +3360,7 @@ pub mod abstimmung_vom_25_september_2022_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -3316,7 +3409,7 @@ pub mod abstimmung_vom_25_september_2022_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -3341,7 +3434,7 @@ pub mod abstimmung_vom_25_september_2022_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -3427,7 +3520,9 @@ pub mod abstimmung_vom_25_september_2022_details {
     }
 }
 
-/// Kennzahlen der Abstimmung vom 18. Juni 2023
+#[doc = "Kennzahlen der Abstimmung vom 18. Juni 2023"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 18. Juni 2023 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_18_juni_2023 {
     use super::*;
 
@@ -3474,6 +3569,10 @@ pub mod kennzahlen_der_abstimmung_vom_18_juni_2023 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -3523,7 +3622,7 @@ pub mod kennzahlen_der_abstimmung_vom_18_juni_2023 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -3578,7 +3677,7 @@ pub mod kennzahlen_der_abstimmung_vom_18_juni_2023 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -3603,7 +3702,7 @@ pub mod kennzahlen_der_abstimmung_vom_18_juni_2023 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -3689,7 +3788,9 @@ pub mod kennzahlen_der_abstimmung_vom_18_juni_2023 {
     }
 }
 
-/// Abstimmung vom 18. Juni 2023 Details
+#[doc = "Abstimmung vom 18. Juni 2023 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 18.Juni 2023 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_vom_18_juni_2023_details {
     use super::*;
 
@@ -3736,6 +3837,10 @@ pub mod abstimmung_vom_18_juni_2023_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -3769,7 +3874,7 @@ pub mod abstimmung_vom_18_juni_2023_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -3818,7 +3923,7 @@ pub mod abstimmung_vom_18_juni_2023_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -3843,7 +3948,7 @@ pub mod abstimmung_vom_18_juni_2023_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -3929,7 +4034,9 @@ pub mod abstimmung_vom_18_juni_2023_details {
     }
 }
 
-/// Abstimmung 13. Juni 2021 Details
+#[doc = "Abstimmung 13. Juni 2021 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 13. Juni 2021 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_13_juni_2021_details {
     use super::*;
 
@@ -3980,6 +4087,10 @@ pub mod abstimmung_13_juni_2021_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -4041,7 +4152,7 @@ pub mod abstimmung_13_juni_2021_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -4108,7 +4219,7 @@ pub mod abstimmung_13_juni_2021_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -4133,7 +4244,7 @@ pub mod abstimmung_13_juni_2021_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -4219,7 +4330,9 @@ pub mod abstimmung_13_juni_2021_details {
     }
 }
 
-/// Ordnungsbussen
+#[doc = "Ordnungsbussen"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die durch die Kantonspolizei Basel-Stadt ausgestellten Ordnungsbussen gem\u{e4}ss <a href=\"https://www.fedlex.admin.ch/eli/oc/2019/93/de\" target=\"_blank\">eidg. Ordnungsbussenverordnung</a>. Es handelt sich ausschliesslich um bereits bezahlte Bussen.</p><p>Der Datensatz enth\u{e4}lt die Ordnungsbussen ab Januar 2017.</p><p>Die Daten im Zeitraum vom 1.1.2017 bis 30.11.2019 wurden korrigiert. Die entsprechenden Werte k\u{f6}nnen deshalb minim von jenen abweichen, welche vor dem 21. April 2020 an dieser Stelle publiziert waren.</p>"]
 pub mod ordnungsbussen {
     use super::*;
 
@@ -4289,7 +4402,7 @@ pub mod ordnungsbussen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Laufnummer,
         KategorieBezeichnung,
@@ -4328,7 +4441,7 @@ pub mod ordnungsbussen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -4353,7 +4466,7 @@ pub mod ordnungsbussen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -4439,7 +4552,9 @@ pub mod ordnungsbussen {
     }
 }
 
-/// Resultate der Ersatzwahl Regierungspräsidium 3. März 2024
+#[doc = "Resultate der Ersatzwahl Regierungspr\u{e4}sidium 3. M\u{e4}rz 2024"]
+#[doc = ""]
+#[doc = "<p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Dieser Datensatz zeigt die Resultate des ersten Wahlgangs der Regierungspr\u{e4}sidiums-Ersatzwahl vom 3. M\u{e4}rz 2024.</p><p style=\"font-family: sans-serif;\"></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod resultate_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
     use super::*;
 
@@ -4456,6 +4571,10 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
         /// Wahltermin
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wahltermin: Option<Date>,
         /// Anzahl Sitze
         ///
@@ -4583,7 +4702,7 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         Amtsdauer,
@@ -4666,7 +4785,7 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -4691,7 +4810,7 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -4777,7 +4896,9 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
     }
 }
 
-/// Resultate der Ersatzwahl Regierungsrat 7. April 2024 (2. Wahlgang)
+#[doc = "Resultate der Ersatzwahl Regierungsrat 7. April 2024 (2. Wahlgang)"]
+#[doc = ""]
+#[doc = "<p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Dieser Datensatz zeigt die Resultate des zweiten Wahlgangs der Regierungsrats-Ersatzwahl vom 7. April 2024.</p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><o:p></o:p></p><p style=\"font-family: sans-serif;\"></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im <a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">Kantonsblatt</a>\u{a0}(<a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">www.kantonsblatt.ch</a>) des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod resultate_der_ersatzwahl_regierungsrat_7_april_2024_2_wahlgang {
     use super::*;
 
@@ -4794,6 +4915,10 @@ pub mod resultate_der_ersatzwahl_regierungsrat_7_april_2024_2_wahlgang {
         /// Wahltermin
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wahltermin: Option<Date>,
         /// Anzahl Sitze
         ///
@@ -4923,7 +5048,7 @@ pub mod resultate_der_ersatzwahl_regierungsrat_7_april_2024_2_wahlgang {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         Amtsdauer,
@@ -5006,7 +5131,7 @@ pub mod resultate_der_ersatzwahl_regierungsrat_7_april_2024_2_wahlgang {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -5031,7 +5156,7 @@ pub mod resultate_der_ersatzwahl_regierungsrat_7_april_2024_2_wahlgang {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -5117,7 +5242,9 @@ pub mod resultate_der_ersatzwahl_regierungsrat_7_april_2024_2_wahlgang {
     }
 }
 
-/// Regierungsrats- und Regierungspräsidiumswahl 2020
+#[doc = "Regierungsrats- und Regierungspr\u{e4}sidiumswahl 2020"]
+#[doc = ""]
+#[doc = "<p class=\"MsoNormal\">Dieser Datensatz zeigt die Resultate der Regierungsratswahl\nund der Regierungspr\u{e4}sidiumswahl vom 25. Oktober und vom 29. November 2020. <o:p></o:p></p><p>\n\n</p><p class=\"MsoNormal\">Bitte beachten Sie, dass die offiziell g\u{fc}ltigen\nSchlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.<o:p></o:p></p>"]
 pub mod regierungsrats_und_regierungspraesidiumswahl_2020 {
     use super::*;
 
@@ -5138,6 +5265,10 @@ pub mod regierungsrats_und_regierungspraesidiumswahl_2020 {
         /// Datum
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Anzahl Sitze
         ///
@@ -5313,7 +5444,7 @@ pub mod regierungsrats_und_regierungspraesidiumswahl_2020 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahlTitel,
         Wahlgang,
@@ -5422,7 +5553,7 @@ pub mod regierungsrats_und_regierungspraesidiumswahl_2020 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -5447,7 +5578,7 @@ pub mod regierungsrats_und_regierungspraesidiumswahl_2020 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -5533,7 +5664,9 @@ pub mod regierungsrats_und_regierungspraesidiumswahl_2020 {
     }
 }
 
-/// Zuordnung von Parzellen auf Statistische Raumeinheiten
+#[doc = "Zuordnung von Parzellen auf Statistische Raumeinheiten"]
+#[doc = ""]
+#[doc = "Zuordnung von Liegenschaften und Allmendparzellen auf Statistische Raumeinheiten (Wohnviertel, Bezirk, Block). Zur Methodik: Von jeder Parzelle wird ein Mittelpunkt berechnet (Zentroid), und mit der Geometrie der statistischen Raumeinheiten verschnitten. Falls ein Parzellenmittelpunkt auf eine Grenze zwischen mehreren Raumeinheiten zu liegen kommt, so wird die Parzelle all diesen Raumeinheiten zugeordnet (es entstehen dadurch pro Parzelle mehrere Zeilen im Datensatz). Parzellen auf dem Rhein werden keiner statistischen Raumeinheit zugeordnet."]
 pub mod zuordnung_von_parzellen_auf_statistische_raumeinheiten {
     use super::*;
 
@@ -5606,7 +5739,7 @@ pub mod zuordnung_von_parzellen_auf_statistische_raumeinheiten {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         R1Nummer,
         R1EgrisE,
@@ -5647,7 +5780,7 @@ pub mod zuordnung_von_parzellen_auf_statistische_raumeinheiten {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -5672,7 +5805,7 @@ pub mod zuordnung_von_parzellen_auf_statistische_raumeinheiten {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -5758,7 +5891,9 @@ pub mod zuordnung_von_parzellen_auf_statistische_raumeinheiten {
     }
 }
 
-/// Kennzahlen der Abstimmung vom 29. November 2020
+#[doc = "Kennzahlen der Abstimmung vom 29. November 2020"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 29. November 2020 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_29_november_2020 {
     use super::*;
 
@@ -5805,6 +5940,10 @@ pub mod kennzahlen_der_abstimmung_vom_29_november_2020 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -5851,7 +5990,7 @@ pub mod kennzahlen_der_abstimmung_vom_29_november_2020 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -5906,7 +6045,7 @@ pub mod kennzahlen_der_abstimmung_vom_29_november_2020 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -5931,7 +6070,7 @@ pub mod kennzahlen_der_abstimmung_vom_29_november_2020 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -6017,7 +6156,9 @@ pub mod kennzahlen_der_abstimmung_vom_29_november_2020 {
     }
 }
 
-/// Schülerprognose Riehen und Bettingen
+#[doc = "Sch\u{fc}lerprognose Riehen und Bettingen"]
+#[doc = ""]
+#[doc = "Das Statistische Amt erstellt kleinr\u{e4}umige Prognosen zu den Sch\u{fc}lerzahlen in den \u{f6}ffentlichen Schulen der Gemeinden Riehen und Bettingen. Die Sch\u{fc}lerzahlen werden f\u{fc}r die ersten 8 Schulstufen (Kindergarten und Primarschule), 13 Schulperimeter und 5 Schuljahre in die Zukunft prognostiziert. Die Perimeter dienen als Planungsgrundlage und nicht als effektive Einzugsgebiete. Die Prognosen werden im Auftrag der Gemeinde Riehen erstellt und j\u{e4}hrlich aktualisiert. Die Sch\u{fc}lerinnen und Sch\u{fc}ler mit dem Schutzstatus S werden in diesem Datensatz nicht ausgewiesen."]
 pub mod schuelerprognose_riehen_und_bettingen {
     use super::*;
 
@@ -6065,7 +6206,7 @@ pub mod schuelerprognose_riehen_und_bettingen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Schuljahr,
         Nummer,
@@ -6092,7 +6233,7 @@ pub mod schuelerprognose_riehen_und_bettingen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -6117,7 +6258,7 @@ pub mod schuelerprognose_riehen_und_bettingen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -6203,7 +6344,9 @@ pub mod schuelerprognose_riehen_und_bettingen {
     }
 }
 
-/// Kennzahlen der Abstimmung vom 13. Juni 2021
+#[doc = "Kennzahlen der Abstimmung vom 13. Juni 2021"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 13. Juni 2021 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_13_juni_2021 {
     use super::*;
 
@@ -6254,6 +6397,10 @@ pub mod kennzahlen_der_abstimmung_vom_13_juni_2021 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -6323,7 +6470,7 @@ pub mod kennzahlen_der_abstimmung_vom_13_juni_2021 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -6392,7 +6539,7 @@ pub mod kennzahlen_der_abstimmung_vom_13_juni_2021 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -6417,7 +6564,7 @@ pub mod kennzahlen_der_abstimmung_vom_13_juni_2021 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -6503,7 +6650,9 @@ pub mod kennzahlen_der_abstimmung_vom_13_juni_2021 {
     }
 }
 
-/// Kantonale Abstimmungen
+#[doc = "Kantonale Abstimmungen"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Resultate der Volksabstimmungen im Kanton Basel-Stadt seit 1875. Die Daten vor 1921 wurden von <a href=\"https://baselvotes.ch/\" target=\"_blank\">baselvotes (https://baselvotes.ch)</a> zur Verf\u{fc}gung gestellt. Seit 1921 basieren die Daten auf den Statistischen Jahrb\u{fc}chern. F\u{fc}r jede Abstimmungsvorlage sind alle amtlich publizierten Kennzahlen zum Schlussresultat ausgewiesen.<br><br>Zus\u{e4}tzlich sind alle Vorlagen inhaltlich dem haupts\u{e4}chlich betroffenen Politikbereich zugeordnet. Die Zuteilung erfolgt auf Basis der Einteilung des Bundesamtes f\u{fc}r Statistik, die im eidgen\u{f6}ssischen Abstimmungsdatensatz der Datenplattform <a \'=\"\" href=\"https://swissvotes.ch/votes\" target=\"_blank\">swissvotes (https://swissvotes.ch/votes)</a> des Instituts f\u{fc}r Politikwissenschaft der Universit\u{e4}t Bern verwendet wird."]
 pub mod kantonale_abstimmungen {
     use super::*;
 
@@ -6520,6 +6669,10 @@ pub mod kantonale_abstimmungen {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Laufnummer des Abstimmungstermins
         ///
@@ -6600,6 +6753,10 @@ pub mod kantonale_abstimmungen {
         /// Datum Grossratsbeschluss
         ///
         /// Datum des Grossratsbeschlusses
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub grossratsbeschlussdatum: Option<Date>,
         /// Stichfragenannahmen
         ///
@@ -6621,7 +6778,7 @@ pub mod kantonale_abstimmungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BsId,
         Jahr,
@@ -6684,7 +6841,7 @@ pub mod kantonale_abstimmungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -6709,7 +6866,7 @@ pub mod kantonale_abstimmungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -6795,7 +6952,9 @@ pub mod kantonale_abstimmungen {
     }
 }
 
-/// Abstimmung 29. November 2020 Details
+#[doc = "Abstimmung 29. November 2020 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 29. November 2020 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_29_november_2020_details {
     use super::*;
 
@@ -6842,6 +7001,10 @@ pub mod abstimmung_29_november_2020_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -6870,7 +7033,7 @@ pub mod abstimmung_29_november_2020_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -6917,7 +7080,7 @@ pub mod abstimmung_29_november_2020_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -6942,7 +7105,7 @@ pub mod abstimmung_29_november_2020_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -7028,12 +7191,18 @@ pub mod abstimmung_29_november_2020_details {
     }
 }
 
-/// Monatliche Ankünfte und Logiernächte
+#[doc = "Monatliche Ank\u{fc}nfte und Logiern\u{e4}chte"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Anzahl Ank\u{fc}nfte und Logiern\u{e4}chte in baselst\u{e4}dtischen Hotels nach Herkunftsland auf monatlicher Basis."]
 pub mod monatliche_ankuenfte_und_logiernaechte {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Herkunftsland
         ///
@@ -7059,7 +7228,7 @@ pub mod monatliche_ankuenfte_und_logiernaechte {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Herkunftsland,
@@ -7082,7 +7251,7 @@ pub mod monatliche_ankuenfte_und_logiernaechte {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -7107,7 +7276,7 @@ pub mod monatliche_ankuenfte_und_logiernaechte {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -7193,13 +7362,19 @@ pub mod monatliche_ankuenfte_und_logiernaechte {
     }
 }
 
-/// Coronavirus (COVID-19): Ergänzte Fallzahlen ganze Schweiz
+#[doc = "Coronavirus (COVID-19): Erg\u{e4}nzte Fallzahlen ganze Schweiz"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz bildet die Grundlage des Covid-19 Dashboards (<a href=\"https://data.bs.ch/pages/covid-19-dashboard\" target=\"_blank\">https://data.bs.ch/pages/covid-19-dashboard</a>). Bitte verwenden Sie f\u{fc}r Ihre Analysen nicht den vorliegenden Datensatz, sondern diesen: <a href=\"https://data.bs.ch/explore/dataset/100077\" target=\"_blank\">https://data.bs.ch/explore/dataset/100077</a>.</p>\n<p>Zum Zweck der einfachen Visualisierung wurden Tage ohne gemeldete Fallzahlen mit den letzten gemeldeten Fallzahlen des entsprechenden Kantons aufgef\u{fc}llt.</p>"]
 pub mod coronavirus_covid_19_ergaenzte_fallzahlen_ganze_schweiz {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Kanton
         pub abbreviation_canton_and_fl: Option<String>,
@@ -7252,7 +7427,7 @@ pub mod coronavirus_covid_19_ergaenzte_fallzahlen_ganze_schweiz {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         AbbreviationCantonAndFl,
@@ -7289,7 +7464,7 @@ pub mod coronavirus_covid_19_ergaenzte_fallzahlen_ganze_schweiz {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -7314,7 +7489,7 @@ pub mod coronavirus_covid_19_ergaenzte_fallzahlen_ganze_schweiz {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -7400,7 +7575,9 @@ pub mod coronavirus_covid_19_ergaenzte_fallzahlen_ganze_schweiz {
     }
 }
 
-/// Kennzahlen der Abstimmung vom 9. Juni 2024
+#[doc = "Kennzahlen der Abstimmung vom 9. Juni 2024"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 9. Juni 2024 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im <a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">Kantonsblatt</a>\u{a0}(<a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">https://www.kantonsblatt.ch/#!/search/publications</a>) des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_9_juni_2024 {
     use super::*;
 
@@ -7447,6 +7624,10 @@ pub mod kennzahlen_der_abstimmung_vom_9_juni_2024 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -7496,7 +7677,7 @@ pub mod kennzahlen_der_abstimmung_vom_9_juni_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -7551,7 +7732,7 @@ pub mod kennzahlen_der_abstimmung_vom_9_juni_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -7576,7 +7757,7 @@ pub mod kennzahlen_der_abstimmung_vom_9_juni_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -7662,7 +7843,9 @@ pub mod kennzahlen_der_abstimmung_vom_9_juni_2024 {
     }
 }
 
-/// Kennzahlen der Abstimmung vom 27. September 2020
+#[doc = "Kennzahlen der Abstimmung vom 27. September 2020"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 27. September 2020 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.\u{a0}</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_27_september_2020 {
     use super::*;
 
@@ -7709,6 +7892,10 @@ pub mod kennzahlen_der_abstimmung_vom_27_september_2020 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -7755,7 +7942,7 @@ pub mod kennzahlen_der_abstimmung_vom_27_september_2020 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -7810,7 +7997,7 @@ pub mod kennzahlen_der_abstimmung_vom_27_september_2020 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -7835,7 +8022,7 @@ pub mod kennzahlen_der_abstimmung_vom_27_september_2020 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -7921,7 +8108,9 @@ pub mod kennzahlen_der_abstimmung_vom_27_september_2020 {
     }
 }
 
-/// Kandidierende der Ersatzwahl Regierungspräsidium 3. März 2024
+#[doc = "Kandidierende der Ersatzwahl Regierungspr\u{e4}sidium 3. M\u{e4}rz 2024"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">F\u{fc}r die Ersatzwahl des Regierungspr\u{e4}sidiums vom 3. M\u{e4}rz 2024 kandidieren vier Personen.</p><p style=\"font-family: sans-serif; margin-bottom: 1em;\">Dieser Datensatz zeigt die Kandidierenden des ersten Wahlgangs nach Geschlecht, Jahrgang und Beruf.</p>"]
 pub mod kandidierende_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
     use super::*;
 
@@ -7967,7 +8156,7 @@ pub mod kandidierende_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         ListenNr,
         Listenbezeichnung,
@@ -7996,7 +8185,7 @@ pub mod kandidierende_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -8021,7 +8210,7 @@ pub mod kandidierende_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -8107,7 +8296,9 @@ pub mod kandidierende_der_ersatzwahl_regierungspraesidium_3_maerz_2024 {
     }
 }
 
-/// Resultate der Bürgergemeinderatswahlen 2023
+#[doc = "Resultate der B\u{fc}rgergemeinderatswahlen 2023"]
+#[doc = ""]
+#[doc = "<p>Der vorliegende Datensatz beinhaltet Resultate der B\u{fc}rgergemeinderatswahlen Basel 2023 auf Ebene der einzelnen Kandidierenden. Weitere Informationen zu den Wahlen sind hier zu finden:\u{a0}<a href=\"https://bgbasel.ch/de/politische-organe/buergergemeinderat/wahlen2023.html\" target=\"_blank\">https://bgbasel.ch/de/politische-organe/buergergemeinderat/wahlen2023.html</a><br/></p>"]
 pub mod resultate_der_buergergemeinderatswahlen_2023 {
     use super::*;
 
@@ -8124,6 +8315,10 @@ pub mod resultate_der_buergergemeinderatswahlen_2023 {
         /// Wahltermin
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wahltermin: Option<Date>,
         /// Anzahl Sitze Wahlkreis
         ///
@@ -8335,7 +8530,7 @@ pub mod resultate_der_buergergemeinderatswahlen_2023 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         Amtsdauer,
@@ -8466,7 +8661,7 @@ pub mod resultate_der_buergergemeinderatswahlen_2023 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -8491,7 +8686,7 @@ pub mod resultate_der_buergergemeinderatswahlen_2023 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -8577,7 +8772,9 @@ pub mod resultate_der_buergergemeinderatswahlen_2023 {
     }
 }
 
-/// Resultate der Ersatzwahl Regierungspräsidium 7. April 2024 (2. Wahlgang)
+#[doc = "Resultate der Ersatzwahl Regierungspr\u{e4}sidium 7. April 2024 (2. Wahlgang)"]
+#[doc = ""]
+#[doc = "<p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Dieser Datensatz zeigt die Resultate des zweiten Wahlgangs der Regierungspr\u{e4}sidiums-Ersatzwahl vom 7. April 2024.</p><p style=\"font-family: sans-serif;\"></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im <a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">Kantonsblatt</a>\u{a0}(<a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">www.kantonsblatt.ch</a>) des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod resultate_der_ersatzwahl_regierungspraesidium_7_april_2024_2_wahlgang {
     use super::*;
 
@@ -8594,6 +8791,10 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_7_april_2024_2_wahlgang {
         /// Wahltermin
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wahltermin: Option<Date>,
         /// Anzahl Sitze
         ///
@@ -8721,7 +8922,7 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_7_april_2024_2_wahlgang {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         Amtsdauer,
@@ -8804,7 +9005,7 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_7_april_2024_2_wahlgang {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -8829,7 +9030,7 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_7_april_2024_2_wahlgang {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -8915,7 +9116,9 @@ pub mod resultate_der_ersatzwahl_regierungspraesidium_7_april_2024_2_wahlgang {
     }
 }
 
-/// Studierende der Universität Basel nach Geschlecht und Fakultät
+#[doc = "Studierende der Universit\u{e4}t Basel nach Geschlecht und Fakult\u{e4}t"]
+#[doc = ""]
+#[doc = "Der Datensatz zeigt die Studierenden der Universit\u{e4}t Basel nach Geschlecht, Fakult\u{e4}t und Staatsangeh\u{f6}rigkeit. Die Daten werden j\u{e4}hrlich aktualisiert."]
 pub mod studierende_der_universitaet_basel_nach_geschlecht_und_fakultaet {
     use super::*;
 
@@ -9107,7 +9310,7 @@ pub mod studierende_der_universitaet_basel_nach_geschlecht_und_fakultaet {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         InternationaleStudenten,
@@ -9206,7 +9409,7 @@ pub mod studierende_der_universitaet_basel_nach_geschlecht_und_fakultaet {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -9231,7 +9434,7 @@ pub mod studierende_der_universitaet_basel_nach_geschlecht_und_fakultaet {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -9317,7 +9520,9 @@ pub mod studierende_der_universitaet_basel_nach_geschlecht_und_fakultaet {
     }
 }
 
-/// Coronavirus (Covid-19): Für Impfung angemeldete Personen nach Altersklasse
+#[doc = "Coronavirus (Covid-19): F\u{fc}r Impfung angemeldete Personen nach Altersklasse"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Anzahl Personen, welche sich im Kanton Basel-Stadt f\u{fc}r eine Impfung gegen SARS-CoV-2 angemeldet, aber noch keine Impfung erhalten haben nach Altersklasse (\u{ab}Warteliste\u{bb}). Zudem wird angegeben, ob die Person bereits einen Termin f\u{fc}r die Impfung hat oder noch nicht.\u{a0}</p><p>Ab dem 25. Juni k\u{f6}nnen sich auch Personen im Alter zwischen 12 und 15 Jahren f\u{fc}r die Impfung anmelden. Entsprechend wird diese Altersklasse im Datensatz auch gef\u{fc}hrt.\u{a0}</p><p><br></p>"]
 pub mod coronavirus_covid_19_fuer_impfung_angemeldete_personen_nach_altersklasse {
     use super::*;
 
@@ -9326,6 +9531,10 @@ pub mod coronavirus_covid_19_fuer_impfung_angemeldete_personen_nach_altersklasse
         /// Datum
         ///
         /// Zeitstand
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Altersklasse
         ///
@@ -9351,7 +9560,7 @@ pub mod coronavirus_covid_19_fuer_impfung_angemeldete_personen_nach_altersklasse
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         AgeGroup,
@@ -9372,7 +9581,7 @@ pub mod coronavirus_covid_19_fuer_impfung_angemeldete_personen_nach_altersklasse
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -9397,7 +9606,7 @@ pub mod coronavirus_covid_19_fuer_impfung_angemeldete_personen_nach_altersklasse
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -9483,7 +9692,9 @@ pub mod coronavirus_covid_19_fuer_impfung_angemeldete_personen_nach_altersklasse
     }
 }
 
-/// Coronavirus (Covid-19): Massentests in Betrieben
+#[doc = "Coronavirus (Covid-19): Massentests in Betrieben"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die SARS-CoV-2-Tests, welche an Angestellten von baselst\u{e4}dtischen Betrieben durchgef\u{fc}hrt wurden. Es werden die Anzahl durchgef\u{fc}hrter Tests sowie die Test-Positivit\u{e4}tsrate pro Woche aufgef\u{fc}hrt. Weitere Informationen zum Coronavirus in Kanton Basel-Stadt:\u{a0}<a href=\"https://www.bs.ch/gd/md/gesundheitsschutz/uebertragbarekrankheiten/grippe-corona-und-co\" target=\"_blank\">https://www.bs.ch/gd/md/gesundheitsschutz/uebertragbarekrankheiten/grippe-corona-und-co</a></p>"]
 pub mod coronavirus_covid_19_massentests_in_betrieben {
     use super::*;
 
@@ -9492,6 +9703,10 @@ pub mod coronavirus_covid_19_massentests_in_betrieben {
         /// Datum Wochenstart
         ///
         /// Datum des Montags der Woche
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub firstdayofweek: Option<Date>,
         /// Kalenderwoche
         ///
@@ -9521,7 +9736,7 @@ pub mod coronavirus_covid_19_massentests_in_betrieben {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Firstdayofweek,
         Weekofyear,
@@ -9544,7 +9759,7 @@ pub mod coronavirus_covid_19_massentests_in_betrieben {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -9569,7 +9784,7 @@ pub mod coronavirus_covid_19_massentests_in_betrieben {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -9655,7 +9870,9 @@ pub mod coronavirus_covid_19_massentests_in_betrieben {
     }
 }
 
-/// Kennzahlen zu den Basler Wohnvierteln und Landgemeinden - langer Datensatz
+#[doc = "Kennzahlen zu den Basler Wohnvierteln und Landgemeinden - langer Datensatz"]
+#[doc = ""]
+#[doc = "Ausgew\u{e4}hlte statistische Kennzahlen der 19 Wohnviertel der Stadt Basel sowie der zwei Gemeinden Riehen und Bettingen seit 2015. Aufgrund einer ver\u{e4}nderten Datenlage k\u{f6}nnen die Indikatoren 3 (Religionszugeh\u{f6}rigkeit) und 18 (Arbeitslosenquote) ab der Ausgabe 2020 nicht mehr dargestellt werden. Dieser lange Datensatz wurde zus\u{e4}tzlich zum bisher bereits bestehenden breiten Datensatz angelegt, um neben dem Publikationsjahr auch das jeweilige Datenjahr noch zu erg\u{e4}nzen. Die Berechnungsmethode f\u{fc}r die Sozialhilfequote wurde 2022 f\u{fc}r die Jahre ab 2017 r\u{fc}ckwirkend angepasst.Zur Definition: <a href=\"https://statistik.bs.ch/files/faltblatt/Erlaeuterungen-Quartierradar.pdf\" target=\"_blank\">https://statistik.bs.ch/files/faltblatt/Erlaeuterungen-Quartierradar.pdf</a>."]
 pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden_langer_datensatz {
     use super::*;
 
@@ -9701,7 +9918,7 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden_langer_datensatz
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Publikationsjahr,
         IndikatorNr,
@@ -9730,7 +9947,7 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden_langer_datensatz
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -9755,7 +9972,7 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden_langer_datensatz
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -9841,7 +10058,9 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden_langer_datensatz
     }
 }
 
-/// Wasserstand Grundwasser
+#[doc = "Wasserstand Grundwasser"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz enth\u{e4}lt die Grundwasserst\u{e4}nde in m \u{fc}. M. des kantonalen Grundwassermessnetzes. Es weist zur Zeit um die 80 Messstationen auf. Bei den Stationen, die mit einer Datenfern\u{fc}bertragung ausger\u{fc}stet sind, liegen tagesaktuelle Stundenwerte vor.</p><p>Jede Messstation ist mit der Katasternummer gem\u{e4}ss Bohrkataster des Kantons Basel-Stadt versehen (<a href=\"https://data.bs.ch/explore/dataset/100182\" target=\"_blank\">https://data.bs.ch/explore/dataset/100182</a>). Die Bohrungen sind auch auf MapBS unter dem Thema Geologie abrufbar (<a href=\"http://www.geo.bs.ch/bohrkataster\" target=\"_blank\">www.geo.bs.ch/bohrkataster</a>).</p><p>Weitere Informationen:\u{a0}<a href=\"https://www.aue.bs.ch/wasser/grundwasser/grundwasserpegel-grundwasserqualitaet.html\" target=\"_blank\">https://www.aue.bs.ch/wasser/grundwasser/grundwasserpegel-grundwasserqualitaet.html</a></p><div><br></div>"]
 pub mod wasserstand_grundwasser {
     use super::*;
 
@@ -9925,7 +10144,7 @@ pub mod wasserstand_grundwasser {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         Stationnr,
@@ -9974,7 +10193,7 @@ pub mod wasserstand_grundwasser {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -9999,7 +10218,7 @@ pub mod wasserstand_grundwasser {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -10085,7 +10304,9 @@ pub mod wasserstand_grundwasser {
     }
 }
 
-/// Abstimmung vom 26. September 2021 Details
+#[doc = "Abstimmung vom 26. September 2021 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 26. September 2021 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_vom_26_september_2021_details {
     use super::*;
 
@@ -10132,6 +10353,10 @@ pub mod abstimmung_vom_26_september_2021_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -10161,7 +10386,7 @@ pub mod abstimmung_vom_26_september_2021_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -10208,7 +10433,7 @@ pub mod abstimmung_vom_26_september_2021_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -10233,7 +10458,7 @@ pub mod abstimmung_vom_26_september_2021_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -10319,7 +10544,9 @@ pub mod abstimmung_vom_26_september_2021_details {
     }
 }
 
-/// Verkehrszähldaten Velos und Fussgänger
+#[doc = "Verkehrsz\u{e4}hldaten Velos und Fussg\u{e4}nger"]
+#[doc = ""]
+#[doc = "<p>Resultate der Messungen der\u{a0}Dauerz\u{e4}hlstellen und Kurzzeitz\u{e4}hlstellen f\u{fc}r den Velo- und Fussg\u{e4}ngerverkehr.\u{a0}</p><p>Die Z\u{e4}hldaten f\u{fc}r den Fussg\u{e4}ngerverkehr werden monatlich durch Anwendung einer Korrekturfunktion angepasst und im Anschluss ver\u{f6}ffentlicht. Ausnahme bildet hier die Z\u{e4}hlstelle 817 Elisabethenanlage. Diese wird auf Grund der aktuellen COVID-19 Krise t\u{e4}glich aufgearbeitet und beobachtet </p><p>Aus Kostengr\u{fc}nden sind nur die Werte des aktuellen und des letzten Jahres als Tabelle / Visualisierung sichtbar bzw. via API abgreifbar. Die vollst\u{e4}ndigen Daten ab dem Jahr 2000 k\u{f6}nnen hier heruntergeladen werden: </p><ul><li><a href=\"https://data-bs.ch/mobilitaet/converted_Velo_Fuss_Count.csv\">Leicht aufbereiteter Datensatz: https://data-bs.ch/mobilitaet/converted_Velo_Fuss_Count.csv</a> </li><li><a href=\"https://data-bs.ch/mobilitaet/Velo_Fuss_Count.csv\">Rohdaten: https://data-bs.ch/mobilitaet/Velo_Fuss_Count.csv</a></li></ul><p>Die Daten einzelner Jahre ab dem Jahr 2000 k\u{f6}nnen einzeln heruntergeladen werden unter der URL mit dem Muster https://data-bs.ch/mobilitaet/[JAHR]_Velo_Fuss_Count.csv, also zum Beispiel f\u{fc}r das Jahr 2020 hier: <a href=\"https://data-bs.ch/mobilitaet/2020_Velo_Fuss_Count.csv\" target=\"_blank\">https://data-bs.ch/mobilitaet/2020_Velo_Fuss_Count.csv</a>.</p><p>Die Z\u{e4}hlstellen sind auf MET eingestellt (Spalten TimeFrom und TimeTo), d.h. die Zeitumstellung wird wie in Mitteleuropa ausgef\u{fc}hrt. Bei der Umstellung von Winter- auf Sommerzeit fehlt die Stunde der Umstellung, dieser Tag hat dann 23 Stunden. Bei der Umstellung von Sommer- auf Winterzeit ist eine Stunde zu viel enthalten (der Tag hat 25 Stunden). In diesem Fall werden die Z\u{e4}hldaten der beiden Stunden zusammengez\u{e4}hlt. </p><p><br/></p>"]
 pub mod verkehrszaehldaten_velos_und_fussgaenger {
     use super::*;
 
@@ -10423,7 +10650,7 @@ pub mod verkehrszaehldaten_velos_und_fussgaenger {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         ZstNr,
         Sitecode,
@@ -10478,7 +10705,7 @@ pub mod verkehrszaehldaten_velos_und_fussgaenger {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -10503,7 +10730,7 @@ pub mod verkehrszaehldaten_velos_und_fussgaenger {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -10589,7 +10816,9 @@ pub mod verkehrszaehldaten_velos_und_fussgaenger {
     }
 }
 
-/// Bevölkerung nach Geschlecht, Heimat und Altersjahr ab 1945
+#[doc = "Bev\u{f6}lkerung nach Geschlecht, Heimat und Altersjahr ab 1945"]
+#[doc = ""]
+#[doc = "Der Datensatz zeigt die Bev\u{f6}lkerung des Kantons Basel-Stadt nach Heimat, 1-Jahres-Altersklassen am Ende des Jahres. Die Daten werden j\u{e4}hrlich aktualisiert. <br><br>Methodischer Hinweise: <br>- In der Kategorie CH sind auch die Kantonsb\u{fc}rger (Kategorie BS) enthalten. Addiert man die beiden Kategorien, so werden die Kantonsb\u{fc}rger doppelt gez\u{e4}hlt.<br>- In den Jahren von 1964 bis 1990 basiert die Bev\u{f6}lkerungszahlen auf Fortschreibungen von Volksz\u{e4}hlungen; <br>- In den Jahren von 1990 bis 2011 beruhten die j\u{e4}hrlichen Fortschreibungen auf dem Bestand des kantonalen Einwohnerregisters am 31.12.1990.<br>- Seit dem Jahr 2012 basiert die Bev\u{f6}lkerungszahlen direkt auf Auswertungen aus dem kantonalen Einwohnerregister.<br>- Im Jahr 1989 und 1990:  Ab dem 94. Altersjahr wurden die Daten  an den Bestand der Einwohnerkontrolle Basel-Stadt angeglichen.<br> - Im Jahr 2019: Infolge einer Systemumstellung ohne Grenzg\u{e4}nger mit Wochenaufenthalt."]
 pub mod bevoelkerung_nach_geschlecht_heimat_und_altersjahr_ab_1945 {
     use super::*;
 
@@ -10621,7 +10850,7 @@ pub mod bevoelkerung_nach_geschlecht_heimat_und_altersjahr_ab_1945 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         PersAlter,
@@ -10642,7 +10871,7 @@ pub mod bevoelkerung_nach_geschlecht_heimat_und_altersjahr_ab_1945 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -10667,7 +10896,7 @@ pub mod bevoelkerung_nach_geschlecht_heimat_und_altersjahr_ab_1945 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -10753,7 +10982,9 @@ pub mod bevoelkerung_nach_geschlecht_heimat_und_altersjahr_ab_1945 {
     }
 }
 
-/// Coronavirus (COVID-19): Todesfälle Basel-Stadt nach Alter und Geschlecht
+#[doc = "Coronavirus (COVID-19): Todesf\u{e4}lle Basel-Stadt nach Alter und Geschlecht"]
+#[doc = ""]
+#[doc = "<div>Todesf\u{e4}lle von Einwohnern des Kantons Basel-Stadt mit der Coronavirus-Krankheit (COVID-19) nach Alter und Geschlecht. Die Daten wurden zu Beginn der Pandemie von Hand aus \u{f6}ffentlich zug\u{e4}nglichen offiziellen Quellen durch Mitarbeiter der Fachstelle OGD Basel-Stadt erfasst. Inzwischen erhalten wir die Daten der Gestorbenen direkt von den Gesundheitsdiensten des Kantons. Die Quellenangabe der jeweiligen Zahlen ist direkt der Tabelle zu entnehmen.</div><div><br/></div><div>Die gesamtschweizerischen Daten aller Kantone und des F\u{fc}rstentums Liechtenstein (FL), welche die F\u{e4}lle nach Alter und Geschlecht ausweisen, sind hier zu finden:</div><div><ul><li><a href=\"https://github.com/openZH/covid_19/tree/master/fallzahlen_kanton_alter_geschlecht_csv\" target=\"_blank\">https://github.com/openZH/covid_19/tree/master/fallzahlen_kanton_alter_geschlecht_csv</a></li></ul></div><p style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">\u{c4}nderungsprotokoll:</span></p><ul><li>Die Erhebung der Werte wurde per 5. Juli 2023 sistiert. Der Datensatz wird nicht mehr aktualisiert.\u{a0}Aktualisierungsintervall von \"DAILY\" auf \"NEVER\" ge\u{e4}ndert.</li></ul>"]
 pub mod coronavirus_covid_19_todesfaelle_basel_stadt_nach_alter_und_geschlecht {
     use super::*;
 
@@ -10762,6 +10993,10 @@ pub mod coronavirus_covid_19_todesfaelle_basel_stadt_nach_alter_und_geschlecht {
         /// Datum
         ///
         /// Datum der Datenveröffentlichung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Kanton
         pub area: Option<String>,
@@ -10805,7 +11040,7 @@ pub mod coronavirus_covid_19_todesfaelle_basel_stadt_nach_alter_und_geschlecht {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         Area,
@@ -10836,7 +11071,7 @@ pub mod coronavirus_covid_19_todesfaelle_basel_stadt_nach_alter_und_geschlecht {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -10861,7 +11096,7 @@ pub mod coronavirus_covid_19_todesfaelle_basel_stadt_nach_alter_und_geschlecht {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -10947,7 +11182,9 @@ pub mod coronavirus_covid_19_todesfaelle_basel_stadt_nach_alter_und_geschlecht {
     }
 }
 
-/// Kandidierende der Regierungsratswahl 20. Oktober 2024
+#[doc = "Kandidierende der Regierungsratswahl 20. Oktober 2024"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">F\u{fc}r die Wahl der sieben Mitglieder des Regierungsrates des Regierungsrat vom 20. Oktober 2024 kandidieren zw\u{f6}lf Personen.</p><p style=\"font-family: sans-serif; margin-bottom: 1em;\">Dieser Datensatz zeigt die Kandidierenden des ersten Wahlgangs nach Geschlecht, Jahrgang und Beruf.</p>"]
 pub mod kandidierende_der_regierungsratswahl_20_oktober_2024 {
     use super::*;
 
@@ -10993,7 +11230,7 @@ pub mod kandidierende_der_regierungsratswahl_20_oktober_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         ListenNr,
         Listenbezeichnung,
@@ -11022,7 +11259,7 @@ pub mod kandidierende_der_regierungsratswahl_20_oktober_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -11047,7 +11284,7 @@ pub mod kandidierende_der_regierungsratswahl_20_oktober_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -11133,7 +11370,9 @@ pub mod kandidierende_der_regierungsratswahl_20_oktober_2024 {
     }
 }
 
-/// Zeitreihe der Belegung der Elektroauto-Ladestationen der IWB
+#[doc = "Zeitreihe der Belegung der Elektroauto-Ladestationen der IWB"]
+#[doc = ""]
+#[doc = "<p>IWB baut im Kanton Basel-Stadt ein Netz leistungsf\u{e4}higer \u{f6}ffentlich zug\u{e4}nglicher Ladestationen auf, um der umweltfreundlichen und gerade f\u{fc}r Ballungsgebiete idealen Elektromobilit\u{e4}t entscheidende Impulse zu geben. </p>\n\n<p>In der Pilotphase wurden die Parkpl\u{e4}tze mit LoRa-angebunden Sensoren ausgestattet. Ziel war es festzustellen, ob Parkpl\u{e4}tze durch Fahrzeuge besetzt werden, ohne dass diese einen aktiven Ladevorgang vornehmen. Nach internen Abstimmungen wird die IWB die \u{dc}bermittlung der Daten ab ca. Mitte September 2022 nicht weiterf\u{fc}hren. Gr\u{fc}nde daf\u{fc}r sind Schwierigkeiten bei der \u{dc}bertragung der Werte sowie eine fehlende Relevanz f\u{fc}r die Praxis. Beim Roll-Out der weiteren \u{f6}ffentlichen Ladestationen auf Allmend werden voraussichtlich keine LoRa-Sensoren mehr verbaut.</p>\n\n<p>Echtzeitdaten zur Belegung der Elektroauto-Ladestationen der gesamten Schweiz basierend auf dem Status des Ladevorgangs sind hier zu finden:\u{a0}<a href=\"https://opendata.swiss/de/dataset/ladestationen\" target=\"_blank\">https://opendata.swiss/de/dataset/ladestationen</a></p>\n\n<p>Hier finden Sie die Zeitreihe der Belegung der Ladestationen, welche t\u{e4}glich aktualisiert wird basierend auf der Zeitreihe der Rohdaten. Es wird jede Status\u{e4}nderung (belegt/frei) angegeben.\u{a0}</p>\n\n\n<p>Die Zeitreihe der Rohdaten ist hier zu finden:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100149\" target=\"_blank\">https://data.bs.ch/explore/dataset/100149</a>. Achtung: Die Rohdaten-Zeitreihe enth\u{e4}lt Duplikate, weil jede Push-Meldung eines Sensors abgebildet wird.\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100196\" target=\"_blank\"></a></p><p></p><p\">Der Datensatz mit nur den aktuellsten Statusmeldungen ist hier zu finden:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100004\" target=\"_blank\">https://data.bs.ch/explore/dataset/100004</a><a href=\"https://data.bs.ch/explore/dataset/100004\" target=\"_blank\"></a></p\"><p\"><br/></p\"><p\"><br/></p\"><p\">\u{c4}nderungsprotokoll: </p\"><p\"><br/></p\"><p\">20.09.2022 - Aktualisierungsintervall von \"CONT\" auf \"NEVER\" ge\u{e4}ndert.<br/><p></p></p\">"]
 pub mod zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
     use super::*;
 
@@ -11170,7 +11409,7 @@ pub mod zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         Address,
@@ -11193,7 +11432,7 @@ pub mod zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -11218,7 +11457,7 @@ pub mod zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -11304,7 +11543,9 @@ pub mod zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
     }
 }
 
-/// Gebäudeeingänge (Gebäude- und Wohnungsregister GWR)
+#[doc = "Geb\u{e4}udeeing\u{e4}nge (Geb\u{e4}ude- und Wohnungsregister GWR)"]
+#[doc = ""]
+#[doc = "Geb\u{e4}udeeing\u{e4}nge bzw. Geb\u{e4}udeadressen gem\u{e4}ss Geb\u{e4}ude- und Wohnungsregister (GWR). <br><br>Ein Geb\u{e4}udeeingang ist ein Zugang von aussen in ein Geb\u{e4}ude, wobei der Eingang durch eine Geb\u{e4}udeadresse idenzifiziert ist. Die Geb\u{e4}udeadressierung dient der Identifikation und dem Auffinden eines Geb\u{e4}udes. Zudem erleichtert sie Planungsarbeiten und verbessert, insbesondere in Notfallsituationen, eine zielgerichtete Routenwahl. Die Geb\u{e4}udeadresse setzt sich aus einem Strassennamen, einer Hausnummer (auch Eingangs- oder Polizeinummer genannt) und einer Ortschaft mit zugeh\u{f6}riger vierstelliger Postleitzahl (PLZ) zusammen. Die Kombination Strassenname und Hausnummer muss pro Ortschaft eindeutig sein, jede Adresse in der Schweiz gibt es somit nur einmal.<br><br>Weitere Einzelheiten zur Geb\u{e4}udeadressierung sind hier nachzulesen: <a href=\"https://www.bfs.admin.ch/bfsstatic/dam/assets/5566189/master\" target=\"_blank\">https://www.bfs.admin.ch/bfsstatic/dam/assets/5566189/master (Empfehlung Geb\u{e4}udeadressierung und Schreibweise von Strassennamen)</a><br><br>Einen \u{dc}berblick \u{fc}ber die im Register gef\u{fc}hrten Merkmal gibt folgendes Dokument: <a href=\"https://www.housing-stat.ch/files/881-2200.pdf\" target=\"_blank\">https://www.housing-stat.ch/files/881-2200.pdf (Merkmalskatalog 4.2)</a> bzw. online unter <a href=\"https://www.housing-stat.ch/de/help/42.html\" target=\"_blank\">https://www.housing-stat.ch/de/help/42.html (Online-Merkmalskatalog 4.2)</a><br><br>Die rechtliche Grundlage stellt die entsprechende eidgen\u{f6}ssische Gesetzgebung dar: <a href=\"https://www.fedlex.admin.ch/eli/cc/2017/376/de\" target=\"_blank\">https://www.fedlex.admin.ch/eli/cc/2017/376/de (Verordnung \u{fc}ber das eidgen\u{f6}ssische Geb\u{e4}ude- und Wohnungsregister (VGWR))</a><br><br>"]
 pub mod gebaeudeeingaenge_gebaeude_und_wohnungsregister_gwr {
     use super::*;
 
@@ -11358,6 +11599,10 @@ pub mod gebaeudeeingaenge_gebaeude_und_wohnungsregister_gwr {
         /// Offizielle Adresse Bezeichnung
         pub doffadr_decoded: Option<String>,
         /// Exportdatum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub dexpdat: Option<Date>,
     }
 
@@ -11367,7 +11612,7 @@ pub mod gebaeudeeingaenge_gebaeude_und_wohnungsregister_gwr {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Egid,
         Edid,
@@ -11418,7 +11663,7 @@ pub mod gebaeudeeingaenge_gebaeude_und_wohnungsregister_gwr {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -11443,7 +11688,7 @@ pub mod gebaeudeeingaenge_gebaeude_und_wohnungsregister_gwr {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -11529,7 +11774,9 @@ pub mod gebaeudeeingaenge_gebaeude_und_wohnungsregister_gwr {
     }
 }
 
-/// Wohnbevölkerung nach Postleitzahl seit 1979
+#[doc = "Wohnbev\u{f6}lkerung nach Postleitzahl seit 1979"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Wohnbev\u{f6}lkerung des Kantons Basel-Stadt am Jahresende auf Ebene der Postleitzahlen-Gebiete ab dem Jahr 1979. Diese Gebiete orientieren sich nicht an den statistischen Raumeinheiten (Wohnviertel, Bezirk, Block,\u{2026}), sondern wurden von der Schweizerischen Post vergeben."]
 pub mod wohnbevoelkerung_nach_postleitzahl_seit_1979 {
     use super::*;
 
@@ -11551,7 +11798,7 @@ pub mod wohnbevoelkerung_nach_postleitzahl_seit_1979 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Postleitzahl,
@@ -11568,7 +11815,7 @@ pub mod wohnbevoelkerung_nach_postleitzahl_seit_1979 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -11593,7 +11840,7 @@ pub mod wohnbevoelkerung_nach_postleitzahl_seit_1979 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -11679,13 +11926,19 @@ pub mod wohnbevoelkerung_nach_postleitzahl_seit_1979 {
     }
 }
 
-/// Vornamen der baselstädtischen Bevölkerung
+#[doc = "Vornamen der baselst\u{e4}dtischen Bev\u{f6}lkerung"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Wohnbev\u{f6}lkerung des Kantons Basel-Stadt nach Vornamen. Die Daten werden j\u{e4}hrlich aktualisiert. Bei mehreren Vornamen wird nur der erste ber\u{fc}cksichtigt. Durch Bindestrich verbundene Vornamen z\u{e4}hlen als ein Vorname. Vornamen, die weniger als viermal vorkommen, werden in der Rubrik \'\u{dc}brige\' zusammengefasst. <br>Die hier ver\u{f6}ffentlichten Werte der Jahre 1979 bis 2011 weichen aus methodischen Gr\u{fc}nden von denjenigen in der kantonalen \u{f6}ffentlichen Statistik ab: In Letzterer wurde bis zum Jahr 2011 die Bev\u{f6}lkerungszahl durch Fortschreibung ermittelt. Seit dem Jahr 2012 basiert sie direkt auf Auswertungen aus dem kantonalen Einwohnerregister. Die hier ver\u{f6}ffentlichten Werte hingegen basieren seit 1979 auf Auswertungen aus dem Einwohnerregister."]
 pub mod vornamen_der_baselstaedtischen_bevoelkerung {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Vorname
         pub vorname: Option<String>,
@@ -11703,7 +11956,7 @@ pub mod vornamen_der_baselstaedtischen_bevoelkerung {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Vorname,
@@ -11724,7 +11977,7 @@ pub mod vornamen_der_baselstaedtischen_bevoelkerung {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -11749,7 +12002,7 @@ pub mod vornamen_der_baselstaedtischen_bevoelkerung {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -11835,13 +12088,19 @@ pub mod vornamen_der_baselstaedtischen_bevoelkerung {
     }
 }
 
-/// Effektiver und erwarteter täglicher Stromverbrauch
+#[doc = "Effektiver und erwarteter t\u{e4}glicher Stromverbrauch"]
+#[doc = ""]
+#[doc = "Dieser Datensatz beinhaltet den t\u{e4}glichen Stromverbrauch sowie den mittels eines Modells berechneten, anhand des Kalendertages und der Witterung zu erwartenden Stromverbrauch.<br>Der Stromverbrauch ist die Summe der elektrischen Energie, die im Kanton Basel-Stadt t\u{e4}glich aus dem Netz bezogen wird, inklusive Netzverluste. Der t\u{e4}gliche Stromverbrauch ergibt sich als Summe des viertelst\u{fc}ndlich ausgewiesenen Stromverbrauchs im OGD-Datensatz \"Kantonaler Stromverbrauch\" (<a href=\"https://data.bs.ch/explore/dataset/100233/\">https://data.bs.ch/explore/dataset/100233/</a>).<br><br>Der Code des Modells kann selber ausgef\u{fc}hrt und weiterentwickelt werden. Hierf\u{fc}r wird Renku verwendet. Renku ist eine Plattform, die verschiedene Werkzeuge f\u{fc}r reproduzierbare und kollaborative Datenanalyseprojekte b\u{fc}ndelt:<a href=\"https://renkulab.io/projects/statabs/reproducible-research/erwarteter-stromverbrauch-basel-stadt\">https://renkulab.io/projects/statabs/reproducible-research/erwarteter-stromverbrauch-basel-stadt</a>"]
 pub mod effektiver_und_erwarteter_taeglicher_stromverbrauch {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub time: Option<Date>,
         /// Stromverbrauch effektiv
         ///
@@ -11875,7 +12134,7 @@ pub mod effektiver_und_erwarteter_taeglicher_stromverbrauch {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Time,
         Stromverbrauch,
@@ -11900,7 +12159,7 @@ pub mod effektiver_und_erwarteter_taeglicher_stromverbrauch {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -11925,7 +12184,7 @@ pub mod effektiver_und_erwarteter_taeglicher_stromverbrauch {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -12011,7 +12270,9 @@ pub mod effektiver_und_erwarteter_taeglicher_stromverbrauch {
     }
 }
 
-/// Gemeinden
+#[doc = "Gemeinden"]
+#[doc = ""]
+#[doc = "Zum Kanton Basel-Stadt z\u{e4}hlen die Stadt Basel und die Gemeinden Riehen und Bettingen."]
 pub mod gemeinden {
     use super::*;
 
@@ -12060,7 +12321,7 @@ pub mod gemeinden {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         Entstehung,
@@ -12101,7 +12362,7 @@ pub mod gemeinden {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -12126,7 +12387,7 @@ pub mod gemeinden {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -12212,7 +12473,9 @@ pub mod gemeinden {
     }
 }
 
-/// Postleitzahlenkreise
+#[doc = "Postleitzahlenkreise"]
+#[doc = ""]
+#[doc = "Die Einteilung des Kantons in adressgenaue Postleitzahlenkreise ist eine Erweiterung der Amtlichen Vermessung des Kantons Basel-Stadt, welche in Zusammenarbeit mit der Post unterhalten wird. Sie wird f\u{fc}r die automatische Zuweisung der PLZ zu einer Adresse im kantonalen Datenmark verwendet und an das Bundesamt f\u{fc}r Landestopografie (swisstopo) weitergeleitet."]
 pub mod postleitzahlenkreise {
     use super::*;
 
@@ -12275,7 +12538,7 @@ pub mod postleitzahlenkreise {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         Entstehung,
@@ -12330,7 +12593,7 @@ pub mod postleitzahlenkreise {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -12355,7 +12618,7 @@ pub mod postleitzahlenkreise {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -12441,7 +12704,9 @@ pub mod postleitzahlenkreise {
     }
 }
 
-/// Invasive Neophyten
+#[doc = "Invasive Neophyten"]
+#[doc = ""]
+#[doc = "Die im Kanton Basel-Stadt am h\u{e4}ufigsten vorkommenden invasiven Neophyten (nicht heimische, problematische Pflanzenarten) wurden kartiert und die Fundorte je nach Pflanzenart als Fl\u{e4}chen oder Punkte aufgenommen. Die Kartierung wurde bisher in den Jahren 2006, 2009 und 2013 durchgef\u{fc}hrt."]
 pub mod invasive_neophyten {
     use super::*;
 
@@ -12485,7 +12750,7 @@ pub mod invasive_neophyten {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         KartId,
@@ -12510,7 +12775,7 @@ pub mod invasive_neophyten {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -12535,7 +12800,7 @@ pub mod invasive_neophyten {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -12621,7 +12886,9 @@ pub mod invasive_neophyten {
     }
 }
 
-/// Handelsregister: Firmen mit Rechtsform und Standort
+#[doc = "Handelsregister: Firmen mit Rechtsform und Standort"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz umfasst die Firmen des Kantons Basel-Stadt, die im Handelsregister des Zefix (Zentraler Firmenindex) registriert sind. Das Zefix bildet das \u{f6}ffentlich zug\u{e4}ngliche Angebot des Eidgen\u{f6}ssischen Amtes f\u{fc}r das Handelsregister (EHRA). Es stellt die Daten des Zentralregisters \u{fc}ber verschiedene Zug\u{e4}nge wie die Zefix Webapplikation (<a href=\"https://www.zefix.admin.ch/\" target=\"_blank\">https://www.zefix.admin.ch/</a>), die Zefix REST API (<a href=\"https://www.zefix.admin.ch/ZefixPublicREST)\" target=\"_blank\">https://www.zefix.admin.ch/ZefixPublicREST)</a>, die Zefix Mobile App (<a href=\"https://www.zefixapp.ch\" target=\"_blank\">https://www.zefixapp.ch</a>/) und als Linked Data in LINDAS (<a href=\"https://lindas.admin.ch/\" target=\"_blank\">https://lindas.admin.ch/</a>, was hier verwendet wurde) \u{fc}ber das Internet zur Verf\u{fc}gung. \u{dc}ber Zefix k\u{f6}nnen die Daten s\u{e4}mtlicher im Handelsregister eingetragener Rechtseinheiten sowie die t\u{e4}glichen Handelsregisterpublikationen im SHAB (Schweizerischen Handelsamtsblatt, <a href=\"https://www.shab.ch/\" target=\"_blank\">https://www.shab.ch/</a>)\u{a0}abgerufen werden. Der hier angebotene Datensatz beinhaltet tagesaktuelle Kerndaten der aktiven, im Handelsregister eingetragenen Rechtseinheiten, wie Firma/Name, Sitz und Domiziladresse.</p><p>LINDAS (Linked Data Service) fungiert in diesem Kontext als Plattform f\u{fc}r die Vernetzung und den Zugriff auf diverse Datenquellen in der Schweiz, einschliesslich der Daten aus dem Zefix. Zur Gewinnung spezifischer Informationen \u{fc}ber die im Kanton Basel-Stadt registrierten Unternehmen wird eine SPARQL-Abfrage verwendet. SPARQL, eine Abfragesprache f\u{fc}r Daten im RDF-Format, erm\u{f6}glicht den Zugriff auf detaillierte Datens\u{e4}tze \u{fc}ber die Firmen aus dem LINDAS-Netzwerk. Die SPARQL-Abfrage kann unter einem bereitgestellten Link (<a href=\"https://s.zazuko.com/2WjT8iZ\" target=\"_blank\">https://s.zazuko.com/2WjT8iZ</a>) aufgerufen werden. Die Abfrage wurde mithilfe der vorhandenen SPARQL-Abfrage von opendata.swiss (<a href=\"https://opendata.swiss/de/dataset/zefix-zentraler-firmenindex\" target=\"_blank\">https://opendata.swiss/de/dataset/zefix-zentraler-firmenindex</a>) zum Zefix erweitert:\u{a0}<a href=\"https://github.com/opendatabs/data-processing/blob/master/zefix_handelsregister/etl.py\" target=\"_blank\">https://github.com/opendatabs/data-processing/blob/master/zefix_handelsregister/etl.py</a></p><p>Diese Zefix-Daten und die der anderen Kantone werden von der Fachstelle OGD t\u{e4}glich aktualisiert und k\u{f6}nnen unter folgendem HTTPS-Link heruntergeladen werden: <br><i>https://data-bs.ch/stata/zefix_handelsregister/all_cantons/companies_[Kantonsk\u{fc}rzel].csv<br></i>Im Beispiel von Basel-Landschaft lautet der Link:<br><a href=\"https://data-bs.ch/stata/zefix_handelsregister/all_cantons/companies_BL.csv\" target=\"_blank\">https://data-bs.ch/stata/zefix_handelsregister/all_cantons/companies_BL.csv\u{a0}</a><br></p><p>Der Datensatz enth\u{e4}lt neben den Grundinformationen der Firmen auch erweiterte Spalten wie die Koordinaten der Unternehmen, die mithilfe der Betriebsadresse und von Nominatim (<a href=\"https://nominatim.org/\" target=\"_blank\">https://nominatim.org/</a>) berechnet wurden.\u{a0}Nominatim ist ein Open-Source-Tool zur Geokodierung, das heisst, es wandelt Standortdaten wie Adressen oder Ortsnamen in geografische Koordinaten (L\u{e4}ngen- und Breitengrade) um und umgekehrt.</p>"]
 pub mod handelsregister_firmen_mit_rechtsform_und_standort {
     use super::*;
 
@@ -12687,7 +12954,7 @@ pub mod handelsregister_firmen_mit_rechtsform_und_standort {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CompanyTypeDe,
         CompanyLegalName,
@@ -12724,7 +12991,7 @@ pub mod handelsregister_firmen_mit_rechtsform_und_standort {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -12749,7 +13016,7 @@ pub mod handelsregister_firmen_mit_rechtsform_und_standort {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -12835,7 +13102,9 @@ pub mod handelsregister_firmen_mit_rechtsform_und_standort {
     }
 }
 
-/// Velo-Einbahnstrassen und -Gefahrenstellen
+#[doc = "Velo-Einbahnstrassen und -Gefahrenstellen"]
+#[doc = ""]
+#[doc = "Der Velostadtplan zeigt dir passende Routen zu deinem Ziel und liefert Ideen, wohin du mit deinem Velo besonders gut fahren kannst. Er ist die elektronische Version der faltbaren Papierkarte, die im Buchhandel, bei Basel Tourismus, Pro Velo und Veloplus erh\u{e4}ltlich ist."]
 pub mod velo_einbahnstrassen_und_gefahrenstellen {
     use super::*;
 
@@ -12859,7 +13128,7 @@ pub mod velo_einbahnstrassen_und_gefahrenstellen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         Recnum,
@@ -12876,7 +13145,7 @@ pub mod velo_einbahnstrassen_und_gefahrenstellen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -12901,7 +13170,7 @@ pub mod velo_einbahnstrassen_und_gefahrenstellen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -12987,7 +13256,9 @@ pub mod velo_einbahnstrassen_und_gefahrenstellen {
     }
 }
 
-/// Recyclingstationen
+#[doc = "Recyclingstationen"]
+#[doc = ""]
+#[doc = "Recyclingstationen f\u{fc}r Glas, Weissblech, Aluminium und Batterien im Kanton Basel-Stadt."]
 pub mod recyclingstationen {
     use super::*;
 
@@ -13021,7 +13292,7 @@ pub mod recyclingstationen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdRs,
         Name,
@@ -13048,7 +13319,7 @@ pub mod recyclingstationen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -13073,7 +13344,7 @@ pub mod recyclingstationen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -13159,7 +13430,9 @@ pub mod recyclingstationen {
     }
 }
 
-/// Sauberkeitsindex pro Quartal und Wohnviertel
+#[doc = "Sauberkeitsindex pro Quartal und Wohnviertel"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz enth\u{e4}lt den Sauberkeitsindex f\u{fc}r alle Wohnviertel in der Stadt Basel. Zur Berechnung des Sauberkeitsindex wird wie folgt vorgegangen:</p><p>Auf den Kehrrichtfahrzeugen sind Kameras installiert, die w\u{e4}hrend der Eins\u{e4}tze Videoaufnahmen der Strassen machen. Ein Computer durchsucht anschliessend diese Videoaufnahmen nach Abf\u{e4}llen. Dieser sortiert die Abf\u{e4}lle in verschiedene Abfallkategorien (Zigarettenstummel, Papier, PET-Flaschen etc.) und z\u{e4}hlt die Anzahl der gefundenen Abf\u{e4}lle jeder Kategorie. Zus\u{e4}tzlich wird f\u{fc}r jede Abfallkategorie der Verschmutzungsgrad und der St\u{f6}rfaktor bestimmt. Daraus wird der Sauberkeitsindex berechnet. Danach werden die Videoaufnahmen aus Datenschutzgr\u{fc}nden umgehend gel\u{f6}scht.</p><p>Der Sauberkeitsindex wird auf einer Skala von 0 bis 5 angegeben, wobei die Werte folgendermassen beurteilt werden:<br>Kleiner als 3: schlecht<br>Zwischen 3 und 4: mittel<br>Gr\u{f6}sser als 4: gut<br>Der Grosse Rat beauftragt das Tiefbauamt mit dem Erreichen eines Indexes f\u{fc}r die gesamte Stadt von mindestens 4.5.</p><p>Der Datensatz wird quartalsweise mit den Daten des Vorquartals aktualisiert.</p>"]
 pub mod sauberkeitsindex_pro_quartal_und_wohnviertel {
     use super::*;
 
@@ -13176,8 +13449,16 @@ pub mod sauberkeitsindex_pro_quartal_und_wohnviertel {
         /// Quartalsnummer
         pub quartalsnummer: Option<String>,
         /// Beginn Quartal
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub quartal_beginn: Option<Date>,
         /// Ende Quartal
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub quartal_ende: Option<Date>,
         /// Geo Point
         pub geo_point_2d: Option<GeoPoint2d>,
@@ -13191,7 +13472,7 @@ pub mod sauberkeitsindex_pro_quartal_und_wohnviertel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wohnviertel,
         Ski,
@@ -13216,7 +13497,7 @@ pub mod sauberkeitsindex_pro_quartal_und_wohnviertel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -13241,7 +13522,7 @@ pub mod sauberkeitsindex_pro_quartal_und_wohnviertel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -13327,7 +13608,9 @@ pub mod sauberkeitsindex_pro_quartal_und_wohnviertel {
     }
 }
 
-/// Verkehrsreiche Strassen (50 km/h oder mehr)
+#[doc = "Verkehrsreiche Strassen (50 km/h oder mehr)"]
+#[doc = ""]
+#[doc = "Der Velostadtplan zeigt dir passende Routen zu deinem Ziel und liefert Ideen, wohin du mit deinem Velo besonders gut fahren kannst. Er ist die elektronische Version der faltbaren Papierkarte, die im Buchhandel, bei Basel Tourismus, Pro Velo und Veloplus erh\u{e4}ltlich ist."]
 pub mod verkehrsreiche_strassen_50_km_h_oder_mehr {
     use super::*;
 
@@ -13355,7 +13638,7 @@ pub mod verkehrsreiche_strassen_50_km_h_oder_mehr {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         Attribute1,
@@ -13376,7 +13659,7 @@ pub mod verkehrsreiche_strassen_50_km_h_oder_mehr {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -13401,7 +13684,7 @@ pub mod verkehrsreiche_strassen_50_km_h_oder_mehr {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -13487,7 +13770,9 @@ pub mod verkehrsreiche_strassen_50_km_h_oder_mehr {
     }
 }
 
-/// Steile Velo-Strecken
+#[doc = "Steile Velo-Strecken"]
+#[doc = ""]
+#[doc = "Der Velostadtplan zeigt dir passende Routen zu deinem Ziel und liefert Ideen, wohin du mit deinem Velo besonders gut fahren kannst. Er ist die elektronische Version der faltbaren Papierkarte, die im Buchhandel, bei Basel Tourismus, Pro Velo und Veloplus erh\u{e4}ltlich ist."]
 pub mod steile_velo_strecken {
     use super::*;
 
@@ -13517,7 +13802,7 @@ pub mod steile_velo_strecken {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdSteig,
         Steigung,
@@ -13534,7 +13819,7 @@ pub mod steile_velo_strecken {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -13559,7 +13844,7 @@ pub mod steile_velo_strecken {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -13645,7 +13930,9 @@ pub mod steile_velo_strecken {
     }
 }
 
-/// Empfohlene Schwimmbereiche im Rhein
+#[doc = "Empfohlene Schwimmbereiche im Rhein"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz enth\u{e4}lt die empfohlenen Schwimmbereiche im Rhein.</p>"]
 pub mod empfohlene_schwimmbereiche_im_rhein {
     use super::*;
 
@@ -13663,7 +13950,7 @@ pub mod empfohlene_schwimmbereiche_im_rhein {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {}
 
     impl Field {
@@ -13672,7 +13959,7 @@ pub mod empfohlene_schwimmbereiche_im_rhein {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -13697,7 +13984,7 @@ pub mod empfohlene_schwimmbereiche_im_rhein {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -13783,7 +14070,9 @@ pub mod empfohlene_schwimmbereiche_im_rhein {
     }
 }
 
-/// Quartiertreffpunkte
+#[doc = "Quartiertreffpunkte"]
+#[doc = ""]
+#[doc = "Quartiertreffpunkte sind wichtige Begegnungsorte f\u{fc}r junge Familien ebenso wie f\u{fc}r \u{e4}ltere Menschen, f\u{fc}r Alteingesessene wie auch Neuank\u{f6}mmlinge. Sie bieten ein breitgef\u{e4}chertes Angebot wie Beratung und Unterst\u{fc}tzung im Alltag, offene Treffpunkte, Mittagstische und weitere kulinarische Angebote, Spielabende, Filmvorf\u{fc}hrungen,kulturelle Veranstaltungen und vieles mehr."]
 pub mod quartiertreffpunkte {
     use super::*;
 
@@ -13819,7 +14108,7 @@ pub mod quartiertreffpunkte {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         QtId,
         Name,
@@ -13848,7 +14137,7 @@ pub mod quartiertreffpunkte {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -13873,7 +14162,7 @@ pub mod quartiertreffpunkte {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -13959,7 +14248,9 @@ pub mod quartiertreffpunkte {
     }
 }
 
-/// Baustellen in Gewässernähe
+#[doc = "Baustellen in Gew\u{e4}ssern\u{e4}he"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz enth\u{e4}lt Informationen zu Baustellen in Gew\u{e4}ssern\u{e4}he, \u{fc}ber welche die Bev\u{f6}lkerung z.B. via BachApp informiert werden soll.\u{a0}</p>"]
 pub mod baustellen_in_gewaessernaehe {
     use super::*;
 
@@ -13968,18 +14259,34 @@ pub mod baustellen_in_gewaessernaehe {
         /// IDUnique
         pub idunique: Option<String>,
         /// Sichtbar_von
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_von: Option<Date>,
         /// Sichtbar_bis
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_bis: Option<Date>,
         /// Status
         pub status: Option<String>,
         /// Datum_von
         ///
         /// Datum Beginn der Baustelle
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_von: Option<Date>,
         /// Datum_bis
         ///
         /// Wenn bekannt, geplantes Ende der Baustelle. Sonst bis 31.12.2099
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_bis: Option<Date>,
         /// Titel
         ///
@@ -14007,7 +14314,7 @@ pub mod baustellen_in_gewaessernaehe {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Idunique,
         SichtbarVon,
@@ -14040,7 +14347,7 @@ pub mod baustellen_in_gewaessernaehe {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -14065,7 +14372,7 @@ pub mod baustellen_in_gewaessernaehe {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -14151,7 +14458,9 @@ pub mod baustellen_in_gewaessernaehe {
     }
 }
 
-/// Basler Index der Konsumentenpreise
+#[doc = "Basler Index der Konsumentenpreise"]
+#[doc = ""]
+#[doc = "Entwicklung des Basler Index der Konsumentenpreise BIK (Basis Dezember 2020 = 100) nach Hauptgruppe seit 1939."]
 pub mod basler_index_der_konsumentenpreise {
     use super::*;
 
@@ -14160,6 +14469,10 @@ pub mod basler_index_der_konsumentenpreise {
         /// Erhebungsdatum
         ///
         /// Erhebungsmonat und -jahr
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Erhebungsjahr
         ///
@@ -14240,10 +14553,18 @@ pub mod basler_index_der_konsumentenpreise {
         /// Indexbasis Publikationsdatum
         ///
         /// Das Datum der Revision, die zum Zeitpunkt der Erhebung dieses Indexeintrags gültig war
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub revisiondate: Option<Date>,
         /// Indexbasis aktuell
         ///
         /// Das Datum der Revision, in der dieser Eintrag skaliert ist
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub viewrevisiondate: Option<Date>,
         /// Indexwert
         ///
@@ -14278,7 +14599,7 @@ pub mod basler_index_der_konsumentenpreise {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         Year,
@@ -14345,7 +14666,7 @@ pub mod basler_index_der_konsumentenpreise {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -14370,7 +14691,7 @@ pub mod basler_index_der_konsumentenpreise {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -14456,7 +14777,9 @@ pub mod basler_index_der_konsumentenpreise {
     }
 }
 
-/// Defibrillatoren
+#[doc = "Defibrillatoren"]
+#[doc = ""]
+#[doc = "S\u{e4}mtliche Standorte \u{f6}ffentlich zug\u{e4}nglicher Defibrillatoren in Basel-Stadt sind im Geoportal und in der First Responder App einsehbar. Die entsprechenden Standorte sind mit einem gr\u{fc}nen Herz-Symbol signalisiert. Finden Sie den n\u{e4}chsten Defibrillator in Ihrer N\u{e4}he."]
 pub mod defibrillatoren {
     use super::*;
 
@@ -14494,7 +14817,7 @@ pub mod defibrillatoren {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdDf,
         Standort,
@@ -14525,7 +14848,7 @@ pub mod defibrillatoren {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -14550,7 +14873,7 @@ pub mod defibrillatoren {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -14636,7 +14959,9 @@ pub mod defibrillatoren {
     }
 }
 
-/// Politische Wahlkreise
+#[doc = "Politische Wahlkreise"]
+#[doc = ""]
+#[doc = "Enth\u{e4}lt die politischen Wahlkreise des Kantons Basel-Stadt."]
 pub mod politische_wahlkreise {
     use super::*;
 
@@ -14660,7 +14985,7 @@ pub mod politische_wahlkreise {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         Text,
@@ -14677,7 +15002,7 @@ pub mod politische_wahlkreise {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -14702,7 +15027,7 @@ pub mod politische_wahlkreise {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -14788,7 +15113,9 @@ pub mod politische_wahlkreise {
     }
 }
 
-/// Grosser Rat: Politische Vorstösse
+#[doc = "Grosser Rat: Politische Vorst\u{f6}sse"]
+#[doc = ""]
+#[doc = "<p style=\"margin-top:0cm;margin-right:0cm;margin-bottom:7.5pt;margin-left:0cm\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 13.3333px;\">Dieser Datensatz erm\u{f6}glicht einen thematischen \u{dc}berblick \u{fc}ber die politischen Vorst\u{f6}sse des Grossen Rats des Kantons Basel-Stadt. Es sind darin alle Gesch\u{e4}fte ab Januar 2019 enthalten, welche \u{fc}berwiesen und manuell mit Thema kategorisiert worden sind. Die Zuteilung zu Themen erfolgt durch die Kantons- und Stadtentwicklung. Weitere Informationen finden Sie unter <a href=\"https://politmonitor.bs.ch\" target=\"_blank\">politmonitor.bs.ch</a>.</span></font><br/></p>"]
 pub mod grosser_rat_politische_vorstoesse {
     use super::*;
 
@@ -14817,10 +15144,18 @@ pub mod grosser_rat_politische_vorstoesse {
         /// Beginn-Datum
         ///
         /// Datum, an welchem ein Vorstoss an den Regierungsrat überwiesen wurde.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub beginn_datum: Option<Date>,
         /// Ende
         ///
         /// Datum, an welchem ein Geschäft den Status abgeschlossen erhält.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub ende: Option<Date>,
         /// Thema 1
         ///
@@ -14850,7 +15185,7 @@ pub mod grosser_rat_politische_vorstoesse {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Signatur,
         Geschaftstyp,
@@ -14885,7 +15220,7 @@ pub mod grosser_rat_politische_vorstoesse {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -14910,7 +15245,7 @@ pub mod grosser_rat_politische_vorstoesse {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -14996,7 +15331,9 @@ pub mod grosser_rat_politische_vorstoesse {
     }
 }
 
-/// Touristische Velorouten
+#[doc = "Touristische Velorouten"]
+#[doc = ""]
+#[doc = "Die touristischen Velorouten zeigen in Basel-Stadt und in der n\u{e4}heren Umgebung die signalisierten Velorouten von EuroVelo und SchweizMobil sowie die signalisierten regionalen Velorouten wie der S\u{fc}dschwarzwald-Radweg und der Dreiland-Radweg."]
 pub mod touristische_velorouten {
     use super::*;
 
@@ -15030,7 +15367,7 @@ pub mod touristische_velorouten {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         Objectid,
@@ -15057,7 +15394,7 @@ pub mod touristische_velorouten {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -15082,7 +15419,7 @@ pub mod touristische_velorouten {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -15168,7 +15505,9 @@ pub mod touristische_velorouten {
     }
 }
 
-/// Alltagsvelorouten
+#[doc = "Alltagsvelorouten"]
+#[doc = ""]
+#[doc = "Die Alltagsvelorouten zeigen in Basel-Stadt und in der n\u{e4}heren Umgebung die rot signalisierten Velorouten ohne Nummern. Sie leiten den Alltagsvelofahrenden zu den wichtigsten Zielen in der Stadt."]
 pub mod alltagsvelorouten {
     use super::*;
 
@@ -15202,7 +15541,7 @@ pub mod alltagsvelorouten {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         Objectid,
@@ -15229,7 +15568,7 @@ pub mod alltagsvelorouten {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -15254,7 +15593,7 @@ pub mod alltagsvelorouten {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -15340,7 +15679,9 @@ pub mod alltagsvelorouten {
     }
 }
 
-/// Bio-Klappen
+#[doc = "Bio-Klappen"]
+#[doc = ""]
+#[doc = "Bio-Klappen f\u{fc}r organische K\u{fc}chenabf\u{e4}lle im Kanton Basel-Stadt."]
 pub mod bio_klappen {
     use super::*;
 
@@ -15370,7 +15711,7 @@ pub mod bio_klappen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdBk,
         Name,
@@ -15393,7 +15734,7 @@ pub mod bio_klappen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -15418,7 +15759,7 @@ pub mod bio_klappen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -15504,7 +15845,9 @@ pub mod bio_klappen {
     }
 }
 
-/// Statistische Raumeinheiten: Blöcke
+#[doc = "Statistische Raumeinheiten: Bl\u{f6}cke"]
+#[doc = ""]
+#[doc = "Ein Block wird in der Regel von allen Seiten durch Strassen begrenzt. In einzelnen F\u{e4}llen wird die Abgrenzung durch Zonenplankategorien vorgegeben (Bahnareale, Wald, Gr\u{fc}nzone, Landwirtschaftszone etc.).\n\nStatistische Nummerierung:\nDie Nummerierung der Bl\u{f6}cke setzt sich zusammen aus der zweistelligen Wohnviertel-Nr., der einstelligen Bezirks-Nr. und der dreistelligen Block-Nr (im Label jeweils durch Punkte getrennt):\n- Bl\u{f6}cke haben keine Namensbezeichnung und werden lediglich \u{fc}ber die Nummer referenziert.\n- Beispiel Block rund um die Clarakirche: BLO_ID 121014, die Bezeichnung (BLO_Label) lautet 12.1.014"]
 pub mod statistische_raumeinheiten_bloecke {
     use super::*;
 
@@ -15530,7 +15873,7 @@ pub mod statistische_raumeinheiten_bloecke {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BloId,
         BloLabel,
@@ -15549,7 +15892,7 @@ pub mod statistische_raumeinheiten_bloecke {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -15574,7 +15917,7 @@ pub mod statistische_raumeinheiten_bloecke {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -15660,7 +16003,9 @@ pub mod statistische_raumeinheiten_bloecke {
     }
 }
 
-/// Abstimmung 27. September 2020 Details
+#[doc = "Abstimmung 27. September 2020 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 27. September 2020 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_27_september_2020_details {
     use super::*;
 
@@ -15707,6 +16052,10 @@ pub mod abstimmung_27_september_2020_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -15737,7 +16086,7 @@ pub mod abstimmung_27_september_2020_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -15786,7 +16135,7 @@ pub mod abstimmung_27_september_2020_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -15811,7 +16160,7 @@ pub mod abstimmung_27_september_2020_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -15897,7 +16246,9 @@ pub mod abstimmung_27_september_2020_details {
     }
 }
 
-/// Kantonaler Stromverbrauch
+#[doc = "Kantonaler Stromverbrauch"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz beinhaltet die Summe der elektrischen Energie, die im Kanton Basel-Stadt innert 15-Minuten Intervallen aus dem Netz bezogen wird, inklusive <a href=\"https://de.wikipedia.org/wiki/\u{dc}bertragungsverlust\" target=\"_blank\">Netzverluste</a>. </p><p>Lokal direkt am Ort der Produktion verbrauchte elektrische Energie (z.B. aus Photovoltaikanlagen), welche nicht ins \u{f6}ffentliche Netz eingespiesen wird, ist in den vorliegenden Daten nicht enthalten. Seit 1. September 2020 liegen auch Daten zum Verbrauch der Kunden in der Grundversorgung vs. dem freien Markt vor. </p><p>Die Daten umfassen den an allen im Netz installierten fernausgelesenen Z\u{e4}hlern gemessenen Verbrauch sowie erg\u{e4}nzend, da nicht 100 % der Z\u{e4}hler fernauslesbar sind, Daten aus den ins Netz eingespeisten Strommengen.\u{a0}</p><p>Hinweis: Die Werte der folgenden Messstartzeiten sind interpoliert: 01.01.2014 00:00, 01.11.2015 00:00 und 01.10.2019 00:00.</p><p>\u{c4}nderungsprotokoll: <br/>10.10.23: Aktualisierungsintervall von \"WEEKLY\" auf \"DAILY\" ge\u{e4}ndert.<br/></p>"]
 pub mod kantonaler_stromverbrauch {
     use super::*;
 
@@ -15956,7 +16307,7 @@ pub mod kantonaler_stromverbrauch {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         TimestampIntervalStart,
         TimestampIntervalStartText,
@@ -15991,7 +16342,7 @@ pub mod kantonaler_stromverbrauch {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -16016,7 +16367,7 @@ pub mod kantonaler_stromverbrauch {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -16102,7 +16453,9 @@ pub mod kantonaler_stromverbrauch {
     }
 }
 
-/// BachApp: Infos - Allgemein
+#[doc = "BachApp: Infos - Allgemein"]
+#[doc = ""]
+#[doc = "Der Datensatz enth\u{e4}lt allgemeine Infotexte und Links, welche in der BachApp publiziert werden.\u{a0}"]
 pub mod bachapp_infos_allgemein {
     use super::*;
 
@@ -16115,10 +16468,18 @@ pub mod bachapp_infos_allgemein {
         /// Sichtbar_von
         ///
         /// Sichtbar ab
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_von: Option<Date>,
         /// Sichtbar_bis
         ///
         /// Sichtbar bis
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_bis: Option<Date>,
         /// Titel
         ///
@@ -16148,7 +16509,7 @@ pub mod bachapp_infos_allgemein {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Id,
         Status,
@@ -16181,7 +16542,7 @@ pub mod bachapp_infos_allgemein {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -16206,7 +16567,7 @@ pub mod bachapp_infos_allgemein {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -16292,7 +16653,9 @@ pub mod bachapp_infos_allgemein {
     }
 }
 
-/// Schulwegsicherheit: Strassenquerungen
+#[doc = "Schulwegsicherheit: Strassenquerungen"]
+#[doc = ""]
+#[doc = "Die Daten zur Schulwegsicherheit zeigen auf, wo Strassen\u{fc}berg\u{e4}nge f\u{fc}r Kinder im Kindergarten- und Schulalter \u{fc}bersichtlich und einfach sind, bzw. wo erh\u{f6}hte Anforderungen an das \u{dc}berqueren der Strasse gestellt werden. Der Datensatz enth\u{e4}lt die Daten zu den Strassen\u{fc}berg\u{e4}ngen (Querungen), also alle Verbindungen der Fusswegachsen. Es werden nicht nur die geeigneten Querungen erfasst, sondern alle. Erfasst wird immer die am schlechtesten bewertete Richtung, da jede Querung von zwei Seiten begehbar ist. Die Digitalisierungsrichtung entspricht demnach der schlechter bewerteten Richtung. Start und Ende m\u{fc}ssen auf einer Fusswegachse liegen. Jede Strassenquerung wird systematisch von einem Schulwegsinstruktor bewertet. Die Daten wurden in Basel, Bettingen und Riehen erhoben."]
 pub mod schulwegsicherheit_strassenquerungen {
     use super::*;
 
@@ -16346,7 +16709,7 @@ pub mod schulwegsicherheit_strassenquerungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         Id,
@@ -16375,7 +16738,7 @@ pub mod schulwegsicherheit_strassenquerungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -16400,7 +16763,7 @@ pub mod schulwegsicherheit_strassenquerungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -16486,7 +16849,9 @@ pub mod schulwegsicherheit_strassenquerungen {
     }
 }
 
-/// Schulwegsicherheit: Fusswege
+#[doc = "Schulwegsicherheit: Fusswege"]
+#[doc = ""]
+#[doc = "Die Daten zur Schulwegsicherheit zeigen auf, wo Strassen\u{fc}berg\u{e4}nge f\u{fc}r Kinder im Kindergarten- und Schulalter \u{fc}bersichtlich und einfach sind, bzw. wo erh\u{f6}hte Anforderungen an das \u{dc}berqueren der Strasse gestellt werden. Der Datensatz enth\u{e4}lt die Achsen der Fusswege, das heisst Trottoirs und wo n\u{f6}tig Strassen. Es werden alle f\u{fc}r Fussg\u{e4}nger begehbaren Wege, Strassen oder Parkwege innerhalb und an der Peripherie von Wohngebieten aufgenommen, sofern sie relevant f\u{fc}r Schulwege sind. In Parkanlagen wurden ausgew\u{e4}hlte Wege erfasst. Oberste Priorit\u{e4}t hat eine topologisch korrekte Aufnahme dieser Achsen. Die Daten wurden in Basel, Bettingen und Riehen erhoben."]
 pub mod schulwegsicherheit_fusswege {
     use super::*;
 
@@ -16525,7 +16890,7 @@ pub mod schulwegsicherheit_fusswege {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         Id,
@@ -16546,7 +16911,7 @@ pub mod schulwegsicherheit_fusswege {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -16571,7 +16936,7 @@ pub mod schulwegsicherheit_fusswege {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -16657,7 +17022,9 @@ pub mod schulwegsicherheit_fusswege {
     }
 }
 
-/// Statistische Raumeinheiten: Blockseiten
+#[doc = "Statistische Raumeinheiten: Blockseiten"]
+#[doc = ""]
+#[doc = "Die Blockseite ist die dem angrenzenden Strassenraum zugeordnete Seite eines Blocks.\n\nStatistische Nummerierung:\nDie Nummerierung der Blockseiten setzt sich zusammen aus der zweistelligen Wohnviertel-Nr., der einstelligen Bezirks-Nr. und der dreistelligen Block-Nr\n(im Label jeweils durch Punkte getrennt), gefolgt von der vierstelligen Block-Nr\n(sowohl im Label als auch in der ID durch einen Unterstrich verbunden):\n- Blockseiten haben wie die Bl\u{f6}cke keine Namensbezeichnung und werden lediglich \u{fc}ber die Nummer referenziert.\n- Beispiel Blockseite mit der Clarakirche: BLS_ID 121014_1741, die Bezeichnung (BLS_Label) lautet 12.1.014_1741"]
 pub mod statistische_raumeinheiten_blockseiten {
     use super::*;
 
@@ -16689,7 +17056,7 @@ pub mod statistische_raumeinheiten_blockseiten {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BlsId,
         BlsLabel,
@@ -16714,7 +17081,7 @@ pub mod statistische_raumeinheiten_blockseiten {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -16739,7 +17106,7 @@ pub mod statistische_raumeinheiten_blockseiten {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -16825,7 +17192,9 @@ pub mod statistische_raumeinheiten_blockseiten {
     }
 }
 
-/// Rheinüberwachungsstation: Umweltanalyse Schwebstoffe
+#[doc = "Rhein\u{fc}berwachungsstation: Umweltanalyse Schwebstoffe"]
+#[doc = ""]
+#[doc = "<p class=\"MsoNormal\"><span style=\"font-size: 11pt; line-height: 16.8667px; font-family: Calibri, sans-serif;\">Der Datensatz enth\u{e4}lt die Analysedaten aus der binationalen Rhein\u{fc}berwachungsstation (R\u{dc}S) in Weil am Rhein (Rhein-Kilometer 171,37) seit Bestehen der Station im Jahr 1993 aus der Matrix Schwebstoffe. </span></p><p class=\"MsoNormal\"><span style=\"font-family: Calibri, sans-serif; font-size: 11pt;\">Der Rhein wird aktuell auf 670 Schadstoffe untersucht, 420 davon t\u{e4}glich. Der Unterhalt der Anlage und die Analytik werden durch das Amt f\u{fc}r Umwelt und Energie des Kantons Basel-Stadt (AUE) geleistet. Auftraggeber sind die Landesanstalt f\u{fc}r Umwelt, Messungen und Naturschutz Baden-W\u{fc}rttemberg (LUBW) und das schweizerische Bundesamt f\u{fc}r Umwelt (BAFU).</span><br/></p><p class=\"MsoNormal\"><span style=\"line-height: 16.8667px;\"><font face=\"Calibri, sans-serif\"><span style=\"font-size: 14.6667px;\">Weitere Informationen: <a href=\"http://www.aue.bs.ch/umweltanalytik/rheinueberwachungsstation-weil-am-rhein.html\" target=\"_blank\">http://www.aue.bs.ch/umweltanalytik/rheinueberwachungsstation-weil-am-rhein.html</a></span></font></span></p>"]
 pub mod rheinueberwachungsstation_umweltanalyse_schwebstoffe {
     use super::*;
 
@@ -16920,6 +17289,10 @@ pub mod rheinueberwachungsstation_umweltanalyse_schwebstoffe {
         /// Probenahmedatum_date
         ///
         /// Datum der Probeentnahme.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub probenahmedatum_date: Option<Date>,
         /// Probenahmejahr
         ///
@@ -16933,7 +17306,7 @@ pub mod rheinueberwachungsstation_umweltanalyse_schwebstoffe {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Probentyp,
         Probenahmestelle,
@@ -16990,7 +17363,7 @@ pub mod rheinueberwachungsstation_umweltanalyse_schwebstoffe {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -17015,7 +17388,7 @@ pub mod rheinueberwachungsstation_umweltanalyse_schwebstoffe {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -17101,7 +17474,9 @@ pub mod rheinueberwachungsstation_umweltanalyse_schwebstoffe {
     }
 }
 
-/// Kandidierende der Grossratswahlen nach Alter, Geschlecht und Liste seit 2020
+#[doc = "Kandidierende der Grossratswahlen nach Alter, Geschlecht und Liste seit 2020"]
+#[doc = ""]
+#[doc = "<p style=\"\">Dieser Datensatz zeigt die Kandidierenden der Grossratswahlen nach Altersgruppe, amtlichen Geschlecht und Liste seit 2020<br></p>"]
 pub mod kandidierende_der_grossratswahlen_nach_alter_geschlecht_und_liste_seit_2020 {
     use super::*;
 
@@ -17147,7 +17522,7 @@ pub mod kandidierende_der_grossratswahlen_nach_alter_geschlecht_und_liste_seit_2
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahljahr,
         Altersgruppe,
@@ -17176,7 +17551,7 @@ pub mod kandidierende_der_grossratswahlen_nach_alter_geschlecht_und_liste_seit_2
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -17201,7 +17576,7 @@ pub mod kandidierende_der_grossratswahlen_nach_alter_geschlecht_und_liste_seit_2
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -17287,7 +17662,9 @@ pub mod kandidierende_der_grossratswahlen_nach_alter_geschlecht_und_liste_seit_2
     }
 }
 
-/// Kandidierende der Grossratswahlen nach Geschlecht seit 1968
+#[doc = "Kandidierende der Grossratswahlen nach Geschlecht seit 1968"]
+#[doc = ""]
+#[doc = "<p style=\"\">Dieser Datensatz zeigt die Kandidierenden der Grossratswahlen nach amtlichen Geschlecht seit 1968</p>"]
 pub mod kandidierende_der_grossratswahlen_nach_geschlecht_seit_1968 {
     use super::*;
 
@@ -17323,7 +17700,7 @@ pub mod kandidierende_der_grossratswahlen_nach_geschlecht_seit_1968 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahljahr,
         Total,
@@ -17346,7 +17723,7 @@ pub mod kandidierende_der_grossratswahlen_nach_geschlecht_seit_1968 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -17371,7 +17748,7 @@ pub mod kandidierende_der_grossratswahlen_nach_geschlecht_seit_1968 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -17457,7 +17834,9 @@ pub mod kandidierende_der_grossratswahlen_nach_geschlecht_seit_1968 {
     }
 }
 
-/// Teilhaltestellen des öffentlichen Verkehrs
+#[doc = "Teilhaltestellen des \u{f6}ffentlichen Verkehrs"]
+#[doc = ""]
+#[doc = "Der Datensatz zeigt die Teilhaltestellen (Haltebereich des Busses oder des Trams je Fahrtrichtung) des \u{f6}ffentlichen Verkehrs im Kanton Basel-Stadt sowie teilweise in der trinationalen Agglomeration. Es wird nach Liniennummer, Transportunternehmen, Art und Typ der Haltestelle unterschieden. "]
 pub mod teilhaltestellen_des_oeffentlichen_verkehrs {
     use super::*;
 
@@ -17529,7 +17908,7 @@ pub mod teilhaltestellen_des_oeffentlichen_verkehrs {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         ThstNr,
         HstNr,
@@ -17568,7 +17947,7 @@ pub mod teilhaltestellen_des_oeffentlichen_verkehrs {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -17593,7 +17972,7 @@ pub mod teilhaltestellen_des_oeffentlichen_verkehrs {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -17679,7 +18058,9 @@ pub mod teilhaltestellen_des_oeffentlichen_verkehrs {
     }
 }
 
-/// Liniennetz des öffentlichen Verkehrs
+#[doc = "Liniennetz des \u{f6}ffentlichen Verkehrs"]
+#[doc = ""]
+#[doc = "Der Datensatz zeigt das Liniennetz des \u{f6}ffentlichen Verkehrs im Kanton Basel-Stadt sowie teilweise in der trinationalen Agglomeration. Es wird nach Liniennummer, Transportunternehmen und Zeitdauer das Angebots unterschieden. "]
 pub mod liniennetz_des_oeffentlichen_verkehrs {
     use super::*;
 
@@ -17725,7 +18106,7 @@ pub mod liniennetz_des_oeffentlichen_verkehrs {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         LNr,
         Liniennmr,
@@ -17752,7 +18133,7 @@ pub mod liniennetz_des_oeffentlichen_verkehrs {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -17777,7 +18158,7 @@ pub mod liniennetz_des_oeffentlichen_verkehrs {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -17863,7 +18244,9 @@ pub mod liniennetz_des_oeffentlichen_verkehrs {
     }
 }
 
-/// Haltestellen des öffentlichen Verkehrs
+#[doc = "Haltestellen des \u{f6}ffentlichen Verkehrs"]
+#[doc = ""]
+#[doc = "Der Datensatz zeigt die Haltestellen des \u{f6}ffentlichen Verkehrs im Kanton Basel-Stadt sowie teilweise in der trinationalen Agglomeration. Es wird nach Transportunternehmen, Art und Typ der Haltestelle unterschieden. "]
 pub mod haltestellen_des_oeffentlichen_verkehrs {
     use super::*;
 
@@ -17927,7 +18310,7 @@ pub mod haltestellen_des_oeffentlichen_verkehrs {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         HstNr,
         Name,
@@ -17962,7 +18345,7 @@ pub mod haltestellen_des_oeffentlichen_verkehrs {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -17987,7 +18370,7 @@ pub mod haltestellen_des_oeffentlichen_verkehrs {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -18073,7 +18456,9 @@ pub mod haltestellen_des_oeffentlichen_verkehrs {
     }
 }
 
-/// Eheschliessungen nach Trauungsdatum
+#[doc = "Eheschliessungen nach Trauungsdatum"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt alle Eheschliessungen in Basel-Stadt nach Trauungsdatum. Ber\u{fc}cksichtigt werden alle Eheschliessungen, bei welchen der Ehemann zum Zeitpunkt der Trauung in Basel-Stadt wohnhaft war. <br><br>Die hier ver\u{f6}ffentlichten Werte k\u{f6}nnen aus methodischen Gr\u{fc}nden von denjenigen in der \u{f6}ffentlichen Statistik abweichen: In Letzterer werden nachtr\u{e4}glich gemeldete Eheschliessungen im letzten noch nicht abgeschlossenen Jahr gez\u{e4}hlt. In diesem Datensatz werden sie nachtr\u{e4}glich im Jahr des Trauungsdatums gez\u{e4}hlt."]
 pub mod eheschliessungen_nach_trauungsdatum {
     use super::*;
 
@@ -18082,6 +18467,10 @@ pub mod eheschliessungen_nach_trauungsdatum {
         /// Trauungsdatum
         ///
         /// Datum der Trauung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub trauungsdat: Option<Date>,
         /// Jahr
         ///
@@ -18098,6 +18487,10 @@ pub mod eheschliessungen_nach_trauungsdatum {
         /// Datum Wochenstart
         ///
         /// Datum des Montags der Woche in welcher die Trauung stattfand
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_wochenstart_trauungsdatum: Option<Date>,
         /// Tag im Jahr
         ///
@@ -18135,7 +18528,7 @@ pub mod eheschliessungen_nach_trauungsdatum {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Trauungsdat,
         Jahr,
@@ -18174,7 +18567,7 @@ pub mod eheschliessungen_nach_trauungsdatum {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -18199,7 +18592,7 @@ pub mod eheschliessungen_nach_trauungsdatum {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -18285,7 +18678,9 @@ pub mod eheschliessungen_nach_trauungsdatum {
     }
 }
 
-/// Umweltanalyse Grundwasser
+#[doc = "Umweltanalyse Grundwasser"]
+#[doc = ""]
+#[doc = "<p style=\'font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; font-size: 12.495px;\'>Der Datensatz enth\u{e4}lt die Analysedaten der Grundwasser-Beprobungs-Kampagnen des Kantons Basel-Stadt seit dem Jahr 1993.\u{a0} Es werden Konzentrationsangaben zu verschiedenen Inhalts- resp. Schadstoffen mit Bezug auf den Brunnennamen sowie der geographischen Koordinaten gemacht.</p><p style=\'font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; font-size: 12.495px;\'><span style=\"font-size: 12.495px;\">Weitere Informationen: <a href=\"https://www.aue.bs.ch/umweltanalytik/umweltdaten-gewaesser-feststoffe.html\" target=\"_blank\">https://www.aue.bs.ch/umweltanalytik/umweltdaten-gewaesser-feststoffe.html</a></span><br></p>"]
 pub mod umweltanalyse_grundwasser {
     use super::*;
 
@@ -18382,6 +18777,10 @@ pub mod umweltanalyse_grundwasser {
         /// Probenahmedatum_date
         ///
         /// Datum der Probenahme.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub probenahmedatum_date: Option<Date>,
         /// Probenahmejahr
         ///
@@ -18395,7 +18794,7 @@ pub mod umweltanalyse_grundwasser {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Probentyp,
         Probenahmestelle,
@@ -18452,7 +18851,7 @@ pub mod umweltanalyse_grundwasser {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -18477,7 +18876,7 @@ pub mod umweltanalyse_grundwasser {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -18563,7 +18962,9 @@ pub mod umweltanalyse_grundwasser {
     }
 }
 
-/// Vornamen der Neugeborenen nach Geschlecht
+#[doc = "Vornamen der Neugeborenen nach Geschlecht"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Vornamen der Neugeborenen im Kanton Basel-Stadt seit 2006. Als im Kanton Basel-Stadt Neugeborene gelten Kinder, welche ihren Wohnsitz ab Geburt im Kanton Basel-Stadt haben. Die Daten werden j\u{e4}hrlich aktualisiert."]
 pub mod vornamen_der_neugeborenen_nach_geschlecht {
     use super::*;
 
@@ -18593,7 +18994,7 @@ pub mod vornamen_der_neugeborenen_nach_geschlecht {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Geschlecht,
@@ -18612,7 +19013,7 @@ pub mod vornamen_der_neugeborenen_nach_geschlecht {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -18637,7 +19038,7 @@ pub mod vornamen_der_neugeborenen_nach_geschlecht {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -18723,7 +19124,9 @@ pub mod vornamen_der_neugeborenen_nach_geschlecht {
     }
 }
 
-/// Gasverbrauch im Versorgungsgebiet der IWB
+#[doc = "Gasverbrauch im Versorgungsgebiet der IWB"]
+#[doc = ""]
+#[doc = "<p style=\"\">Dieser Datensatz beinhaltet die Summe des Gasverbrauchs, die innert Stunden-Intervallen aus dem Netz bezogen wird.\u{a0}Neben dem Kanton Basel-Stadt versorgt IWB auch weitere 29 Gemeinden in den Kantonen Basel-Landschaft, Solothurn und Aargau mit Gas. Diese sind auch im Datensatz enthalten.</p><p style=\"\">Die Gemeinden, die im Versorgungsgebiet enthalten sind, sind:<br>Aesch BL, Allschwil, Arlesheim, Augst, Basel, Bettingen, Binningen, Birsfelden, Bottmingen, Dornach, Eiken, Ettingen, Frenkendorf, Frick, F\u{fc}llinsdorf, Gipf-Oberfrick, Lausen, Liestal, M\u{f6}hlin, M\u{fc}nchenstein, Muttenz, Oberwil, Oeschgen, Pfeffingen, Pratteln, Reinach BL, Rheinfelden, Riehen, Sch\u{f6}nenbuch, Therwil, Wallbach<br></p>"]
 pub mod gasverbrauch_im_versorgungsgebiet_der_iwb {
     use super::*;
 
@@ -18741,6 +19144,10 @@ pub mod gasverbrauch_im_versorgungsgebiet_der_iwb {
         /// Datum
         ///
         /// Tag der Messung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Zeit
         ///
@@ -18780,7 +19187,7 @@ pub mod gasverbrauch_im_versorgungsgebiet_der_iwb {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         Value,
@@ -18813,7 +19220,7 @@ pub mod gasverbrauch_im_versorgungsgebiet_der_iwb {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -18838,7 +19245,7 @@ pub mod gasverbrauch_im_versorgungsgebiet_der_iwb {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -18924,7 +19331,9 @@ pub mod gasverbrauch_im_versorgungsgebiet_der_iwb {
     }
 }
 
-/// Umweltanalyse Oberflächengewässer
+#[doc = "Umweltanalyse Oberfl\u{e4}chengew\u{e4}sser"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz enth\u{e4}lt die Analysedaten der Beprobungen der Oberfl\u{e4}chengew\u{e4}sser des Kantons Basel-Stadt seit dem Jahr 1993. Die Daten des Rheins sind hiervon ausgenommen. Es werden Konzentrationsangaben zu verschiedenen Inhalts- resp. Schadstoffen mit Bezug auf die einzelnen Fliessgew\u{e4}sser, sowie der geographischen Koordinaten gemacht.</p><p>Weitere Informationen: <a href=\"https://www.aue.bs.ch/umweltanalytik/umweltdaten-gewaesser-feststoffe.html\" target=\"_blank\">https://www.aue.bs.ch/umweltanalytik/umweltdaten-gewaesser-feststoffe.html</a></p>"]
 pub mod umweltanalyse_oberflaechengewaesser {
     use super::*;
 
@@ -19021,6 +19430,10 @@ pub mod umweltanalyse_oberflaechengewaesser {
         /// Probenahmedatum_date
         ///
         /// Datum der Probenahme.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub probenahmedatum_date: Option<Date>,
         /// Probenahmejahr
         ///
@@ -19034,7 +19447,7 @@ pub mod umweltanalyse_oberflaechengewaesser {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Probentyp,
         Probenahmestelle,
@@ -19091,7 +19504,7 @@ pub mod umweltanalyse_oberflaechengewaesser {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -19116,7 +19529,7 @@ pub mod umweltanalyse_oberflaechengewaesser {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -19202,7 +19615,9 @@ pub mod umweltanalyse_oberflaechengewaesser {
     }
 }
 
-/// Grosser Rat: Vorgänge von Geschäften
+#[doc = "Grosser Rat: Vorg\u{e4}nge von Gesch\u{e4}ften"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">Dieser Datensatz zeigt Vorg\u{e4}nge und Sitzungen von Gesch\u{e4}ften (beziehungsweise Beschl\u{fc}sse zu Gesch\u{e4}ften), die im Grossen Rat des Kantons Basel-Stadt behandelt werden.</p><p style=\"font-family: sans-serif;\">Die Daten k\u{f6}nnen auch auf der Webseite des Grossen Rates eingesehen werden:<br/><a href=\"https://grosserrat.bs.ch/\" target=\"_blank\">https://grosserrat.bs.ch</a></p>"]
 pub mod grosser_rat_vorgaenge_von_geschaeften {
     use super::*;
 
@@ -19227,6 +19642,10 @@ pub mod grosser_rat_vorgaenge_von_geschaeften {
         /// Sitzungsdatum
         ///
         /// Datum der Sitzung, an der der Vorgang behandelt wurde
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub siz_datum: Option<Date>,
         /// Laufnummer Geschäft
         ///
@@ -19264,7 +19683,7 @@ pub mod grosser_rat_vorgaenge_von_geschaeften {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Beschlnr,
         Nummer,
@@ -19299,7 +19718,7 @@ pub mod grosser_rat_vorgaenge_von_geschaeften {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -19324,7 +19743,7 @@ pub mod grosser_rat_vorgaenge_von_geschaeften {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -19410,13 +19829,19 @@ pub mod grosser_rat_vorgaenge_von_geschaeften {
     }
 }
 
-/// Coronavirus (Covid-19): Hospitalisierte in baselstädtischen Spitälern
+#[doc = "Coronavirus (Covid-19): Hospitalisierte in baselst\u{e4}dtischen Spit\u{e4}lern"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt Kennzahlen auf Tagesebene zu den in baselst\u{e4}dtischen Spit\u{e4}lern hospitalisierten Personen mit einem positiven Testresultat auf SARS-CoV-2. </p><p><b>Die t\u{e4}gliche Erhebung der baselst\u{e4}dtischen Spitalkapazit\u{e4}ten wurde per 1. Mai 2023 sistiert. Der Datensatz wird nicht mehr aktualisiert.</b></p><p>Weitere Angaben zu den positiv auf SARS-CoV-2 getesteten Personen mit Wohnsitz im Kanton Basel-Stadt finden Sie unter diesem Link:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100073/table/?sort=timestamp\">Coronavirus (COVID-19): Fallzahlen Basel-Stadt</a>.\u{a0}</p>"]
 pub mod coronavirus_covid_19_hospitalisierte_in_baselstaedtischen_spitaelern {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Hospitalisierte total
         ///
@@ -19458,7 +19883,7 @@ pub mod coronavirus_covid_19_hospitalisierte_in_baselstaedtischen_spitaelern {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         CurrentHosp,
@@ -19487,7 +19912,7 @@ pub mod coronavirus_covid_19_hospitalisierte_in_baselstaedtischen_spitaelern {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -19512,7 +19937,7 @@ pub mod coronavirus_covid_19_hospitalisierte_in_baselstaedtischen_spitaelern {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -19598,7 +20023,9 @@ pub mod coronavirus_covid_19_hospitalisierte_in_baselstaedtischen_spitaelern {
     }
 }
 
-/// Grosser Rat: Interessensbindungen Ratsmitglieder
+#[doc = "Grosser Rat: Interessensbindungen Ratsmitglieder"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">Dieser Datensatz zeigt die aktiven Interessensbindungen von Grossratsmitgliedern w\u{e4}hrend ihrer Mitgliedschaft im Grossen Rat des Kantons Basel-Stadt.</p><p style=\"font-family: sans-serif;\">Die Daten k\u{f6}nnen auch auf der Webseite des Grossen Rates eingesehen werden:<br/><a href=\"https://grosserrat.bs.ch/\" target=\"_blank\">https://grosserrat.bs.ch</a></p>"]
 pub mod grosser_rat_interessensbindungen_ratsmitglieder {
     use super::*;
 
@@ -19660,7 +20087,7 @@ pub mod grosser_rat_interessensbindungen_ratsmitglieder {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Rubrik,
         IntrBind,
@@ -19695,7 +20122,7 @@ pub mod grosser_rat_interessensbindungen_ratsmitglieder {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -19720,7 +20147,7 @@ pub mod grosser_rat_interessensbindungen_ratsmitglieder {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -19806,7 +20233,9 @@ pub mod grosser_rat_interessensbindungen_ratsmitglieder {
     }
 }
 
-/// Events in Gewässernähe
+#[doc = "Events in Gew\u{e4}ssern\u{e4}he"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz enth\u{e4}lt Informationen zu Anl\u{e4}ssen u.\u{e4}. in Gew\u{e4}ssern\u{e4}he, welche z.B. in der BachApp publiziert werden.\u{a0}</p>"]
 pub mod events_in_gewaessernaehe {
     use super::*;
 
@@ -19819,20 +20248,36 @@ pub mod events_in_gewaessernaehe {
         /// Sichtbar_von
         ///
         /// Sichtbar ab
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_von: Option<Date>,
         /// Sichtbar_bis
         ///
         /// Sichtbar bis
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_bis: Option<Date>,
         /// Status
         pub status: Option<String>,
         /// Datum_von
         ///
         /// Beginn des Events
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_von: Option<Date>,
         /// Datum_bis
         ///
         /// Ende des Events
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_bis: Option<Date>,
         /// Eventname
         ///
@@ -19858,7 +20303,7 @@ pub mod events_in_gewaessernaehe {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Idunique,
         SichtbarVon,
@@ -19891,7 +20336,7 @@ pub mod events_in_gewaessernaehe {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -19916,7 +20361,7 @@ pub mod events_in_gewaessernaehe {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -20002,7 +20447,9 @@ pub mod events_in_gewaessernaehe {
     }
 }
 
-/// Feuerstellen in Gewässernähe
+#[doc = "Feuerstellen in Gew\u{e4}ssern\u{e4}he"]
+#[doc = ""]
+#[doc = "<p>Gew\u{e4}ssernahe Feuerstellen.\u{a0}</p>"]
 pub mod feuerstellen_in_gewaessernaehe {
     use super::*;
 
@@ -20022,7 +20469,7 @@ pub mod feuerstellen_in_gewaessernaehe {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Bezeichnung,
     }
@@ -20035,7 +20482,7 @@ pub mod feuerstellen_in_gewaessernaehe {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -20060,7 +20507,7 @@ pub mod feuerstellen_in_gewaessernaehe {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -20146,7 +20593,9 @@ pub mod feuerstellen_in_gewaessernaehe {
     }
 }
 
-/// Coronavirus (Covid-19): Teststellen
+#[doc = "Coronavirus (Covid-19): Teststellen"]
+#[doc = ""]
+#[doc = "<p>Eine \u{dc}bersicht der Standorte, an welchen sich die Bev\u{f6}lkerung w\u{e4}hrend der Corona-Pandemie auf SARS-CoV-2 testen lassen konnte. F\u{fc}r Kinder werden von gewissen Teststellen zus\u{e4}tzlich zum Abstrich im Rachenbereich alternative Testmethoden angeboten. </p><p><b>Der Datensatz wurde vom Gesundheitsdepartement aktuell gehalten. Dieser wird seit 8. M\u{e4}rz 2023 nicht mehr aktualisiert.\u{a0}Man kann sich weiterhin bei einzelnen Arztpraxen und Institutionen testen lassen.</b></p><p>Weitere\u{a0}Informationen zum Coronavirus in Basel-Stadt sind hier zu finden: <a href=\"https://www.bs.ch/gd/md/gesundheitsschutz/uebertragbarekrankheiten/grippe-corona-und-co\" target=\"_blank\">https://www.bs.ch/gd/md/gesundheitsschutz/uebertragbarekrankheiten/grippe-corona-und-co</a></p>"]
 pub mod coronavirus_covid_19_teststellen {
     use super::*;
 
@@ -20240,7 +20689,7 @@ pub mod coronavirus_covid_19_teststellen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdTs,
         Institut,
@@ -20291,7 +20740,7 @@ pub mod coronavirus_covid_19_teststellen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -20316,7 +20765,7 @@ pub mod coronavirus_covid_19_teststellen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -20402,7 +20851,9 @@ pub mod coronavirus_covid_19_teststellen {
     }
 }
 
-/// Sport- und Bewegungsanlagen
+#[doc = "Sport- und Bewegungsanlagen"]
+#[doc = ""]
+#[doc = "Der Datensatz bildet vom Kanton Basel-Stadt betriebenen Sport- und Bewegungsanlagen ab sowie auch alle kantonalen Sportanlagen ausserhalb der Kantons- und Landesgrenzen. Im Datensatz sind zus\u{e4}tzlich kantonale R\u{e4}umlichkeiten aufgef\u{fc}hrt, welche f\u{fc}r den Sportbetrieb genutzt und gemietet werden."]
 pub mod sport_und_bewegungsanlagen {
     use super::*;
 
@@ -20460,7 +20911,7 @@ pub mod sport_und_bewegungsanlagen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdAngebot,
         Name,
@@ -20495,7 +20946,7 @@ pub mod sport_und_bewegungsanlagen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -20520,7 +20971,7 @@ pub mod sport_und_bewegungsanlagen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -20606,7 +21057,9 @@ pub mod sport_und_bewegungsanlagen {
     }
 }
 
-/// Standorte der IWB Ladestationen für Elektroautos
+#[doc = "Standorte der IWB Ladestationen f\u{fc}r Elektroautos"]
+#[doc = ""]
+#[doc = "<p>IWB baut im Kanton Basel-Stadt ein Netz leistungsf\u{e4}higer \u{f6}ffentlich zug\u{e4}nglicher Ladestationen auf, um der umweltfreundlichen und gerade f\u{fc}r Ballungsgebiete idealen Elektromobilit\u{e4}t entscheidende Impulse zu geben. Hier finden Sie unsere Ladestationen.</p>\n\n<p>In der Pilotphase wurden die Parkpl\u{e4}tze mit LoRa-angebunden Sensoren ausgestattet. Ziel war es festzustellen, ob Parkpl\u{e4}tze durch Fahrzeuge besetzt werden, ohne dass diese einen aktiven Ladevorgang vornehmen. Nach internen Abstimmungen wird die IWB die \u{dc}bermittlung der Daten ab ca. Mitte September 2022 nicht weiterf\u{fc}hren. Gr\u{fc}nde daf\u{fc}r sind Schwierigkeiten bei der \u{dc}bertragung der Werte sowie eine fehlende Relevanz f\u{fc}r die Praxis. Beim Roll-Out der weiteren \u{f6}ffentlichen Ladestationen auf Allmend werden voraussichtlich keine LoRa-Sensoren mehr verbaut.</p>\n\n<p>Echtzeitdaten zur Belegung der Elektroauto-Ladestationen der gesamten Schweiz basierend auf dem Status des Ladevorgangs sind hier zu finden:\u{a0}<a href=\"https://opendata.swiss/de/dataset/ladestationen\" target=\"_blank\">https://opendata.swiss/de/dataset/ladestationen</a></p>"]
 pub mod standorte_der_iwb_ladestationen_fuer_elektroautos {
     use super::*;
 
@@ -20633,7 +21086,7 @@ pub mod standorte_der_iwb_ladestationen_fuer_elektroautos {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Name,
         Description,
@@ -20654,7 +21107,7 @@ pub mod standorte_der_iwb_ladestationen_fuer_elektroautos {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -20679,7 +21132,7 @@ pub mod standorte_der_iwb_ladestationen_fuer_elektroautos {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -20765,7 +21218,9 @@ pub mod standorte_der_iwb_ladestationen_fuer_elektroautos {
     }
 }
 
-/// Gebäude (Gebäude- und Wohnungsregister GWR)
+#[doc = "Geb\u{e4}ude (Geb\u{e4}ude- und Wohnungsregister GWR)"]
+#[doc = ""]
+#[doc = "Geb\u{e4}ude gem\u{e4}ss Geb\u{e4}ude- und Wohnungsregister (GWR). <br><br>Ein Geb\u{e4}ude ist ein auf Dauer angelegter, mit einem Dach versehener, mit dem Boden fest verbundener Bau, der Personen aufnehmen kann und zu Wohnzwecken oder Zwecken der Arbeit, der Ausbildung, der Kultur, des Sports oder jeglicher anderer menschlicher T\u{e4}tigkeit dient; ein Doppel-, Gruppen- und Reihenhaus z\u{e4}hlt ebenfalls als ein Geb\u{e4}ude, wenn es einen eigenen Zugang von aussen hat und wenn zwischen den Geb\u{e4}uden eine senkrechte vom Erdgeschoss bis zum Dach reichende tragende Trennmauer besteht.<br><br>Weitere Einzelheiten zur Erfassung von Geb\u{e4}uden sind hier nachzulesen: <a href=\"https://www.housing-stat.ch/files/1754-2300.pdf\" target=\"_blank\">https://www.housing-stat.ch/files/1754-2300.pdf (Weisung zur Erfassung der Geb\u{e4}ude in der amtlichen Vermessung (AV) und im Geb\u{e4}ude- und Wohnungsregister (GWR)) </a><br><br>Einen \u{dc}berblick \u{fc}ber die im Register gef\u{fc}hrten Merkmal gibt folgendes Dokument: <a href=\"https://www.housing-stat.ch/files/881-2200.pdf\" target=\"_blank\">https://www.housing-stat.ch/files/881-2200.pdf (Merkmalskatalog 4.2)</a> bzw. online unter <a href=\"https://www.housing-stat.ch/de/help/42.html\" target=\"_blank\">https://www.housing-stat.ch/de/help/42.html (Online-Merkmalskatalog 4.2)</a><br><br>Die rechtliche Grundlage stellt die entsprechende eidgen\u{f6}ssische Gesetzgebung dar: <a href=\"https://www.fedlex.admin.ch/eli/cc/2017/376/de\" target=\"_blank\">https://www.fedlex.admin.ch/eli/cc/2017/376/de (Verordnung \u{fc}ber das eidgen\u{f6}ssische Geb\u{e4}ude- und Wohnungsregister (VGWR))</a><br><br>"]
 pub mod gebaeude_gebaeude_und_wohnungsregister_gwr {
     use super::*;
 
@@ -20878,6 +21333,10 @@ pub mod gebaeude_gebaeude_und_wohnungsregister_gwr {
         /// Aktualisierungsdatum primäre Heizung
         ///
         /// Informationsquelle primäre Heizung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub gwaerdath1: Option<Date>,
         /// Sekundärer Wärmeerzeuger der Heizung Code
         pub gwaerzh2: Option<i64>,
@@ -20892,6 +21351,10 @@ pub mod gebaeude_gebaeude_und_wohnungsregister_gwr {
         /// Informationsquelle sekundäre Heizung Bezeichnung
         pub gwaersceh2_decoded: Option<String>,
         /// Aktualisierungsdatum sekundäre Heizung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub gwaerdath2: Option<Date>,
         /// Primärer Wärmeerzeuger Warmwasser Code
         pub gwaerzw1: Option<i64>,
@@ -20906,6 +21369,10 @@ pub mod gebaeude_gebaeude_und_wohnungsregister_gwr {
         /// Informationsquelle primäre Wasseraufbereitung Bezeichnung
         pub gwaerscew1_decoded: Option<String>,
         /// Aktualisierungsdatum primäre Warmwasseraufbereitung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub gwaerdatw1: Option<Date>,
         /// Sekundärer Wärmeerzeuger Warmwasser Code
         pub gwaerzw2: Option<i64>,
@@ -20920,8 +21387,16 @@ pub mod gebaeude_gebaeude_und_wohnungsregister_gwr {
         /// Informationsquelle sekundäre Warmwasseraufbereitung Bezeichnung
         pub gwaerscew2_decoded: Option<String>,
         /// Aktualisierungsdatum sekundäre Warmwasseraufbereitung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub gwaerdatw2: Option<Date>,
         /// Exportdatum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub gexpdat: Option<Date>,
     }
 
@@ -20931,7 +21406,7 @@ pub mod gebaeude_gebaeude_und_wohnungsregister_gwr {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Egid,
         Gdekt,
@@ -21076,7 +21551,7 @@ pub mod gebaeude_gebaeude_und_wohnungsregister_gwr {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -21101,7 +21576,7 @@ pub mod gebaeude_gebaeude_und_wohnungsregister_gwr {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -21187,7 +21662,9 @@ pub mod gebaeude_gebaeude_und_wohnungsregister_gwr {
     }
 }
 
-/// Kandidierende der Grossratswahl 20. Oktober 2024
+#[doc = "Kandidierende der Grossratswahl 20. Oktober 2024"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">F\u{fc}r die Gesamterneuerungswahl der 100 Mitglieder vom Grossen Rat vom 20. Oktober 2024 kandidieren 870 Personen auf insgesamt 16 Listen.</p><p style=\"font-family: sans-serif; margin-bottom: 1em;\">Dieser Datensatz zeigt die Kandidierenden nach Geschlecht, Jahrgang und Beruf.</p>"]
 pub mod kandidierende_der_grossratswahl_20_oktober_2024 {
     use super::*;
 
@@ -21249,7 +21726,7 @@ pub mod kandidierende_der_grossratswahl_20_oktober_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlkreis,
         ListenNr,
@@ -21288,7 +21765,7 @@ pub mod kandidierende_der_grossratswahl_20_oktober_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -21313,7 +21790,7 @@ pub mod kandidierende_der_grossratswahl_20_oktober_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -21399,7 +21876,9 @@ pub mod kandidierende_der_grossratswahl_20_oktober_2024 {
     }
 }
 
-/// Luftqualität Station Basel-Binningen
+#[doc = "Luftqualit\u{e4}t Station Basel-Binningen"]
+#[doc = ""]
+#[doc = "<p>St\u{fc}ndliche Messungen der <a href=\"https://www.meteoschweiz.admin.ch/home/messwerte.html?param=messnetz-automatisch&amp;station=BAS\" target=\"_blank\">automatischen Wetterstation Basel-Binningen</a>.\u{a0}</p>"]
 pub mod luftqualitaet_station_basel_binningen {
     use super::*;
 
@@ -21460,7 +21939,7 @@ pub mod luftqualitaet_station_basel_binningen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         DatumZeit,
         TimestampText,
@@ -21497,7 +21976,7 @@ pub mod luftqualitaet_station_basel_binningen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -21522,7 +22001,7 @@ pub mod luftqualitaet_station_basel_binningen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -21608,7 +22087,9 @@ pub mod luftqualitaet_station_basel_binningen {
     }
 }
 
-/// Gesundheitsversorgung (GSV): Spitalkennzahlen
+#[doc = "Gesundheitsversorgung (GSV): Spitalkennzahlen"]
+#[doc = ""]
+#[doc = "Wichtige Kennzahlen der baselst\u{e4}dtischen Spit\u{e4}ler. Dieser Datensatz fliesst in den Bericht des Bereiches Gesundheitsversorgung (GSV) des Gesundheitsdepartements, vor allem in Form eines Dashboards."]
 pub mod gesundheitsversorgung_gsv_spitalkennzahlen {
     use super::*;
 
@@ -21617,6 +22098,10 @@ pub mod gesundheitsversorgung_gsv_spitalkennzahlen {
         /// Jahr
         ///
         /// Jahr der Erhebung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub jahr: Option<Date>,
         /// Spital/Klinik
         ///
@@ -21902,7 +22387,7 @@ pub mod gesundheitsversorgung_gsv_spitalkennzahlen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Spital,
@@ -22057,7 +22542,7 @@ pub mod gesundheitsversorgung_gsv_spitalkennzahlen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -22082,7 +22567,7 @@ pub mod gesundheitsversorgung_gsv_spitalkennzahlen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -22168,7 +22653,9 @@ pub mod gesundheitsversorgung_gsv_spitalkennzahlen {
     }
 }
 
-/// Grillstellen in Gewässernähe
+#[doc = "Grillstellen in Gew\u{e4}ssern\u{e4}he"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt die Koordinaten gew\u{e4}ssernaher Grillstellen in Basel-Stadt.</p>"]
 pub mod grillstellen_in_gewaessernaehe {
     use super::*;
 
@@ -22179,8 +22666,16 @@ pub mod grillstellen_in_gewaessernaehe {
         /// Status
         pub status: Option<String>,
         /// Sichtbar_von
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_von: Option<Date>,
         /// Sichtbar_bis
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_bis: Option<Date>,
         /// Name
         ///
@@ -22196,7 +22691,7 @@ pub mod grillstellen_in_gewaessernaehe {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Id,
         Status,
@@ -22219,7 +22714,7 @@ pub mod grillstellen_in_gewaessernaehe {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -22244,7 +22739,7 @@ pub mod grillstellen_in_gewaessernaehe {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -22330,7 +22825,9 @@ pub mod grillstellen_in_gewaessernaehe {
     }
 }
 
-/// Strassennamen
+#[doc = "Strassennamen"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz beinhaltet die Namen aller Strassen im Kanton Basel-Stadt sowie kurze Erl\u{e4}uterungen zur Bedeutung der Strassennamen der Stadt Basel. Die Felder zu den Erkl\u{e4}rungen sind ausserhalb des Stadtgebietes leer.</p><p>Der Datensatz darf f\u{fc}r Open Street Map verwendet werden.<br></p>"]
 pub mod strassennamen {
     use super::*;
 
@@ -22380,7 +22877,7 @@ pub mod strassennamen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Strassenid,
         Strname,
@@ -22407,7 +22904,7 @@ pub mod strassennamen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -22432,7 +22929,7 @@ pub mod strassennamen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -22518,7 +23015,9 @@ pub mod strassennamen {
     }
 }
 
-/// Sanitäre Anlagen
+#[doc = "Sanit\u{e4}re Anlagen"]
+#[doc = ""]
+#[doc = "\u{d6}ffentliche sanit\u{e4}re Anlagen der Gemeinden Basel, Riehen und Bettingen: WC Anlage, WC Anlage rollstuhlg\u{e4}ngig, nur Pissoir, Dusche, Anlage geschlossen (in Sanierung oder geschlossen)."]
 pub mod sanitaere_anlagen {
     use super::*;
 
@@ -22565,7 +23064,7 @@ pub mod sanitaere_anlagen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Bezeichnug,
         Strasse,
@@ -22600,7 +23099,7 @@ pub mod sanitaere_anlagen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -22625,7 +23124,7 @@ pub mod sanitaere_anlagen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -22711,13 +23210,19 @@ pub mod sanitaere_anlagen {
     }
 }
 
-/// Tägliche Klimadaten der NBCN-Station Basel-Binningen
+#[doc = "T\u{e4}gliche Klimadaten der NBCN-Station Basel-Binningen"]
+#[doc = ""]
+#[doc = "<p>Tagesdaten der NBCN-Station (Swiss National Basic Climatological Network) Basel-Binningen der MeteoSchweiz. Komplette, <a href=\"https://www.meteoschweiz.admin.ch/klima/klimawandel/entwicklung-temperatur-niederschlag-sonnenschein/homogene-messreihen-ab-1864/homogenisierung-von-klima-messreihen.html\" target=\"_blank\">nicht homogenisierte</a>\u{a0} Datenreihe der wichtigsten Tageswerte seit Messbeginn.</p><p> Methodischer Hinweis:<br>Die Berechnung des Tagesmittels der Lufttemperatur erfolgte je nach historischer Zeitperiode unterschiedlich. <br>Bis 1980 wurden die Temperaturwerte nur dreimal t\u{e4}glich erfasst, der Mittelwert basiert entsprechend auf diesen drei Ablesungen. Ab 1981 liegen Stundenmittel zugrunde und ab 2018 10min-Werte. Das t\u{e4}gliche Minimum und Maximum der Lufttemperatur wurde bis 1980 anhand von Minimum- bzw. Maximum-Thermometern erfasst.</p>"]
 pub mod taegliche_klimadaten_der_nbcn_station_basel_binningen {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Jahr
         pub jahr: Option<String>,
@@ -22772,7 +23277,7 @@ pub mod taegliche_klimadaten_der_nbcn_station_basel_binningen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         Jahr,
@@ -22807,7 +23312,7 @@ pub mod taegliche_klimadaten_der_nbcn_station_basel_binningen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -22832,7 +23337,7 @@ pub mod taegliche_klimadaten_der_nbcn_station_basel_binningen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -22918,7 +23423,9 @@ pub mod taegliche_klimadaten_der_nbcn_station_basel_binningen {
     }
 }
 
-/// Wahl der 100 Mitglieder des Grossen Rates vom 25.10.2020
+#[doc = "Wahl der 100 Mitglieder des Grossen Rates vom 25.10.2020"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Einzeldaten der Grossratswahl vom 25. Oktober 2020.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod wahl_der_100_mitglieder_des_grossen_rates_vom_25_10_2020 {
     use super::*;
 
@@ -22943,6 +23450,10 @@ pub mod wahl_der_100_mitglieder_des_grossen_rates_vom_25_10_2020 {
         /// Wahltermin
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wahltermin: Option<Date>,
         /// Anzahl Sitze Wahlkreis
         ///
@@ -23188,7 +23699,7 @@ pub mod wahl_der_100_mitglieder_des_grossen_rates_vom_25_10_2020 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahljahr,
         Status,
@@ -23343,7 +23854,7 @@ pub mod wahl_der_100_mitglieder_des_grossen_rates_vom_25_10_2020 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -23368,7 +23879,7 @@ pub mod wahl_der_100_mitglieder_des_grossen_rates_vom_25_10_2020 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -23454,7 +23965,9 @@ pub mod wahl_der_100_mitglieder_des_grossen_rates_vom_25_10_2020 {
     }
 }
 
-/// Grosser Rat: Geschäfte
+#[doc = "Grosser Rat: Gesch\u{e4}fte"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">Dieser Datensatz bietet eine umfassende \u{dc}bersicht \u{fc}ber Gesch\u{e4}fte, die im Grossen Rat des Kantons Basel-Stadt behandelt werden.</p><p style=\"font-family: sans-serif;\">Die Daten k\u{f6}nnen auch auf der Webseite des Grossen Rates eingesehen werden:<br><a href=\"https://grosserrat.bs.ch/\" target=\"_blank\">https://grosserrat.bs.ch</a></p>"]
 pub mod grosser_rat_geschaefte {
     use super::*;
 
@@ -23463,10 +23976,18 @@ pub mod grosser_rat_geschaefte {
         /// Beginn Geschäft
         ///
         /// Datum, an dem des Geschäft zum ersten mal traktandiert ist.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub beginn_ges: Option<Date>,
         /// Ende Geschäft
         ///
         /// Abschlussdatum des Geschäfts
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub ende_ges: Option<Date>,
         /// Laufnummer
         ///
@@ -23588,7 +24109,7 @@ pub mod grosser_rat_geschaefte {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BeginnGes,
         EndeGes,
@@ -23659,7 +24180,7 @@ pub mod grosser_rat_geschaefte {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -23684,7 +24205,7 @@ pub mod grosser_rat_geschaefte {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -23770,7 +24291,9 @@ pub mod grosser_rat_geschaefte {
     }
 }
 
-/// Coronavirus (COVID-19): Tests Basel-Stadt
+#[doc = "Coronavirus (COVID-19): Tests Basel-Stadt"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Anzahl Tests auf SARS-CoV-2, welche an Personen mit Wohnsitz im Kanton Basel-Stadt durchgef\u{fc}hrt wurden sowie die entsprechenden Testresultate (positiv/negativ) und separiert nach PCR Test bzw. Antigen Schnelltest auf t\u{e4}glicher Basis. Die Angaben wurden t\u{e4}glich durch das Bundesamt f\u{fc}r Gesundheit (BAG) zur Verf\u{fc}gung gestellt im <a href=\"https://www.covid19.admin.ch\" target=\"_blank\">Covid-19 Situationsbericht</a>\u{a0}bzw. \u{fc}ber dessen <a href=\"https://www.covid19.admin.ch/api/data/context\" target=\"_blank\">API</a>.\u{a0}</p><p>Die Zahlen von Freitag, Samstag und Sonntag wurden durch das BAG jeweils am Montag aktualisiert.</p><p><b>Die Erhebung der Anzahl Tests auf SARS-CoV-2 wurde per 16. Januar 2023 sistiert. Der Datensatz wird nicht mehr aktualisiert.</b><br/></p><p>Die Zahlen f\u{fc}r alle Kantone sowie f\u{fc}r die gesamte Schweiz und das F\u{fc}rstentum Liechtenstein sind in diesem Datensatz zu finden:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100116\" target=\"_blank\">https://data.bs.ch/explore/dataset/100116</a></p>"]
 pub mod coronavirus_covid_19_tests_basel_stadt {
     use super::*;
 
@@ -23779,6 +24302,10 @@ pub mod coronavirus_covid_19_tests_basel_stadt {
         /// Datum
         ///
         /// Falldatum, entspricht in der Regel dem Datum der Probeentnahme
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Negative Tests
         ///
@@ -23860,7 +24387,7 @@ pub mod coronavirus_covid_19_tests_basel_stadt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         NegativeTests,
@@ -23911,7 +24438,7 @@ pub mod coronavirus_covid_19_tests_basel_stadt {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -23936,7 +24463,7 @@ pub mod coronavirus_covid_19_tests_basel_stadt {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -24022,7 +24549,9 @@ pub mod coronavirus_covid_19_tests_basel_stadt {
     }
 }
 
-/// Veloabstellplätze
+#[doc = "Veloabstellpl\u{e4}tze"]
+#[doc = ""]
+#[doc = "Der Datensatz beinhaltet alle Veloabstellpl\u{e4}tze auf \u{f6}ffentlichem Grund, die grossen Abstellanlagen bei den Bahnh\u{f6}fen, Velostationen, Bike+Ride-Anlagen und Cargovelo-Pl\u{e4}tze. Die Punkte befinden sich in der Mitte der Parkfelder."]
 pub mod veloabstellplaetze {
     use super::*;
 
@@ -24084,7 +24613,7 @@ pub mod veloabstellplaetze {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdPlatz,
         Typ,
@@ -24119,7 +24648,7 @@ pub mod veloabstellplaetze {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -24144,7 +24673,7 @@ pub mod veloabstellplaetze {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -24230,7 +24759,9 @@ pub mod veloabstellplaetze {
     }
 }
 
-/// Velopumpen
+#[doc = "Velopumpen"]
+#[doc = ""]
+#[doc = "<p></p><p>Dieser Datensatz zeigt die von Veloh\u{e4}ndlern f\u{fc}r die \u{d6}ffentlichkeit verf\u{fc}gbaren Velopumpen.</p>"]
 pub mod velopumpen {
     use super::*;
 
@@ -24278,7 +24809,7 @@ pub mod velopumpen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdPumpe,
         Haendler,
@@ -24307,7 +24838,7 @@ pub mod velopumpen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -24332,7 +24863,7 @@ pub mod velopumpen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -24418,7 +24949,9 @@ pub mod velopumpen {
     }
 }
 
-/// Verkehrsberuhigte Zonen: Kernzone Verkehrskonzept Innenstadt
+#[doc = "Verkehrsberuhigte Zonen: Kernzone Verkehrskonzept Innenstadt"]
+#[doc = ""]
+#[doc = "Dieser Datensatz beinhaltet das Verkehrskonzept Innenstadt (VKI): Kernzone mit eingeschr\u{e4}nktem Motorfahrzeugverkehr.<br/>Die verkehrsberuhigten Zonen setzen sich aus Fussg\u{e4}ngerzonen, Begegnungszonen und Tempo 30-Zonen zusammen. Ebenso ist der Perimeter des Verkehrskonzepts Innenstadt mit der Kernzone mit eingeschr\u{e4}nktem Motorfahrzeugverkehr dargestellt.<br/>Weitere Daten zu \"Verkehrsberuhigte Zonen\": <a href=\"https://data.bs.ch/explore/?sort=modified&amp;q=tags=Verkehrsberuhigte+Zonen\">https://data.bs.ch/explore/?sort=modified&amp;q=tags=Verkehrsberuhigte+Zonen</a>"]
 pub mod verkehrsberuhigte_zonen_kernzone_verkehrskonzept_innenstadt {
     use super::*;
 
@@ -24450,7 +24983,7 @@ pub mod verkehrsberuhigte_zonen_kernzone_verkehrskonzept_innenstadt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         Objectid,
@@ -24471,7 +25004,7 @@ pub mod verkehrsberuhigte_zonen_kernzone_verkehrskonzept_innenstadt {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -24496,7 +25029,7 @@ pub mod verkehrsberuhigte_zonen_kernzone_verkehrskonzept_innenstadt {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -24582,7 +25115,9 @@ pub mod verkehrsberuhigte_zonen_kernzone_verkehrskonzept_innenstadt {
     }
 }
 
-/// Strassen und Wege: Kantonsstrassen Riehen und Bettingen
+#[doc = "Strassen und Wege: Kantonsstrassen Riehen und Bettingen"]
+#[doc = ""]
+#[doc = "Dieser Datensatz ist Teil des kantonalen Geodatenmodells des Kantons Basel-Stadt \"Strassen und Wege\" und stellt die Kantonsstrassen Riehen und Bettingen dar. <br>Weitere Daten zu \"Strassen und Wege\":<a href=\"https://data.bs.ch/explore/?refine.tags=Strassen+und+Wege\">https://data.bs.ch/explore/?refine.tags=Strassen+und+Wege</a><br>\nDie Kantonsstrassen Riehen und Bettingen zeigen die Kantonsstrassen in Riehen und Bettingen."]
 pub mod strassen_und_wege_kantonsstrassen_riehen_und_bettingen {
     use super::*;
 
@@ -24616,7 +25151,7 @@ pub mod strassen_und_wege_kantonsstrassen_riehen_und_bettingen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdKsrb,
         Gemeinde,
@@ -24635,7 +25170,7 @@ pub mod strassen_und_wege_kantonsstrassen_riehen_und_bettingen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -24660,7 +25195,7 @@ pub mod strassen_und_wege_kantonsstrassen_riehen_und_bettingen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -24746,7 +25281,9 @@ pub mod strassen_und_wege_kantonsstrassen_riehen_und_bettingen {
     }
 }
 
-/// Nutzungsplan - Zonenplan Riehen:  Überlagernde Festlegungen
+#[doc = "Nutzungsplan - Zonenplan Riehen:  \u{dc}berlagernde Festlegungen"]
+#[doc = ""]
+#[doc = "Der Zonenplan legt Ort, Art und Mass der Bodennutzung f\u{fc}r ein bestimmtes Gebiet parzellenscharf und grundeigent\u{fc}merverbindlich fest. Zonenplan Riehen gem\u{e4}ss Beschluss des Riehener Einwohnerrats vom 27.11.2014 + 24.09.2015 und Genehmigung des Regierungsrates Basel-Stadt vom 7. Dezember 2016. Der Datensatz enth\u{e4}lt den Zonenplan sowie die Perimeter der Bebauungspl\u{e4}ne, der Speziellen Nutzungsvorschriften und des Nutzungsplans Stettenfeld.<br>Weitere Daten zum Thema ?Nutzungsplanung?: <a href=\"https://data.bs.ch/explore/?refine.tags=Nutzungsplanung\">https://data.bs.ch/explore/?refine.tags=Nutzungsplanung</a>"]
 pub mod nutzungsplan_zonenplan_riehen_ueberlagernde_festlegungen {
     use super::*;
 
@@ -24805,7 +25342,7 @@ pub mod nutzungsplan_zonenplan_riehen_ueberlagernde_festlegungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Idueberfes,
         Festueber,
@@ -24842,7 +25379,7 @@ pub mod nutzungsplan_zonenplan_riehen_ueberlagernde_festlegungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -24867,7 +25404,7 @@ pub mod nutzungsplan_zonenplan_riehen_ueberlagernde_festlegungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -24953,7 +25490,9 @@ pub mod nutzungsplan_zonenplan_riehen_ueberlagernde_festlegungen {
     }
 }
 
-/// Nutzungsplan - Zonenplan Bettingen:  Überlagernde Festlegungen
+#[doc = "Nutzungsplan - Zonenplan Bettingen:  \u{dc}berlagernde Festlegungen"]
+#[doc = ""]
+#[doc = "Zonenplan der Gemeinde Bettingen gem\u{e4}ss Beschluss der Einwohnergemeindeversammlung vom 2. Dezember 2008 und der Genehmigung des Bau- und Verkehrsdepartements vom 1.7.2009. Der Datensatz enth\u{e4}lt den Zonenplan und die Bebauungspl\u{e4}ne ist ein Teil des Geodatenmodelles des Kantons Basel-Stadt zum Thema ?Nutzungsplanung?.<br>Weitere Daten zum Thema ?Nutzungsplanung?: <a href=\"https://data.bs.ch/explore/?refine.tags=Nutzungsplanung\">https://data.bs.ch/explore/?refine.tags=Nutzungsplanung</a>"]
 pub mod nutzungsplan_zonenplan_bettingen_ueberlagernde_festlegungen {
     use super::*;
 
@@ -25004,7 +25543,7 @@ pub mod nutzungsplan_zonenplan_bettingen_ueberlagernde_festlegungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Idueberfes,
         Festueber,
@@ -25037,7 +25576,7 @@ pub mod nutzungsplan_zonenplan_bettingen_ueberlagernde_festlegungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -25062,7 +25601,7 @@ pub mod nutzungsplan_zonenplan_bettingen_ueberlagernde_festlegungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -25148,7 +25687,9 @@ pub mod nutzungsplan_zonenplan_bettingen_ueberlagernde_festlegungen {
     }
 }
 
-/// Verkehrsberuhigte Zonen: Fussgängerzone
+#[doc = "Verkehrsberuhigte Zonen: Fussg\u{e4}ngerzone"]
+#[doc = ""]
+#[doc = "Dieser Datensatz beinhaltet die signalisierten Fussg\u{e4}ngerzonen.<br>Die verkehrsberuhigten Zonen setzen sich aus Fussg\u{e4}ngerzonen, Begegnungszonen und Tempo 30-Zonen zusammen. Ebenso ist der Perimeter des Verkehrskonzepts Innenstadt mit der Kernzone mit eingeschr\u{e4}nktem Motorfahrzeugverkehr dargestellt.<br>Weitere Daten zu \"Verkehrsberuhigte Zonen\": <a href=\"https://data.bs.ch/explore/?refine.tags=Verkehrsberuhigte+Zonen\">https://data.bs.ch/explore/?refine.tags=Verkehrsberuhigte+Zonen</a>"]
 pub mod verkehrsberuhigte_zonen_fussgaengerzone {
     use super::*;
 
@@ -25190,7 +25731,7 @@ pub mod verkehrsberuhigte_zonen_fussgaengerzone {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdFussgae,
         Regime,
@@ -25213,7 +25754,7 @@ pub mod verkehrsberuhigte_zonen_fussgaengerzone {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -25238,7 +25779,7 @@ pub mod verkehrsberuhigte_zonen_fussgaengerzone {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -25324,7 +25865,9 @@ pub mod verkehrsberuhigte_zonen_fussgaengerzone {
     }
 }
 
-/// Standorte der Smiley-Geschwindigkeitsanzeigen
+#[doc = "Standorte der Smiley-Geschwindigkeitsanzeigen"]
+#[doc = ""]
+#[doc = "Die Smiley-Geschwindigkeitsanzeigen dienen der Kantonspolizei Basel-Stadt zur Erh\u{f6}hung der Verkehrssicherheit an der betreffenden \u{d6}rtlichkeit. Die Wechselanzeige von der aktuell gefahrenen Geschwindigkeit und Smiley-Symbol (Lob oder Tadel) ohne Repression weist auf freundliche Weise auf ein allf\u{e4}lliges Fahrverhalten hin. Durch diese Selbstkontrolle soll das Fahrverhalten positiv beeinflusst, die vorgeschriebene Geschwindigkeit besser eingehalten und die Aufmerksamkeit der Verkehrsteilnehmenden erh\u{f6}ht werden. Mit den Ger\u{e4}ten k\u{f6}nnen zudem Verkehrsdaten anonym erfasst werden. Die Geschwindigkeitsanzeigen stehen nicht in einem Zusammenhang mit Ordnungsbussen oder einer strafrechtlichen Verfolgung."]
 pub mod standorte_der_smiley_geschwindigkeitsanzeigen {
     use super::*;
 
@@ -25367,10 +25910,18 @@ pub mod standorte_der_smiley_geschwindigkeitsanzeigen {
         /// Messbeginn
         ///
         /// Datum des Beginn Smiley-Geschwindigkeitsanzeigen-Betriebs
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messbegin: Option<Date>,
         /// Messende
         ///
         /// Datum des Ende Smiley-Geschwindigkeitsanzeigen-Betriebs
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messende: Option<Date>,
         /// OGD-Link-Einzelmessung
         ///
@@ -25388,7 +25939,7 @@ pub mod standorte_der_smiley_geschwindigkeitsanzeigen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdSmiley,
         Idstandort,
@@ -25423,7 +25974,7 @@ pub mod standorte_der_smiley_geschwindigkeitsanzeigen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -25448,7 +25999,7 @@ pub mod standorte_der_smiley_geschwindigkeitsanzeigen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -25534,7 +26085,9 @@ pub mod standorte_der_smiley_geschwindigkeitsanzeigen {
     }
 }
 
-/// Strassen und Wege: Strassentypen und Wege
+#[doc = "Strassen und Wege: Strassentypen und Wege"]
+#[doc = ""]
+#[doc = "Dieser Datensatz ist Teil des kantonalen Geodatenmodells des Kantons Basel-Stadt \"Strassen und Wege\" und stellt die Strassentypen und Wege dar. <br>Weitere Daten zu \"Strassen und Wege\": <a href=\"https://data.bs.ch/explore/?refine.tags=Strassen+und+Wege\"> https://data.bs.ch/explore/?refine.tags=Strassen+und+Wege</a><br>\nDie Strassentypen und Wege zeigen die Strassentypen (nach VSS - Schweizerischer Verband der Strassen- und Verkehrsfachleute) und Wege im Kanton Basel-Stadt. Darunter fallen verkehrsorientierte Strassen, siedlungsorientierte Strassen und Wege im Kanton."]
 pub mod strassen_und_wege_strassentypen_und_wege {
     use super::*;
 
@@ -25576,7 +26129,7 @@ pub mod strassen_und_wege_strassentypen_und_wege {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdStrweg,
         Strname,
@@ -25603,7 +26156,7 @@ pub mod strassen_und_wege_strassentypen_und_wege {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -25628,7 +26181,7 @@ pub mod strassen_und_wege_strassentypen_und_wege {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -25714,7 +26267,9 @@ pub mod strassen_und_wege_strassentypen_und_wege {
     }
 }
 
-/// Rheinüberwachungsstation: Umweltanalyse Wasserphase
+#[doc = "Rhein\u{fc}berwachungsstation: Umweltanalyse Wasserphase"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz enth\u{e4}lt die Analysedaten aus der binationalen Rhein\u{fc}berwachungsstation (R\u{dc}S) in Weil am Rhein (Rhein-Kilometer 171,37) seit Bestehen der Station im Jahr 1993 aus der Matrix Wasser.</p><p>Der Rhein wird aktuell auf 670 Schadstoffe untersucht, 420 davon t\u{e4}glich. Der Unterhalt der Anlage und die Analytik werden durch das Amt f\u{fc}r Umwelt und Energie des Kantons Basel-Stadt (AUE) geleistet. Auftraggeber sind die Landesanstalt f\u{fc}r Umwelt, Messungen und Naturschutz Baden-W\u{fc}rttemberg (LUBW) und das schweizerische Bundesamt f\u{fc}r Umwelt (BAFU).</p><p>Weitere Informationen: <a href=\"http://www.aue.bs.ch/umweltanalytik/rheinueberwachungsstation-weil-am-rhein.html\" target=\"_blank\">http://www.aue.bs.ch/umweltanalytik/rheinueberwachungsstation-weil-am-rhein.html</a></p><p>Die Daten einzelner Jahre ab dem Jahr 1993 k\u{f6}nnen heruntergeladen werden unter der URL mit dem Muster https://data-bs.ch/umweltlabor/gew_rhein_rues_wasser_[JAHR].csv, also zum Beispiel f\u{fc}r das Jahr 2020 hier: <a href=\"https://data-bs.ch/umweltlabor/gew_rhein_rues_wasser_2020.csv\" target=\"_blank\">https://data-bs.ch/umweltlabor/gew_rhein_rues_wasser_2020.csv</a></p>"]
 pub mod rheinueberwachungsstation_umweltanalyse_wasserphase {
     use super::*;
 
@@ -25812,6 +26367,10 @@ pub mod rheinueberwachungsstation_umweltanalyse_wasserphase {
         /// Probenahmedatum_date
         ///
         /// Datum der Probenahme.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub probenahmedatum_date: Option<Date>,
         /// Probenahmejahr
         ///
@@ -25825,7 +26384,7 @@ pub mod rheinueberwachungsstation_umweltanalyse_wasserphase {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Probentyp,
         Probenahmestelle,
@@ -25882,7 +26441,7 @@ pub mod rheinueberwachungsstation_umweltanalyse_wasserphase {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -25907,7 +26466,7 @@ pub mod rheinueberwachungsstation_umweltanalyse_wasserphase {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -25993,7 +26552,9 @@ pub mod rheinueberwachungsstation_umweltanalyse_wasserphase {
     }
 }
 
-/// Überwachung Luftqualität Transformation Areal Rosental: Gemessene Überschreitungen der Interventionswerte
+#[doc = "\u{dc}berwachung Luftqualit\u{e4}t Transformation Areal Rosental: Gemessene \u{dc}berschreitungen der Interventionswerte"]
+#[doc = ""]
+#[doc = "<p>Bedingt durch die fr\u{fc}here Nutzung des Rosental Areals \u{2013} auch bekannt als die Wiege der Basler Chemie - ist der Untergrund mit Schadstoffen belastet. W\u{e4}hrend der Tiefbauarbeiten im Rahmen der \u{ab}Transformation <a href=\"https://rosentalmitte.ch/\" target=\"_blank\">Rosental Mitte</a>\u{bb} \u{fc}berwacht das <a href=\"http://www.basler-luft.ch/\" target=\"_blank\">Lufthygieneamt beider Basel (LHA)</a> die Immissionen mittels Messungen der Luft <a href=\"https://data.bs.ch/pages/rosental-dashboard/\" target=\"_blank\">(Dashboard)</a>.\u{a0}</p><div><br/></div>"]
 pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_gemessene_ueberschreitungen_der_interventionswerte {
     use super::*;
 
@@ -26019,7 +26580,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_gemessene_ueber
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Standort,
@@ -26042,7 +26603,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_gemessene_ueber
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -26067,7 +26628,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_gemessene_ueber
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -26153,7 +26714,9 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_gemessene_ueber
     }
 }
 
-/// Schulstandorte (Gemeinde Basel)
+#[doc = "Schulstandorte (Gemeinde Basel)"]
+#[doc = ""]
+#[doc = "Die Karte zeigt die Schulstandorte (Kinderg\u{e4}rten, Primar-, Sekundarschule, Gymnasium, Zentrum f\u{fc}r Br\u{fc}ckenangebote, Allgemeine Gewerbeschule, Fachmaturit\u{e4}tsschule, Spezialangebote sowie Tagesstrukturen, Sportpl\u{e4}tze, Turnhallen ausserhalb von Schulstandorten und Schwimmhallen) der Gemeinde Basel."]
 pub mod schulstandorte_gemeinde_basel {
     use super::*;
 
@@ -26219,7 +26782,7 @@ pub mod schulstandorte_gemeinde_basel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Schulstand,
         Schultyp,
@@ -26258,7 +26821,7 @@ pub mod schulstandorte_gemeinde_basel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -26283,7 +26846,7 @@ pub mod schulstandorte_gemeinde_basel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -26369,7 +26932,9 @@ pub mod schulstandorte_gemeinde_basel {
     }
 }
 
-/// Gewässerschutzkarte: Gewässerschutzbereiche
+#[doc = "Gew\u{e4}sserschutzkarte: Gew\u{e4}sserschutzbereiche"]
+#[doc = ""]
+#[doc = "Die Gew\u{e4}sserschutzkarte ist das zentrale planerische Instrument f\u{fc}r den praktischen Vollzug des Grundwasserschutzes. Dargestellt sind die Gew\u{e4}sserschutzbereiche und die Grundwasserschutzzonen."]
 pub mod gewaesserschutzkarte_gewaesserschutzbereiche {
     use super::*;
 
@@ -26405,7 +26970,7 @@ pub mod gewaesserschutzkarte_gewaesserschutzbereiche {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Idgbereich,
         Typ,
@@ -26428,7 +26993,7 @@ pub mod gewaesserschutzkarte_gewaesserschutzbereiche {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -26453,7 +27018,7 @@ pub mod gewaesserschutzkarte_gewaesserschutzbereiche {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -26539,7 +27104,9 @@ pub mod gewaesserschutzkarte_gewaesserschutzbereiche {
     }
 }
 
-/// Schulstandorte (Gemeinden Riehen und Bettingen)
+#[doc = "Schulstandorte (Gemeinden Riehen und Bettingen)"]
+#[doc = ""]
+#[doc = "Schulstandorte der Primarstufe (Gemeinden Riehen und Bettingen)"]
 pub mod schulstandorte_gemeinden_riehen_und_bettingen {
     use super::*;
 
@@ -26585,7 +27152,7 @@ pub mod schulstandorte_gemeinden_riehen_und_bettingen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdSchule,
         Standort,
@@ -26624,7 +27191,7 @@ pub mod schulstandorte_gemeinden_riehen_und_bettingen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -26649,7 +27216,7 @@ pub mod schulstandorte_gemeinden_riehen_und_bettingen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -26735,7 +27302,9 @@ pub mod schulstandorte_gemeinden_riehen_und_bettingen {
     }
 }
 
-/// Coronavirus (COVID-19): Fallzahlen Basel-Stadt
+#[doc = "Coronavirus (COVID-19): Fallzahlen Basel-Stadt"]
+#[doc = ""]
+#[doc = "<div><div>Anzahl F\u{e4}lle der Coronavirus-Krankheit (COVID-19) in Basel-Stadt. Die Daten wurden zu Beginn der Pandemie durch Mitarbeiter der Fachstelle OGD Basel-Stadt von Hand aus \u{f6}ffentlich zug\u{e4}nglichen offiziellen Quellen eingetippt. Sp\u{e4}ter wurden die Daten aus den Bulletins des Gesundheitsdepartements Basel-Stadt automatisiert ausgelesen. Mittlerweile stammen die Angaben direkt von den medizinischen Diensten des Gesundheitsdepartements Basel-Stadt.</div><div><br/></div><div>Die Quellenangabe der jeweiligen Zahlen sind direkt der Tabelle zu entnehmen.\u{a0}</div><div><br/></div></div><div>Die offiziellen Daten aller Kantone und des F\u{fc}rstentums Liechtenstein (FL) sind hier zu finden:\u{a0}</div><ul><li>Interaktives Dashboard der Zahlen aller Kantone:\u{a0}<a href=\"https://data.bs.ch/pages/covid-19-dashboard/\">https://data.bs.ch/pages/covid-19-dashboard/</a></li><li>Alle Kantone und FL in einem File: <a href=\"https://github.com/openZH/covid_19/blob/master/COVID19_Fallzahlen_CH_total_v2.csv\" target=\"_blank\">https://github.com/openZH/covid_19/blob/master/COVID19_Fallzahlen_CH_total_v2.csv</a></li><li>Ein File pro Kanton (z.T. sind in den einzelnen Files zus\u{e4}tzliche Spalten vorhanden gegen\u{fc}ber dem gesamtschweizerischen File): <a href=\"https://github.com/openZH/covid_19/tree/master/fallzahlen_kanton_total_csv_v2\" target=\"_blank\">https://github.com/openZH/covid_19/tree/master/fallzahlen_kanton_total_csv_v2</a><a href=\"https://github.com/openZH/covid_19/tree/master/fallzahlen_kanton_total_csv_v2\" target=\"_blank\"></a></li></ul><p>Informationen zu den durchgef\u{fc}hrten Tests auf t\u{e4}glicher Basis gem\u{e4}ss Bundesamt f\u{fc}r Gesundheit (BAG) finden sich neu in diesem Datensatz: <a href=\"https://data.bs.ch/explore/dataset/100094/table/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100094/table/</a></p><p>Daten zu Todesf\u{e4}llen von Personen mit SARS-CoV-2 mit Wohnsitz in Basel-Stadt sind in diesem Datensatz zu finden: <a href=\"https://data.bs.ch/explore/dataset/100076\" target=\"_blank\">https://data.bs.ch/explore/dataset/100076</a><a \"=\"\" href=\"https://data.bs.ch/explore/dataset/100076\" target=\"_blank\"></a></p><p>Daten zu den 7- und 14-Tages Inzidenzen sowie den Fallzahlen pro Gemeinde (Basel, Riehen, Bettingen) sind in diesem Datensatz:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100108\" target=\"_blank\">https://data.bs.ch/explore/dataset/100108</a></p><p><b>\u{c4}nderungsprotokoll:</b></p><ul><li>Ab dem 5.11.2020 wurden keine Angaben mehr zu positiv getesteten Personen mit Wohnsitz ausserhalb des Kantons Basel-Stadt gemacht. Dies, weil die Tests mittlerweile durch eine gr\u{f6}ssere Anzahl Laboratorien durchgef\u{fc}hrt wurden und nicht mehr alle Resultate der ausserkantonalen und internationalen F\u{e4}lle dem kantons\u{e4}rztlichen Dienst Basel-Stadt gemeldet wurden.</li><li><span>Ab 18.6.2022 wurden am Samstag und Sonntag keine neuen Daten in diesen Datensatz publiziert.\u{a0}</span></li><li><span>Ab 1. Februar 2023 wurden die Daten jeweils am Dienstag und am Freitag aktualisiert.</span></li><li><span>Ab 4. April 2023 werden die Daten jeweils am Dienstag aktualisiert. Die Daten werden somit einmal w\u{f6}chentlich aktualisiert.</span></li><li><span>Die Erhebung der Fallzahlen wurde per 5. Juli 2023 sistiert. Der Datensatz wird nicht mehr aktualisiert.</span>\u{a0}Aktualisierungsintervall von \"DAILY\" auf \"NEVER\" ge\u{e4}ndert.</li></ul><p><br/></p>"]
 pub mod coronavirus_covid_19_fallzahlen_basel_stadt {
     use super::*;
 
@@ -26827,6 +27396,10 @@ pub mod coronavirus_covid_19_fallzahlen_basel_stadt {
         /// Datum
         ///
         /// Datum der Datenveröffentlichung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Zeit
         ///
@@ -26844,7 +27417,7 @@ pub mod coronavirus_covid_19_fallzahlen_basel_stadt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         AbbreviationCantonAndFl,
@@ -26903,7 +27476,7 @@ pub mod coronavirus_covid_19_fallzahlen_basel_stadt {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -26928,7 +27501,7 @@ pub mod coronavirus_covid_19_fallzahlen_basel_stadt {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -27014,7 +27587,9 @@ pub mod coronavirus_covid_19_fallzahlen_basel_stadt {
     }
 }
 
-/// Gewässerschutzkarte: Grundwasserschutzzonen
+#[doc = "Gew\u{e4}sserschutzkarte: Grundwasserschutzzonen"]
+#[doc = ""]
+#[doc = "Die Grundwasserschutzzonen S1-S3 sind das wichtigste Instrument, Fassungs-, Anreicherungsanlagen und das Grundwasser unmittelbar vor seiner Nutzung als Trinkwasser vor Beeintr\u{e4}chtigungen zu sch\u{fc}tzen."]
 pub mod gewaesserschutzkarte_grundwasserschutzzonen {
     use super::*;
 
@@ -27071,7 +27646,7 @@ pub mod gewaesserschutzkarte_grundwasserschutzzonen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Idgwszone,
         Typ,
@@ -27104,7 +27679,7 @@ pub mod gewaesserschutzkarte_grundwasserschutzzonen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -27129,7 +27704,7 @@ pub mod gewaesserschutzkarte_grundwasserschutzzonen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -27215,7 +27790,9 @@ pub mod gewaesserschutzkarte_grundwasserschutzzonen {
     }
 }
 
-/// Abfuhrzonen (Gemeinde Basel)
+#[doc = "Abfuhrzonen (Gemeinde Basel)"]
+#[doc = ""]
+#[doc = "Abfuhrzonen der Stadtreinigung (Tiefbauamt) f\u{fc}r die Stadt Basel. Beinhaltet die Fl\u{e4}chen der Abfuhrzonen (A bis H) der Stadt Basel."]
 pub mod abfuhrzonen_gemeinde_basel {
     use super::*;
 
@@ -27235,7 +27812,7 @@ pub mod abfuhrzonen_gemeinde_basel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Zone,
     }
@@ -27248,7 +27825,7 @@ pub mod abfuhrzonen_gemeinde_basel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -27273,7 +27850,7 @@ pub mod abfuhrzonen_gemeinde_basel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -27359,7 +27936,9 @@ pub mod abfuhrzonen_gemeinde_basel {
     }
 }
 
-/// Verbotszonen geteilte Mikromobilität: Sperr- und Parkverbotszonen
+#[doc = "Verbotszonen geteilte Mikromobilit\u{e4}t: Sperr- und Parkverbotszonen"]
+#[doc = ""]
+#[doc = "Der Datensatz zeigt jene Zonen, die das Amt f\u{fc}r Mobilit\u{e4}t f\u{fc}r die Sharing-Anbieter der Mikromobilit\u{e4}t (z. B. Velo, E-Scooter etc.) in Basel definiert. Es sind dies Zonen, in denen die Fahrzeuge nicht abgemeldet werden d\u{fc}rfen (Parkverbotszonen) und Zonen, in denen die Fahrzeuge nicht durchfahren d\u{fc}rfen (Sperrzonen). Die Anbieter sind frei, selber zus\u{e4}tzliche Parkverbots- und Sperrzonen zu definieren."]
 pub mod verbotszonen_geteilte_mikromobilitaet_sperr_und_parkverbotszonen {
     use super::*;
 
@@ -27389,7 +27968,7 @@ pub mod verbotszonen_geteilte_mikromobilitaet_sperr_und_parkverbotszonen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdVerbot,
         Name,
@@ -27406,7 +27985,7 @@ pub mod verbotszonen_geteilte_mikromobilitaet_sperr_und_parkverbotszonen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -27431,7 +28010,7 @@ pub mod verbotszonen_geteilte_mikromobilitaet_sperr_und_parkverbotszonen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -27517,7 +28096,9 @@ pub mod verbotszonen_geteilte_mikromobilitaet_sperr_und_parkverbotszonen {
     }
 }
 
-/// Feinstaubmessungen Naturhistorisches Museum Basel
+#[doc = "Feinstaubmessungen Naturhistorisches Museum Basel"]
+#[doc = ""]
+#[doc = "<p>Im Rahmen der Sonderausstellung ERDE AM LIMIT\u{a0}(20.11.2020 bis 3.7.2022) wurden mit Hilfe eines Mikrosensors Feinstaub (PM2.5) vom Dach des <a href=\"https://www.nmbs.ch/\" target=\"_blank\">Naturhistorischen Museums Basel</a> gemessen. Hier werden die unvalidierten Daten von Feinstaub PM2.5 zur Verf\u{fc}gung gestellt.</p>"]
 pub mod feinstaubmessungen_naturhistorisches_museum_basel {
     use super::*;
 
@@ -27542,7 +28123,7 @@ pub mod feinstaubmessungen_naturhistorisches_museum_basel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Anfangszeit,
         Pm25,
@@ -27559,7 +28140,7 @@ pub mod feinstaubmessungen_naturhistorisches_museum_basel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -27584,7 +28165,7 @@ pub mod feinstaubmessungen_naturhistorisches_museum_basel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -27670,7 +28251,9 @@ pub mod feinstaubmessungen_naturhistorisches_museum_basel {
     }
 }
 
-/// Tigermückenbekämpfung: Bekämpfungszone
+#[doc = "Tigerm\u{fc}ckenbek\u{e4}mpfung: Bek\u{e4}mpfungszone"]
+#[doc = ""]
+#[doc = "Das Monitoring der Tigerm\u{fc}cken basiert auf 3 Standpfeilern: a) Aktives Monitoring mittels Fallennetzwerk und regelm\u{e4}ssigen Kontrollen der Fallen b) Passives Monitoring aufgrund von Meldungen aus der Bev\u{f6}lkerung c) Nachuntersuchungen bei Bedarf"]
 pub mod tigermueckenbekaempfung_bekaempfungszone {
     use super::*;
 
@@ -27700,7 +28283,7 @@ pub mod tigermueckenbekaempfung_bekaempfungszone {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdBekam,
         Url,
@@ -27717,7 +28300,7 @@ pub mod tigermueckenbekaempfung_bekaempfungszone {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -27742,7 +28325,7 @@ pub mod tigermueckenbekaempfung_bekaempfungszone {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -27828,7 +28411,9 @@ pub mod tigermueckenbekaempfung_bekaempfungszone {
     }
 }
 
-/// Secondhand-Angebote / Wiederverwendungsstellen
+#[doc = "Secondhand-Angebote / Wiederverwendungsstellen"]
+#[doc = ""]
+#[doc = "Dieser Datensatz enth\u{e4}lt die Standorte verschiedener\nSecondhand-Waren in der Region Basel, die entweder verkauft oder kostenlos\nweitergegeben werden. Diese Standorte k\u{f6}nnen Secondhand-L\u{e4}den, Brockenh\u{e4}user,\nBuchhandlungen, B\u{fc}cherschr\u{e4}nke, Lebensmittelverteilschr\u{e4}nke oder\nElektrofachgesch\u{e4}fte umfassen. Bei einigen Standorten sind zus\u{e4}tzliche\nInformationen wie Telefonnummern und Links zu ihren Internetseiten verf\u{fc}gbar."]
 pub mod secondhand_angebote_wiederverwendungsstellen {
     use super::*;
 
@@ -27872,7 +28457,7 @@ pub mod secondhand_angebote_wiederverwendungsstellen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdWiederv,
         Kategorie,
@@ -27903,7 +28488,7 @@ pub mod secondhand_angebote_wiederverwendungsstellen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -27928,7 +28513,7 @@ pub mod secondhand_angebote_wiederverwendungsstellen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -28014,7 +28599,9 @@ pub mod secondhand_angebote_wiederverwendungsstellen {
     }
 }
 
-/// Kitas und Tagesheime
+#[doc = "Kitas und Tagesheime"]
+#[doc = ""]
+#[doc = "\u{ab}Kitas\u{bb}, \u{ab}Kindertagesst\u{e4}tten\u{bb} oder \u{ab}Tagesheime\u{bb} sind Einrichtungen, in denen Kinder regelm\u{e4}ssig tags\u{fc}ber durch qualifizierte Fachpersonen und in geeigneten R\u{e4}umlichkeiten betreut werden.\n\u{ab}Tagesfamilien\u{bb} sind Familien, in denen Kinder gegen Entgelt und regelm\u{e4}ssig in geeigneten R\u{e4}umlichkeiten betreut werden."]
 pub mod kitas_und_tagesheime {
     use super::*;
 
@@ -28064,7 +28651,7 @@ pub mod kitas_und_tagesheime {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdTk,
         StdName,
@@ -28093,7 +28680,7 @@ pub mod kitas_und_tagesheime {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -28118,7 +28705,7 @@ pub mod kitas_und_tagesheime {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -28204,13 +28791,19 @@ pub mod kitas_und_tagesheime {
     }
 }
 
-/// Grosser Rat: Live-Abstimmungsergebnisse
+#[doc = "Grosser Rat: Live-Abstimmungsergebnisse"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Abstimmungen des Grossen Rates Basel-Stadt, einzeln f\u{fc}r jedes Ratsmitglied und jede Abstimmung. An Sitzungstagen werden die Daten in Echtzeit aktualisiert.\u{a0}</p><p>Abstimmungen an Sitzungen, welche w\u{e4}hrend der Coronavirus-Ausnahmesituation 2020/2021 im Kongresscenter Basel abgehalten wurden, sind nun auch in diesem Datensatz vorhanden.\u{a0}</p><p>Die Daten k\u{f6}nnen auch als Website und PDF Datei hier eingesehen werden:\u{a0}</p><ul><li>Aktuelle Sitzung:\u{a0}<a href=\"https://grosserrat.bs.ch/ratsbetrieb/tagesordnung/abstimmungsergebnisse\" target=\"_blank\">https://grosserrat.bs.ch/ratsbetrieb/tagesordnung/abstimmungsergebnisse</a><a href=\"http://abstimmungen.grosserrat-basel.ch/index_aktuell.php\" target=\"_blank\"></a></li><li>Vergangene Sitzungen (Archiv):\u{a0}<a href=\"http://abstimmungen.grosserrat-basel.ch/index_archiv.php\" target=\"_blank\">http://abstimmungen.grosserrat-basel.ch/index_archiv.php</a><a href=\"http://abstimmungen.grosserrat-basel.ch/index_archiv.php\" target=\"_blank\"></a></li></ul><p>Bitte beachten Sie, dass f\u{fc}r das offizielle Abstimmungsergebnis das jeweilige Sitzungsprotokoll des Grossen Rates massgeblich ist (elektronische Fassung:\u{a0}<a href=\"https://ratsprotokolle.grosserrat.bs.ch\" target=\"_blank\">https://ratsprotokolle.grosserrat.bs.ch</a>)</p><p>\u{c4}nderungsprotokoll:<br>5. April 2024: Der Parlamentsdienst nutzt seit dem September 2023 ein neues Abstimmungssystem. Dies f\u{fc}hrt zu einigen \u{c4}nderungen bei den Daten, die geliefert werden. Die Daten konnten mit folgenden Spalten erg\u{e4}nzt werden: Signatur Gesch\u{e4}ft, Signatur Dokument, Erweiterte Abstimmungsnummer, Anrede der abstimmenden Person und Funktion der abstimmenden Person. Des Weiteren haben sich die Abstimmungstypen ge\u{e4}ndert.<br>Die Abstimmungstypen vor dem September 2023: Abstimmung, Schlussabstimmung, Antrag, offene Wahl, R\u{fc}ckweisung, Eventualabstimmung, Eintreten, Ordnungsantrag, ung\u{fc}ltig<br>Die Abstimmungstypen nach dem September 2023: Anwesenheit, Ad Hoc einfaches Mehr, Ad Hoc 2/3 Mehr, Eventual Abstimmung, Schlussabstimmung, Quorum erfassen</p>"]
 pub mod grosser_rat_live_abstimmungsergebnisse {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Zeit
         ///
@@ -28346,7 +28939,7 @@ pub mod grosser_rat_live_abstimmungsergebnisse {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Zeit,
@@ -28421,7 +29014,7 @@ pub mod grosser_rat_live_abstimmungsergebnisse {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -28446,7 +29039,7 @@ pub mod grosser_rat_live_abstimmungsergebnisse {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -28532,7 +29125,9 @@ pub mod grosser_rat_live_abstimmungsergebnisse {
     }
 }
 
-/// Vorhersagen Rhein: Wasserstand und Abfluss
+#[doc = "Vorhersagen Rhein: Wasserstand und Abfluss"]
+#[doc = ""]
+#[doc = "<p>Hydrologischen Vorhersagen (Wasserstand und Abfluss) f\u{fc}r die Station \"Rhein - Basel, Rheinhalle\".</p><p>Die Vorhersagen basieren\u{a0} auf den Meteo-Modellen ICON-CH1-EPS, ICON-CH2-EPS und IFS. Am Anfang der Zeitreihen stehen 24 Std. Messwerte, anschliessend fangen die Prognosen an.\u{a0}</p><p>Bei den ICON-Modellen wird der Kontroll-Lauf in den Spalten \"Wasserstand\" und \"Abflussmenge\" ausgewiesen. Der Kontroll-Lauf ist die\u{a0}hydrologische Vorhersage basierend auf der meteorologischen Kontrollvorhersage.</p><p>Stationsinfo: Die Station befindet sich auf der Kleinbasler Seite auf H\u{f6}he des Birs-Zuflusses.</p><p>Weitere Informationen sind hier zu finden: <a href=\"https://www.hydrodaten.admin.ch/de/2289.html\" target=\"_blank\">https://www.hydrodaten.admin.ch/de/2289.html</a><a href=\"https://www.hydrodaten.admin.ch/de/2289.html\" target=\"_blank\"></a></p><p><b>\u{c4}nderungsprotokoll:</b></p><p><b>30.05.2024:</b>\u{a0}F\u{fc}r die numerische Vorhersage wurde das Wettermodell COSMO mit dem neuen Wettermodell ICON (Icosahedral Nonhydrostatic Weather and Climate Model) ersetzt.\u{a0}Mehr Infos dazu finden Sie hier:\u{a0}<a href=\"https://www.meteoschweiz.admin.ch/ueber-uns/forschung-und-zusammenarbeit/projekte/2023/icon-22.html\" target=\"_blank\">https://www.meteoschweiz.admin.ch/ueber-uns/forschung-und-zusammenarbeit/projekte/2023/icon-22.html</a></p>"]
 pub mod vorhersagen_rhein_wasserstand_und_abfluss {
     use super::*;
 
@@ -28618,7 +29213,7 @@ pub mod vorhersagen_rhein_wasserstand_und_abfluss {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         Wasserstand,
@@ -28663,7 +29258,7 @@ pub mod vorhersagen_rhein_wasserstand_und_abfluss {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -28688,7 +29283,7 @@ pub mod vorhersagen_rhein_wasserstand_und_abfluss {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -28774,7 +29369,9 @@ pub mod vorhersagen_rhein_wasserstand_und_abfluss {
     }
 }
 
-/// Überwachung Luftqualität Transformation Areal Rosental: Flüchtige Schadstoffe
+#[doc = "\u{dc}berwachung Luftqualit\u{e4}t Transformation Areal Rosental: Fl\u{fc}chtige Schadstoffe"]
+#[doc = ""]
+#[doc = "<p>Bedingt durch die fr\u{fc}here Nutzung des Rosental Areals \u{2013} auch bekannt als die Wiege der Basler Chemie - ist der Untergrund mit Schadstoffen belastet. W\u{e4}hrend der Tiefbauarbeiten im Rahmen der \u{ab}Transformation <a href=\"https://rosentalmitte.ch/\" target=\"_blank\">Rosental Mitte</a>\u{bb} \u{fc}berwacht das <a href=\"http://www.basler-luft.ch/\" target=\"_blank\">Lufthygieneamt beider Basel (LHA)</a> die Immissionen mittels Messungen der Luft <a href=\"https://data.bs.ch/pages/rosental-dashboard/\" target=\"_blank\">(Dashboard)</a>.\u{a0}</p><p>\u{c4}nderungsprotokoll:<br>23.4.2024: Die Messstation ROSEN 3 wurde verschoben. Alte geografische Breiten- und L\u{e4}ngengrade 47.567827676637364, 7.603804744961502. Neue Breiten- und L\u{e4}gengrade\u{a0}47.567997530870265, 7.60479830196066.<br></p><div><br></div>"]
 pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_fluechtige_schadstoffe {
     use super::*;
 
@@ -28783,10 +29380,18 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_fluechtige_scha
         /// Messbeginn
         ///
         /// Beginn der Messung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messbeginn: Option<Date>,
         /// Messende
         ///
         /// Ende der Messung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messende: Option<Date>,
         /// Standort
         ///
@@ -28824,7 +29429,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_fluechtige_scha
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Messbeginn,
         Messende,
@@ -28859,7 +29464,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_fluechtige_scha
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -28884,7 +29489,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_fluechtige_scha
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -28970,7 +29575,9 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_fluechtige_scha
     }
 }
 
-/// Birs Temperatur, Wasserstand und Abfluss
+#[doc = "Birs Temperatur, Wasserstand und Abfluss"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt den Wasserstand, die Abflussmenge und die Temperatur der Birs bei \"Hofmatt\" in M\u{fc}nchenstein etwa auf H\u{f6}he der Br\u{fc}cke \"Baselstrasse\" \u{fc}ber die Birs. Es liegen aktuelle Werte alle 5 Minuten vor. Die Messungen werden im Auftrag des Bundesamts f\u{fc}r Umwelt durchgef\u{fc}hrt (siehe <a href=\"https://www.hydrodaten.admin.ch/de/2106.html\" target=\"_blank\">https://www.hydrodaten.admin.ch/de/2106.html</a>).</p>"]
 pub mod birs_temperatur_wasserstand_und_abfluss {
     use super::*;
 
@@ -29001,7 +29608,7 @@ pub mod birs_temperatur_wasserstand_und_abfluss {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         Abfluss,
@@ -29020,7 +29627,7 @@ pub mod birs_temperatur_wasserstand_und_abfluss {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -29045,7 +29652,7 @@ pub mod birs_temperatur_wasserstand_und_abfluss {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -29131,7 +29738,9 @@ pub mod birs_temperatur_wasserstand_und_abfluss {
     }
 }
 
-/// Smart Climate Feinstaubmessungen
+#[doc = "Smart Climate Feinstaubmessungen"]
+#[doc = ""]
+#[doc = "<p>Im Rahmen des Projektes <a href=\"https://smartregiobasel.ch/de/projekte/smart-climate-plug-and-sense\" target=\"_blank\">\u{ab}Smart Climate\u{bb} von Smart Regio Basel (https://smartregiobasel.ch/de/projekte/smart-climate-plug-and-sense)</a> wurden in der ersten Projektphase an zehn Standorten in der Region Basel Luftdaten mit Mikrosensoren gemessen. Das Lufthygieneamt beider Basel, das Amt f\u{fc}r Umwelt und Energie des Kantons Basel-Stadt, der Basler Wetterdienstleister meteoblue AG, die IWB sowie die Sensirion AG schlossen sich zusammen, um in diesem Pilotprojekt den Einsatz von kosteneffizienten Sensoren zur Erfassung des \u{ab}regionalen Mikroklimas\u{bb} zu testen. Hier werden die unvalidierten Daten von Feinstaub PM2.5 zur Verf\u{fc}gung gestellt.\u{a0}Die erste Projektphase wurde Ende 2021 ausgewertet und basierend auf den Ergebnissen das Messnetz verkleinert. Ab Fr\u{fc}hling 2022 werden die Messstationen \u{ab}Erlenparkweg 55\u{bb}, \u{ab}Feldbergstrasse\u{bb}, \u{ab}NABEL Binningen\u{bb}, \u{ab}St. Johanns-Platz\u{bb} und \u{ab}Z\u{fc}rcherstrasse 148 (Breite) weiter betrieben. Die Stationen \u{ab}Goldbachweg\u{bb}, \u{ab}Grenzacherstrasse\u{bb}, \u{ab}Laufenstrasse\u{bb}, \u{ab}Rennweg 89\u{bb} und \u{ab}TS Hochbergerstrasse 162\u{bb} wurden sukzessive ausser Betrieb genommen. Die Daten aus der ersten Projektphase stehen hier nach wie vor zur Verf\u{fc}gung.\u{a0}</p><p>Informationen zu den Standorten der Sensoren sind im Datensatz \u{ab}Standorte Feinstaub Mess-Stationen Smart Climate Luftqualit\u{e4}t\u{bb} ersichtlich:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100084\" target=\"_blank\">https://data.bs.ch/explore/dataset/100084</a>\u{a0}\u{a0}</p>"]
 pub mod smart_climate_feinstaubmessungen {
     use super::*;
 
@@ -29159,7 +29768,7 @@ pub mod smart_climate_feinstaubmessungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Zeitstempel,
         Pm25,
@@ -29180,7 +29789,7 @@ pub mod smart_climate_feinstaubmessungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -29205,7 +29814,7 @@ pub mod smart_climate_feinstaubmessungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -29291,7 +29900,9 @@ pub mod smart_climate_feinstaubmessungen {
     }
 }
 
-/// Smart Climate Schallpegelmessungen
+#[doc = "Smart Climate Schallpegelmessungen"]
+#[doc = ""]
+#[doc = "<p>Im Rahmen des Projektes \u{ab}Smart Climate\u{bb} von\nSmart Regio Basel (<a href=\"https://smartregiobasel.ch/de/projekte/smart-climate-plug-and-sense\" target=\"_blank\">https://smartregiobasel.ch/de/projekte/smart-climate-plug-and-sense</a>)\nwerden an verschiedenen Standorten in der Region Basel Schallpegeldaten mit\nLoRa-Sensoren gemessen. Das Lufthygieneamt beider Basel, das Amt f\u{fc}r Umwelt und\nEnergie des Kantons Basel-Stadt, der Basler Wetterdienstleister meteoblue AG,\ndie IWB sowie die Sensirion AG schlossen sich zusammen, um in diesem\nPilotprojekt den Einsatz von kosteneffizienten Sensoren zur Erfassung des\n\u{ab}regionalen Mikroklimas\u{bb} zu testen. Hier werden die unvalidierten\nSchallpegeldaten (Leq) zur Verf\u{fc}gung gestellt.</p>"]
 pub mod smart_climate_schallpegelmessungen {
     use super::*;
 
@@ -29330,7 +29941,7 @@ pub mod smart_climate_schallpegelmessungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         StationId,
         Timestamp,
@@ -29353,7 +29964,7 @@ pub mod smart_climate_schallpegelmessungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -29378,7 +29989,7 @@ pub mod smart_climate_schallpegelmessungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -29464,7 +30075,9 @@ pub mod smart_climate_schallpegelmessungen {
     }
 }
 
-/// Rhein Wasserstand Klingentalfähre
+#[doc = "Rhein Wasserstand Klingentalf\u{e4}hre"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt den Wasserstand des Rheins in Basel auf der Grossbasler Seite auf H\u{f6}he der Klingentalf\u{e4}hre. Es liegen aktuelle Werte alle 5 Minuten vor. Die Messungen werden im Auftrag des Bundesamts f\u{fc}r Umwelt durchgef\u{fc}hrt (siehe <a href=\"https://www.hydrodaten.admin.ch/de/2615.html\" target=\"_blank\">https://www.hydrodaten.admin.ch/de/2615.html</a>).</p>"]
 pub mod rhein_wasserstand_klingentalfaehre {
     use super::*;
 
@@ -29487,7 +30100,7 @@ pub mod rhein_wasserstand_klingentalfaehre {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         Pegel,
@@ -29502,7 +30115,7 @@ pub mod rhein_wasserstand_klingentalfaehre {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -29527,7 +30140,7 @@ pub mod rhein_wasserstand_klingentalfaehre {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -29613,7 +30226,9 @@ pub mod rhein_wasserstand_klingentalfaehre {
     }
 }
 
-/// Strassenverkehrsunfälle
+#[doc = "Strassenverkehrsunf\u{e4}lle"]
+#[doc = ""]
+#[doc = "Die Strassenverkehrsunf\u{e4}lle im Kanton Basel-Stadt seit 2011 werden nach Unfalltyp und Unfallschweregrad kategorisiert dargestellt. Die Daten werden j\u{e4}hrlich aktualisiert."]
 pub mod strassenverkehrsunfaelle {
     use super::*;
 
@@ -29638,6 +30253,10 @@ pub mod strassenverkehrsunfaelle {
         /// Unfalljahr
         ///
         /// Unfalljahr in dem sich der Unfall ereignet hat.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub jahr: Option<Date>,
         /// Unfallmonat
         ///
@@ -29675,7 +30294,7 @@ pub mod strassenverkehrsunfaelle {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdUnfall,
         Typ,
@@ -29708,7 +30327,7 @@ pub mod strassenverkehrsunfaelle {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -29733,7 +30352,7 @@ pub mod strassenverkehrsunfaelle {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -29819,7 +30438,9 @@ pub mod strassenverkehrsunfaelle {
     }
 }
 
-/// Rheinmesswerte kontinuierlich
+#[doc = "Rheinmesswerte kontinuierlich"]
+#[doc = ""]
+#[doc = "<p>Kontinuierlich gemessene Parameter der <a href=\"https://www.aue.bs.ch/umweltanalytik/rheinueberwachungsstation-weil-am-rhein.html\" target=\"_blank\">Rhein\u{fc}berwachungsstation Weil am Rhein</a>\u{a0}(RUES), jeweils gemittelt \u{fc}ber 15 Minuten. Werte werden alle 15 Minuten wie von den Sensoren gemessen als Rohdaten publiziert. J\u{e4}hrlich werden die Daten manuell plausibilisiert und als Stundenwerte ver\u{f6}ffentlicht.\u{a0}</p><p>Standort: Rheinkilometer 171.37km</p><p>Koordinaten: <a href=\"https://www.google.ch/maps/place/47%C2%B036\'04.7%22N+7%C2%B035\'41.5%22E\" target=\"_blank\">E 7.594868 N 47.601299</a>\u{a0}bzw. E 7\u{b0} 35\u{2018} 39.55\u{201c} N 47\u{b0} 36\u{2018} 4.68\u{201c} bzw. 611740 / 272310</p><p>Tr\u{e4}ger: Schweizerische Eidgenossenschaft; Bundesamt f\u{fc}r Umwelt (BAFU), Land Baden-W\u{fc}rttemberg; Ministerium f\u{fc}r Umwelt, Klima und Energiewirtschaft / Landesanstalt f\u{fc}r Umwelt, Messungen und Naturschutz Baden-W\u{fc}rttemberg (LUBW)</p><p>Messbetrieb / Unterhalt: <a href=\"https://www.aue.bs.ch\" target=\"_blank\">Amt f\u{fc}r Umwelt und Energie Basel-Stadt (AUE-BS)</a></p>"]
 pub mod rheinmesswerte_kontinuierlich {
     use super::*;
 
@@ -29867,7 +30488,7 @@ pub mod rheinmesswerte_kontinuierlich {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Startzeitpunkt,
         StartText,
@@ -29894,7 +30515,7 @@ pub mod rheinmesswerte_kontinuierlich {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -29919,7 +30540,7 @@ pub mod rheinmesswerte_kontinuierlich {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -30005,7 +30626,9 @@ pub mod rheinmesswerte_kontinuierlich {
     }
 }
 
-/// Solarkataster: Dachkanten
+#[doc = "Solarkataster: Dachkanten"]
+#[doc = ""]
+#[doc = "Die Klasse Dachkante ist ein wesentlicher Bestandteil des Geodatenmodells (KGDM) \u{ab}Solarkataster\u{bb} und beschreibt die Dachkanten der Geb\u{e4}ude, die in der Klasse Solarpotenzial erfasst sind. \n<br> S\u{e4}mtliche Datens\u{e4}tze zu dem Produkt \"Solarkataster\": <a href=\"https://data.bs.ch/explore/?refine.tags=solarkataster\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=solarkataster</a>\n<br>Diese Dachkanten repr\u{e4}sentieren die \u{dc}bergangsbereiche zwischen den Dachfl\u{e4}chen und den Geb\u{e4}udefassaden und dienen als visuelle Referenz zur Unterst\u{fc}tzung der Analyse und Bewertung des Solarpotenzials.\n<br>Die Klasse Dachkante ist besonders n\u{fc}tzlich f\u{fc}r Fachleute, die sich mit der Planung und Bewertung von Solaranlagen besch\u{e4}ftigen. Sie dient als Grundlage f\u{fc}r detaillierte Analysen und Entscheidungsprozesse in der solartechnischen Nutzung von Geb\u{e4}uden."]
 pub mod solarkataster_dachkanten {
     use super::*;
 
@@ -30027,7 +30650,7 @@ pub mod solarkataster_dachkanten {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdDkante,
     }
@@ -30040,7 +30663,7 @@ pub mod solarkataster_dachkanten {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -30065,7 +30688,7 @@ pub mod solarkataster_dachkanten {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -30151,7 +30774,9 @@ pub mod solarkataster_dachkanten {
     }
 }
 
-/// Smarte Strasse: Luftqualität des Vortages
+#[doc = "Smarte Strasse: Luftqualit\u{e4}t des Vortages"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt die Maximalwerte (O3) und Mittelwerte (NO2, PM 2.5) des Vortages f\u{fc}r die verschiedenen Messwerte als Vergleichswerte f\u{fc}r die Echtzeitdaten.<br/>Die Echtzeitdaten sind unter folgendem Datensatz zu finden:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100093/table/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100093/table/</a>\u{a0}\u{a0}</p><p>Das\u{a0}<a href=\"https://www.baselland.ch/politik-und-behorden/direktionen/bau-und-umweltschutzdirektion/lufthygiene\" target=\"_blank\">Lufthygieneamt beider Basel</a>\u{a0}(LHA) testet im Projekt \u{ab}Smarte Strasse\u{bb} kosteneffiziente Mikrosensoren auf ihre Genauigkeit und Zuverl\u{e4}ssigkeit. Der installierte Sensor vom Typ \u{ab}Nubo\u{bb} der Firma Sensirion AG ist in der Lage, die Konzentration verschiedener Schadstoffe in der Luft in Echtzeit zu ermitteln. Gemessen werden die Gehalte der Gase Stickstoffdioxid (NO2) und Ozon (O3), sowie die feinere Fraktion des Feinstaubs \u{ab}PM2.5\u{bb}. Die Belastungen mit Stickstoffdioxid und Feinstaub werden haupts\u{e4}chlich durch den motorisierten Verkehr und durch Heizungen verursacht. Ozon wird in der Atmosph\u{e4}re aus den Vorl\u{e4}uferschadstoffen Stickstoffdioxid und fl\u{fc}chtigen organischen Stoffen (VOC) unter Sonneneinwirkung gebildet. Parallel wurden drei \u{ab}Nubo\u{bb}- Sensoren an den permanenten Messstationen des LHA am St. Johanns-Platz, an der Feldbergastrasse und auf der Autobahn A2 in der Hard installiert und gegen die Referenzmessger\u{e4}te des LHA verglichen. Diese Werte stehen ebenfalls auf OGD zur Verf\u{fc}gung:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100178\" target=\"_blank\">https://data.bs.ch/explore/dataset/100178</a><br/>Weitere Informationen zur Luftqualit\u{e4}t in der Region Basel sind auf\u{a0}<a href=\"https://www.luftqualitaet.ch/\" target=\"_blank\">www.luftqualitaet.ch</a>\u{a0}verf\u{fc}gbar. Hintergrundinformationen zu Ozon und Feinstaub auf den Webseiten\u{a0}<a href=\"https://www.ozon-info.ch/\" target=\"_blank\">www.ozon-info.ch</a>\u{a0}und\u{a0}<a href=\"https://www.feinstaub.ch/\" target=\"_blank\">www.feinstaub.ch</a>. Angaben zu den gesundheitlichen Auswirkungen der Luftverschmutzung auf der Webseite\u{a0}<a href=\"https://www.swisstph.ch/de/projects/ludok/healtheffects/\" target=\"_blank\">https://www.swisstph.ch/de/projects/ludok/healtheffects/</a>.</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Weitere Informationen und Daten rund um das Projekt \u{ab}Smarte Strasse\u{bb} finden Sie unter den folgenden Links:</span></p><ul><li>Weitere Informationen zum Projekt \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html\" target=\"_blank\">https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html</a>\u{a0}</li><li>Genaue Standorte aller Sensoren:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100114/table/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100114/table/</a>\u{a0}</li><li>Weitere Datens\u{e4}tze rund um das Thema \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://data.bs.ch/explore/?refine.tags=smarte+strasse\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=smarte+strasse</a>\u{a0}</li></ul><p><span style=\"font-weight: bolder;\">Hinweis:<br/>Die Luft-Sensoren an der Gundeldingerstrasse wurden am 29.6.23 abmontiert. Seit Anfang/Mitte Juni wurden keine Daten mehr erhoben.</span><br/></p>"]
 pub mod smarte_strasse_luftqualitaet_des_vortages {
     use super::*;
 
@@ -30209,7 +30834,7 @@ pub mod smarte_strasse_luftqualitaet_des_vortages {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         G107No2,
@@ -30244,7 +30869,7 @@ pub mod smarte_strasse_luftqualitaet_des_vortages {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -30269,7 +30894,7 @@ pub mod smarte_strasse_luftqualitaet_des_vortages {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -30355,7 +30980,9 @@ pub mod smarte_strasse_luftqualitaet_des_vortages {
     }
 }
 
-/// Coronavirus (Covid-19): Reproduktionszahl (Re)
+#[doc = "Coronavirus (Covid-19): Reproduktionszahl (Re)"]
+#[doc = ""]
+#[doc = "<p>Gesch\u{e4}tzte t\u{e4}gliche effektive Reproduktionszahl f\u{fc}r die Schweiz, die Schweizer Grossregionen sowie die Schweizer Kantone. Die effektive Reproduktionszahl ist ein Mass daf\u{fc}r, wie viele Personen eine infizierte Person durchschnittlich ansteckt. Die Werte wurden t\u{e4}glich von der ETH Z\u{fc}rich berechnet. Die Originaldaten sind auf <a href=\"https://github.com/covid-19-Re/dailyRe-Data\" target=\"_blank\">https://github.com/covid-19-Re/dailyRe-Data</a> sowie <a href=\"https://github.com/covid-19-Re/dailyRe-Data/blob/master/CHE-estimates.csv\" target=\"_blank\">https://github.com/covid-19-Re/dailyRe-Data/blob/master/CHE-estimates.csv</a> verf\u{fc}gbar.</p><p>Die gesch\u{e4}tzte effektive Reproduktionszahl bildet aufgrund der Infektionsdynamik (Inkubationszeit, Meldeverzug, etc.) schweizweit das Infektionsgeschehen erst mit einer zeitlichen Verz\u{f6}gerung von 10-13 Tagen ab. Auf kantonaler Ebene betr\u{e4}gt die zeitliche Verz\u{f6}gerung 14-17 Tage.\u{a0}</p><p>Weitere Informationen zur Interpretation der effektiven Reproduktionszahl finden sich bei der Swiss National Covid-19 Task Force: <a href=\"https://sciencetaskforce.ch/reproduktionszahl\" target=\"_blank\">https://sciencetaskforce.ch/reproduktionszahl</a>\u{a0}</p><p>Details und Quellenangaben zur verwendeten Methodik finden sich auf dem Covid-19-Dashboard der ETH Z\u{fc}rich: <a href=\"https://ibz-shiny.ethz.ch/covid-19-re-international\" target=\"_blank\">https://ibz-shiny.ethz.ch/covid-19-re-international</a>\u{a0}</p><div><br/></div>"]
 pub mod coronavirus_covid_19_reproduktionszahl_re {
     use super::*;
 
@@ -30384,6 +31011,10 @@ pub mod coronavirus_covid_19_reproduktionszahl_re {
         /// Datum
         ///
         /// Datum, für welches die effektive Reproduktionszahl berechnet wurde. Da sich die effektive Reproduktionszahl erst mit zeitlichem Verzug berechnen lässt, liegt der letzte verfügbare Schätzwert in der Vergangenheit
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Mittlere effektive Reproduktionszahl
         ///
@@ -30409,7 +31040,7 @@ pub mod coronavirus_covid_19_reproduktionszahl_re {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Country,
         Region,
@@ -30440,7 +31071,7 @@ pub mod coronavirus_covid_19_reproduktionszahl_re {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -30465,7 +31096,7 @@ pub mod coronavirus_covid_19_reproduktionszahl_re {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -30551,7 +31182,9 @@ pub mod coronavirus_covid_19_reproduktionszahl_re {
     }
 }
 
-/// Smarte Strasse: Zu- und Wegfahrten, Parkplatzauslastung
+#[doc = "Smarte Strasse: Zu- und Wegfahrten, Parkplatzauslastung"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt die Anzahl Zu- und Wegfahrten sowie die mittlere Parkplatzauslastung f\u{fc}r die beiden Zonen \u{ab}blau\u{bb} und \u{ab}gelb\u{bb}.</p><p><b>Die Detektion freier Parkpl\u{e4}tze mittels Kamera befindet sich noch in der Testphase. Aus diesem Grund sind die Werte mit Vorsicht zu geniessen und k\u{f6}nnen von den tats\u{e4}chlichen Zust\u{e4}nden abweichen.</b></p><p>Zus\u{e4}tzlich relevante Datens\u{e4}tze f\u{fc}r die Parkplatzbelegung:</p><ul><li><a href=\"https://data.bs.ch/explore/dataset/100160/\" target=\"_blank\">Parkplatzbelegung</a></li><li><a href=\"https://data.bs.ch/explore/dataset/100176/\" target=\"_blank\">Parkplatz-Zonen</a><br/></li></ul><p>Weitere Informationen und Daten rund um das Projekt \u{ab}Smarte Strasse\u{bb} finden Sie unter den folgenden Links:</p><ul><li>Weitere Informationen zum Projekt\u{a0}\u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html\" target=\"_blank\">https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html</a>\u{a0}</li><li>Genaue Standorte aller Sensoren:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100114/table/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100114/table/</a>\u{a0}</li><li>Weitere Datens\u{e4}tze rund um das Thema \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://data.bs.ch/explore/?refine.tags=smarte+strasse\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=smarte+strasse</a>\u{a0}</li></ul><p><b style=\"font-family\">Hinweis:<br/>Die Parkplatz-Kamera an der Gundeldingerstrasse wurde am Dienstag 4.10.2022 abmontiert. Es werden keine Daten mehr erhoben.</b><br/></p>"]
 pub mod smarte_strasse_zu_und_wegfahrten_parkplatzauslastung {
     use super::*;
 
@@ -30587,7 +31220,7 @@ pub mod smarte_strasse_zu_und_wegfahrten_parkplatzauslastung {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         From,
         To,
@@ -30610,7 +31243,7 @@ pub mod smarte_strasse_zu_und_wegfahrten_parkplatzauslastung {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -30635,7 +31268,7 @@ pub mod smarte_strasse_zu_und_wegfahrten_parkplatzauslastung {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -30721,7 +31354,9 @@ pub mod smarte_strasse_zu_und_wegfahrten_parkplatzauslastung {
     }
 }
 
-/// Aktuelle Temperaturen der Gartenbäder
+#[doc = "Aktuelle Temperaturen der Gartenb\u{e4}der"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">Dieser Datensatz enth\u{e4}lt die aktuellen Wassertemperaturen in den Gartenb\u{e4}dern</p><p style=\"font-family: sans-serif;\">Die Temperaturdaten werden alle 15 Minuten aktualisiert, indem ein automatisiertes Programm die neuesten Werte von der Webseite\u{a0}<a href=\"https://www.ed-baeder.ch/\" target=\"_blank\">https://www.ed-baeder.ch/</a>\u{a0}abruft. Auf dieser Webseite findet man auch sonstige Meldungen zu den Gartenb\u{e4}dern.</p><p style=\"font-family: sans-serif;\">Falls ein Gartenbad geschlossen ist oder keine Temperaturmessung verf\u{fc}gbar ist, wird f\u{fc}r diesen Zeitraum kein Wert im Datensatz vermerkt.</p><p style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Weiterf\u{fc}hrende Links:</span></p><p style=\"font-family: sans-serif;\">Weitere Informationen zu den Gartenb\u{e4}dern:\u{a0}<a href=\"https://www.jfs.bs.ch/fuer-sportlerinnen-und-sportler/sportanlagen/gartenbaeder.html\" target=\"_blank\">https://www.jfs.bs.ch/fuer-sportlerinnen-und-sportler/sportanlagen/gartenbaeder.html</a></p><p style=\"font-family: sans-serif;\">Zeitreihe der Temperaturen der Gartenb\u{e4}der als Datensatz:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100384\" target=\"_blank\">https://data.bs.ch/explore/dataset/100384</a></p><p style=\"font-family: sans-serif;\">Diese und weitere Sportanlagen als Datensatz:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100151\" target=\"_blank\">https://data.bs.ch/explore/dataset/100151</a></p>"]
 pub mod aktuelle_temperaturen_der_gartenbaeder {
     use super::*;
 
@@ -30756,7 +31391,7 @@ pub mod aktuelle_temperaturen_der_gartenbaeder {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Name,
         Temperatur,
@@ -30775,7 +31410,7 @@ pub mod aktuelle_temperaturen_der_gartenbaeder {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -30800,7 +31435,7 @@ pub mod aktuelle_temperaturen_der_gartenbaeder {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -30886,7 +31521,9 @@ pub mod aktuelle_temperaturen_der_gartenbaeder {
     }
 }
 
-/// Luftqualität Station St. Johannplatz
+#[doc = "Luftqualit\u{e4}t Station St. Johannplatz"]
+#[doc = ""]
+#[doc = "<p>Standortbeschreibung:\u{a0}Die Messstation befindet sich in Basel auf dem St.Johannplatz, einem kleinen Park am Rande der Altstadt. Sie wird lokal beeinflusst durch eine m\u{e4}ssig befahrene Strasse und Parkplatzsuchverkehr. 500m n\u{f6}rdlich verl\u{e4}uft eine stark befahrene Strasse und in dieser Richtung liegt auch ein Teil der Chemischen Industrie. Die Station Basel St.Johannplatz gibt die Belastung wieder, wie sie als Hintergrund \u{fc}berall in der Stadt Basel anzutreffen ist.</p>Lage: Stadtzentrum in Park, offene Bebauung<p>Koordinaten: 2610790 / 1268370 bzw.\u{a0}N 47\u{b0} 33.957 E 7\u{b0} 34.921; 260 m \u{fc}. M.Geografische Lage: Juranordfuss</p><p>Siedlungsgr\u{f6}sse: 166\'600 Einwohner</p><p>Verkehr, DTV (% LKW): &lt; 9\'100 / 32\'000 (8%)</p><p>Strassenabstand: 2 m / 500</p>"]
 pub mod luftqualitaet_station_st_johannplatz {
     use super::*;
 
@@ -30914,7 +31551,7 @@ pub mod luftqualitaet_station_st_johannplatz {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         DatumZeit,
         TimestampText,
@@ -30937,7 +31574,7 @@ pub mod luftqualitaet_station_st_johannplatz {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -30962,7 +31599,7 @@ pub mod luftqualitaet_station_st_johannplatz {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -31048,7 +31685,9 @@ pub mod luftqualitaet_station_st_johannplatz {
     }
 }
 
-/// Briefliche Stimmbeteiligung
+#[doc = "Briefliche Stimmbeteiligung"]
+#[doc = ""]
+#[doc = "<div>Dieser Datensatz zeigt die briefliche Stimmbeteiligung der Urneng\u{e4}nge f\u{fc}r die Stadt Basel. Vor Urneng\u{e4}ngen informiert die Staatskanzlei regelm\u{e4}ssig \u{fc}ber den Stand der Stimmbeteiligung per brieflicher Abgabe.</div><div><br/></div><div>Die effektive Stimm-/Wahlbeteiligung inkl. pers\u{f6}nlicher Stimmabgabe an der Urne steht erst nach der Ausz\u{e4}hlung am Abstimmungssontag fest und wird ebenfalls auf diesem Datenportal zur Verf\u{fc}gung gestellt (<a href=\"https://data.bs.ch/explore/?sort=modified&amp;refine.publisher=Staatskanzlei&amp;q=%22Kennzahlen+der+Abstimmung%22+OR+%22Wahl+der+100%22+OR+%22Wahlgangs%22\" target=\"_blank\">Kennzahlen Wahlen/Abstimmungen</a>).\u{a0}</div><div><br/></div>"]
 pub mod briefliche_stimmbeteiligung {
     use super::*;
 
@@ -31061,6 +31700,10 @@ pub mod briefliche_stimmbeteiligung {
         /// Datum
         ///
         /// Datum an dem die Stimmbeteiligung erhoben wurde.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Eingang pro Tag
         ///
@@ -31077,6 +31720,10 @@ pub mod briefliche_stimmbeteiligung {
         /// Datum Urnengang
         ///
         /// Datum des Urnengangs
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_urnengang: Option<Date>,
         /// Tage bis Urnengang
         ///
@@ -31104,7 +31751,7 @@ pub mod briefliche_stimmbeteiligung {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Tag,
         Datum,
@@ -31137,7 +31784,7 @@ pub mod briefliche_stimmbeteiligung {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -31162,7 +31809,7 @@ pub mod briefliche_stimmbeteiligung {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -31248,7 +31895,9 @@ pub mod briefliche_stimmbeteiligung {
     }
 }
 
-/// Smarte Strasse: Luftqualität
+#[doc = "Smarte Strasse: Luftqualit\u{e4}t"]
+#[doc = ""]
+#[doc = "<p>Das <a href=\"https://www.baselland.ch/politik-und-behorden/direktionen/bau-und-umweltschutzdirektion/lufthygiene\" target=\"_blank\">Lufthygieneamt beider Basel</a> (LHA) testet im Projekt \u{ab}Smarte Strasse\u{bb} kosteneffiziente Mikrosensoren auf ihre Genauigkeit und Zuverl\u{e4}ssigkeit. Der installierte Sensor vom Typ \u{ab}Nubo\u{bb} der Firma Sensirion AG ist in der Lage, die Konzentration verschiedener Schadstoffe in der Luft in Echtzeit zu ermitteln. Gemessen werden die Gehalte der Gase Stickstoffdioxid (NO2) und Ozon (O3), sowie die feinere Fraktion des Feinstaubs \u{ab}PM2.5\u{bb}. Die Belastungen mit Stickstoffdioxid und Feinstaub werden haupts\u{e4}chlich durch den motorisierten Verkehr und durch Heizungen verursacht. Ozon wird in der Atmosph\u{e4}re aus den Vorl\u{e4}uferschadstoffen Stickstoffdioxid und fl\u{fc}chtigen organischen Stoffen (VOC) unter Sonneneinwirkung gebildet. Parallel wurden drei \u{ab}Nubo\u{bb}- Sensoren an den permanenten Messstationen des LHA am St. Johanns-Platz, an der Feldbergastrasse und auf der Autobahn A2 in der Hard installiert und gegen die Referenzmessger\u{e4}te des LHA verglichen. Diese Werte stehen ebenfalls auf OGD zur Verf\u{fc}gung:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100178\" target=\"_blank\">https://data.bs.ch/explore/dataset/100178</a><br/>Weitere Informationen zur Luftqualit\u{e4}t in der Region Basel sind auf <a href=\"https://www.luftqualitaet.ch\" target=\"_blank\">www.luftqualitaet.ch</a>\n verf\u{fc}gbar. Hintergrundinformationen zu Ozon und Feinstaub auf den Webseiten <a href=\"https://www.ozon-info.ch\" target=\"_blank\">www.ozon-info.ch</a> und <a href=\"https://www.feinstaub.ch\" target=\"_blank\">www.feinstaub.ch</a>. Angaben zu den gesundheitlichen Auswirkungen der Luftverschmutzung auf der Webseite\u{a0}<a href=\"https://www.swisstph.ch/de/projects/ludok/healtheffects/\" target=\"_blank\">https://www.swisstph.ch/de/projects/ludok/healtheffects/</a>.</p><p>Die Maximalwerte (O3) und Mittelwerte (NO2, PM 2.5) des Vortages\u{a0}sind unter folgendem Datensatz zu finden:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100174/table/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100174/table/</a>\u{a0}</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Weitere Informationen und Daten rund um das Projekt \u{ab}Smarte Strasse\u{bb} finden Sie unter den folgenden Links:</span></p><ul><li>Weitere Informationen zum Projekt \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html\" target=\"_blank\">https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html</a>\u{a0}</li><li>Genaue Standorte aller Sensoren:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100114/table/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100114/table/</a>\u{a0}</li><li>Weitere Datens\u{e4}tze rund um das Thema \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://data.bs.ch/explore/?refine.tags=smarte+strasse\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=smarte+strasse</a>\u{a0}</li></ul><p><b>Hinweis:<br/>Die Luft-Sensoren an der Gundeldingerstrasse wurden am 29.6.23 abmontiert. Seit Anfang/Mitte Juni wurden keine Daten mehr erhoben.</b><br/></p>"]
 pub mod smarte_strasse_luftqualitaet {
     use super::*;
 
@@ -31306,7 +31955,7 @@ pub mod smarte_strasse_luftqualitaet {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         G107No2,
@@ -31341,7 +31990,7 @@ pub mod smarte_strasse_luftqualitaet {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -31366,7 +32015,7 @@ pub mod smarte_strasse_luftqualitaet {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -31452,7 +32101,9 @@ pub mod smarte_strasse_luftqualitaet {
     }
 }
 
-/// Baustellen
+#[doc = "Baustellen"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz enth\u{e4}lt umfassende Informationen zu aktuellen und bevorstehende Baustellen (Baubewilligung erteilt) auf \u{f6}ffentlichem Grund im Kanton Basel-Stadt. Er enth\u{e4}lt Informationen wie z. B. an welcher Strasse sich die Baustelle befindet, die Beschreibung des Projektes, m\u{f6}gliche Zusatzinformationen, Links zum Projekt und zu Anwohnerinformationen. Die Fallnummer der Allmendbewilligung und der Link zum OGD-Datensatz mit den Allmendbewilligungen sind ebenfalls im Datensatz aufgef\u{fc}hrt.</p><p>Dieser Datensatz ist maschinenlesbar und barrierefrei.\u{a0}</p><p>\n</p><p>\nDiese Daten werden vom Tiefbauamt des Kantons Basel-Stadt zur Verf\u{fc}gung gestellt. Die Baustellen finden Sie auch auf einer interaktiven Karte unter <a href=\"https://baustellen.bs.ch\" target=\"_blank\">https://baustellen.bs.ch</a>.\u{a0}</p><p></p><p></p>"]
 pub mod baustellen {
     use super::*;
 
@@ -31471,8 +32122,16 @@ pub mod baustellen {
         /// Link zum Projekt
         pub projekt_link: Option<String>,
         /// Baubeginn
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_von: Option<Date>,
         /// Bauende
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_bis: Option<Date>,
         /// Dokument 1
         ///
@@ -31500,7 +32159,7 @@ pub mod baustellen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         ProjektName,
         ProjektBeschrieb,
@@ -31533,7 +32192,7 @@ pub mod baustellen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -31558,7 +32217,7 @@ pub mod baustellen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -31644,7 +32303,9 @@ pub mod baustellen {
     }
 }
 
-/// Smarte Strasse: Fahrzeugdurchfahrten
+#[doc = "Smarte Strasse: Fahrzeugdurchfahrten"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt alle Durchfahrten von Fahrzeugen mit der dazugeh\u{f6}rigen Zeitangabe.</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Weitere Informationen und Daten rund um das Projekt \u{ab}Smarte Strasse\u{bb} finden Sie unter den folgenden Links:</span></p><ul><li>Informationen zum Projekt \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html\" target=\"_blank\">https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html</a>\u{a0}</li><li>Genaue Standorte aller Sensoren (inkl. dem Schallsensor, der die Fahrzeugdurchfahrten z\u{e4}hlt):\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100114/table/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100114/table/</a>\u{a0}</li><li>Weitere Datens\u{e4}tze aus dem Projekt \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://data.bs.ch/explore/?refine.tags=smarte+strasse\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=smarte+strasse</a>\u{a0}</li></ul><p><b>Hinweis: Die Sensoren an der Gundeldingerstrasse wurden am 29.6.23 abmontiert. Es werden keine Daten mehr erhoben.</b><br/></p><p>\u{c4}nderungsprotokoll: <br/>29.06.2023 - Aktualisierungsintervall von \"CONT\" auf \"NEVER\" ge\u{e4}ndert.<br/></p>"]
 pub mod smarte_strasse_fahrzeugdurchfahrten {
     use super::*;
 
@@ -31672,7 +32333,7 @@ pub mod smarte_strasse_fahrzeugdurchfahrten {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Localdatetime,
         Classification,
@@ -31691,7 +32352,7 @@ pub mod smarte_strasse_fahrzeugdurchfahrten {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -31716,7 +32377,7 @@ pub mod smarte_strasse_fahrzeugdurchfahrten {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -31802,7 +32463,9 @@ pub mod smarte_strasse_fahrzeugdurchfahrten {
     }
 }
 
-/// Standorte der öffentlichen Parkhäuser Basel
+#[doc = "Standorte der \u{f6}ffentlichen Parkh\u{e4}user Basel"]
+#[doc = ""]
+#[doc = "<p>Standorte der \u{f6}ffentlichen Parkh\u{e4}user Basel, wie sie in <a href=\"https://parkendd.de/map.html#Basel\" target=\"_blank\">ParkenDD</a> verwendet werden.</p>"]
 pub mod standorte_der_oeffentlichen_parkhaeuser_basel {
     use super::*;
 
@@ -31834,7 +32497,7 @@ pub mod standorte_der_oeffentlichen_parkhaeuser_basel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Title,
         Address,
@@ -31867,7 +32530,7 @@ pub mod standorte_der_oeffentlichen_parkhaeuser_basel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -31892,7 +32555,7 @@ pub mod standorte_der_oeffentlichen_parkhaeuser_basel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -31978,7 +32641,9 @@ pub mod standorte_der_oeffentlichen_parkhaeuser_basel {
     }
 }
 
-/// Luftqualität Station Feldbergstrasse
+#[doc = "Luftqualit\u{e4}t Station Feldbergstrasse"]
+#[doc = ""]
+#[doc = "<p>Standortbeschreibung: Die Messstation befindet sich in Basel direkt an der Kreuzung Feldbergstrasse / Hammerstrasse. Sie liegt in einer schlecht durchl\u{fc}fteten Strassenschlucht mit hohem Verkehrsaufkommen und oft stehendem Kolonnenverkehr. Die Station Basel Feldbergstrasse ist ein Ort mit sehr hoher lokaler Belastung innerhalb der Stadt Basel.</p><p>Lage: Stadtzentrum an Strasse, geschlossene Bebauung</p><p>Koordinaten: 2611747 / 1268491 bzw. N 47\u{b0} 34.021 E 7\u{b0} 35.684; 255 m \u{fc}. M.</p><p>Geografische Lage: Juranordfuss</p><p>Siedlungsgr\u{f6}sse: 166\'600 Einwohner</p><p>Verkehr, DTV (% LKW): 21\'900 (3%)</p><p>Strassenabstand: 2 m</p>"]
 pub mod luftqualitaet_station_feldbergstrasse {
     use super::*;
 
@@ -32000,7 +32665,7 @@ pub mod luftqualitaet_station_feldbergstrasse {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         DatumZeit,
         TimestampText,
@@ -32021,7 +32686,7 @@ pub mod luftqualitaet_station_feldbergstrasse {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -32046,7 +32711,7 @@ pub mod luftqualitaet_station_feldbergstrasse {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -32132,7 +32797,9 @@ pub mod luftqualitaet_station_feldbergstrasse {
     }
 }
 
-/// Überwachung Luftqualität Transformation Areal Rosental: Online Sensor Feinstaub
+#[doc = "\u{dc}berwachung Luftqualit\u{e4}t Transformation Areal Rosental: Online Sensor Feinstaub"]
+#[doc = ""]
+#[doc = "<p>Bedingt durch die fr\u{fc}here Nutzung des Rosental Areals \u{2013} auch bekannt als die Wiege der Basler Chemie - ist der Untergrund mit Schadstoffen belastet. W\u{e4}hrend der Tiefbauarbeiten im Rahmen der \u{ab}Transformation <a href=\"https://rosentalmitte.ch/\" target=\"_blank\">Rosental Mitte</a>\u{bb} \u{fc}berwacht das <a href=\"http://www.basler-luft.ch/\" target=\"_blank\">Lufthygieneamt beider Basel (LHA)</a> die Immissionen mittels Messungen der Luft <a href=\"https://data.bs.ch/pages/rosental-dashboard/\" target=\"_blank\">(Dashboard)</a>.\u{a0}</p><p>\u{c4}nderungsprotokoll:<br>23.4.2024: Die Messstation ROSEN 3 wurde verschoben. Alte geografische Breiten- und L\u{e4}ngengrade 47.567827676637364, 7.603804744961502. Neue Breiten- und L\u{e4}gengrade\u{a0}47.567997530870265, 7.60479830196066.<br></p><div><br></div>"]
 pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_online_sensor_feinstaub {
     use super::*;
 
@@ -32155,7 +32822,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_online_sensor_f
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         Station,
@@ -32172,7 +32839,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_online_sensor_f
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -32197,7 +32864,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_online_sensor_f
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -32283,7 +32950,9 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_online_sensor_f
     }
 }
 
-/// Zeitreihe der Temperaturen der Gartenbäder
+#[doc = "Zeitreihe der Temperaturen der Gartenb\u{e4}der"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">Dieser Datensatz enth\u{e4}lt eine kontinuierliche Aufzeichnung der Wassertemperaturen in den Gartenb\u{e4}dern, beginnend ab dem 16. August 2024.</p><p style=\"font-family: sans-serif;\">Die Temperaturdaten werden alle 15 Minuten aktualisiert, indem ein automatisiertes Programm die neuesten Werte von der Webseite\u{a0}<a href=\"https://www.ed-baeder.ch/\" target=\"_blank\">https://www.ed-baeder.ch/</a>\u{a0}abruft. Auf dieser Webseite findet man auch sonstige Meldungen zu den Gartenb\u{e4}dern.</p><p style=\"font-family: sans-serif;\">Falls ein Gartenbad geschlossen ist oder keine Temperaturmessung verf\u{fc}gbar ist, wird f\u{fc}r diesen Zeitraum kein Wert im Datensatz vermerkt.</p><p style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Weiterf\u{fc}hrende Links:</span></p><p style=\"font-family: sans-serif;\">Weitere Informationen zu den Gartenb\u{e4}dern:\u{a0}<a href=\"https://www.jfs.bs.ch/fuer-sportlerinnen-und-sportler/sportanlagen/gartenbaeder.html\" target=\"_blank\">https://www.jfs.bs.ch/fuer-sportlerinnen-und-sportler/sportanlagen/gartenbaeder.html</a></p><p style=\"font-family: sans-serif;\">Aktuelle Temperaturen der Gartenb\u{e4}der als Datensatz:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100384/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100384/</a></p><p style=\"font-family: sans-serif;\">Diese und weitere Sportanlagen als Datensatz:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100151\" target=\"_blank\">https://data.bs.ch/explore/dataset/100151</a></p>"]
 pub mod zeitreihe_der_temperaturen_der_gartenbaeder {
     use super::*;
 
@@ -32314,7 +32983,7 @@ pub mod zeitreihe_der_temperaturen_der_gartenbaeder {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Name,
         Temperatur,
@@ -32331,7 +33000,7 @@ pub mod zeitreihe_der_temperaturen_der_gartenbaeder {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -32356,7 +33025,7 @@ pub mod zeitreihe_der_temperaturen_der_gartenbaeder {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -32442,7 +33111,9 @@ pub mod zeitreihe_der_temperaturen_der_gartenbaeder {
     }
 }
 
-/// OGD Datensätze
+#[doc = "OGD Datens\u{e4}tze"]
+#[doc = ""]
+#[doc = "Metadaten zu den im vorliegenden Datenportal publizierten OGD Datens\u{e4}tzen."]
 pub mod ogd_datensaetze {
     use super::*;
 
@@ -32482,8 +33153,16 @@ pub mod ogd_datensaetze {
         /// Attributions
         pub attributions: Option<String>,
         /// Created
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub created: Option<Date>,
         /// Issued
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub issued: Option<Date>,
         /// Creator
         pub creator: Option<String>,
@@ -32560,7 +33239,7 @@ pub mod ogd_datensaetze {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         DatasetIdentifier,
         FederatedDataset,
@@ -32673,7 +33352,7 @@ pub mod ogd_datensaetze {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -32698,7 +33377,7 @@ pub mod ogd_datensaetze {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -32784,7 +33463,9 @@ pub mod ogd_datensaetze {
     }
 }
 
-/// Wahl eines Mitglieds des Gerichts für fürsorgerische Unterbringungen
+#[doc = "Wahl eines Mitglieds des Gerichts f\u{fc}r f\u{fc}rsorgerische Unterbringungen"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate des 1. Wahlgangs der Wahl eines Mitglieds des Gerichts f\u{fc}r f\u{fc}rsorgerische Unterbringung vom 9. Mai 2021.\u{a0}</p>"]
 pub mod wahl_eines_mitglieds_des_gerichts_fuer_fuersorgerische_unterbringungen {
     use super::*;
 
@@ -32805,6 +33486,10 @@ pub mod wahl_eines_mitglieds_des_gerichts_fuer_fuersorgerische_unterbringungen {
         /// Datum
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Anzahl Sitze
         ///
@@ -32892,7 +33577,7 @@ pub mod wahl_eines_mitglieds_des_gerichts_fuer_fuersorgerische_unterbringungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahlTitel,
         Wahlgang,
@@ -32953,7 +33638,7 @@ pub mod wahl_eines_mitglieds_des_gerichts_fuer_fuersorgerische_unterbringungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -32978,7 +33663,7 @@ pub mod wahl_eines_mitglieds_des_gerichts_fuer_fuersorgerische_unterbringungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -33064,7 +33749,9 @@ pub mod wahl_eines_mitglieds_des_gerichts_fuer_fuersorgerische_unterbringungen {
     }
 }
 
-/// Standorte Mess-Stationen Smart Climate Feinstaubmessungen
+#[doc = "Standorte Mess-Stationen Smart Climate Feinstaubmessungen"]
+#[doc = ""]
+#[doc = "<p>Standorte der Mess-Stationen f\u{fc}r Feinstaub f\u{fc}r den Datensatz \u{ab}Smart Climate Feinstaubmessungen\u{bb} <a href=\"https://data.bs.ch/explore/dataset/100081\" target=\"_blank\">https://data.bs.ch/explore/dataset/100081</a>.</p>"]
 pub mod standorte_mess_stationen_smart_climate_feinstaubmessungen {
     use super::*;
 
@@ -33086,7 +33773,7 @@ pub mod standorte_mess_stationen_smart_climate_feinstaubmessungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Name,
         Id,
@@ -33103,7 +33790,7 @@ pub mod standorte_mess_stationen_smart_climate_feinstaubmessungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -33128,7 +33815,7 @@ pub mod standorte_mess_stationen_smart_climate_feinstaubmessungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -33214,7 +33901,9 @@ pub mod standorte_mess_stationen_smart_climate_feinstaubmessungen {
     }
 }
 
-/// Wahl von fünf Präsidentinnen oder Präsidenten des Appellationsgerichts
+#[doc = "Wahl von f\u{fc}nf Pr\u{e4}sidentinnen oder Pr\u{e4}sidenten des Appellationsgerichts"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Schlussresultate des 1. Wahlgangs der Wahl von f\u{fc}nf Pr\u{e4}sidentinnen oder Pr\u{e4}sidenten des Appellationsgerichts Basel-Stadt vom 9. Mai 2021.\u{a0}</p>"]
 pub mod wahl_von_fuenf_praesidentinnen_oder_praesidenten_des_appellationsgerichts {
     use super::*;
 
@@ -33235,6 +33924,10 @@ pub mod wahl_von_fuenf_praesidentinnen_oder_praesidenten_des_appellationsgericht
         /// Datum
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Anzahl Sitze
         ///
@@ -33322,7 +34015,7 @@ pub mod wahl_von_fuenf_praesidentinnen_oder_praesidenten_des_appellationsgericht
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahlTitel,
         Wahlgang,
@@ -33383,7 +34076,7 @@ pub mod wahl_von_fuenf_praesidentinnen_oder_praesidenten_des_appellationsgericht
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -33408,7 +34101,7 @@ pub mod wahl_von_fuenf_praesidentinnen_oder_praesidenten_des_appellationsgericht
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -33494,7 +34187,9 @@ pub mod wahl_von_fuenf_praesidentinnen_oder_praesidenten_des_appellationsgericht
     }
 }
 
-/// Kandidierende der Regierungspräsidiumswahl 20. Oktober 2024
+#[doc = "Kandidierende der Regierungspr\u{e4}sidiumswahl 20. Oktober 2024"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">F\u{fc}r die Gesamterneuerungswahl des Regierungspr\u{e4}sidiums vom 20. Oktober 2024 kandidieren drei Personen.</p><p style=\"font-family: sans-serif; margin-bottom: 1em;\">Dieser Datensatz zeigt die Kandidierenden des ersten Wahlgangs nach Geschlecht, Jahrgang und Beruf.</p>"]
 pub mod kandidierende_der_regierungspraesidiumswahl_20_oktober_2024 {
     use super::*;
 
@@ -33540,7 +34235,7 @@ pub mod kandidierende_der_regierungspraesidiumswahl_20_oktober_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         ListenNr,
         Listenbezeichnung,
@@ -33569,7 +34264,7 @@ pub mod kandidierende_der_regierungspraesidiumswahl_20_oktober_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -33594,7 +34289,7 @@ pub mod kandidierende_der_regierungspraesidiumswahl_20_oktober_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -33680,7 +34375,9 @@ pub mod kandidierende_der_regierungspraesidiumswahl_20_oktober_2024 {
     }
 }
 
-/// Sammlung Europa
+#[doc = "Sammlung Europa"]
+#[doc = ""]
+#[doc = "<div><font color=\"#404040\" face=\"Helvetica, sans-serif\">Das Museum der Kulturen Basel (MKB) ist das gr\u{f6}sste ethnologische Museum der Schweiz und eines der bedeutendsten seiner Art in Europa. Seine Sammlung geniesst Weltruf und z\u{e4}hlt mehr als 340 000 Objekte. Rund 75 000 Objekte dieser Sammlung geh\u{f6}ren zur Abteilung Europa. Sie wurden seit 1904 bis heute aus allen Teilen des Kontinents zusammengetragen.</font></div><div><font color=\"#404040\" face=\"Helvetica, sans-serif\"><br/></font></div><div><font color=\"#404040\" face=\"Helvetica, sans-serif\">Die publizierten Daten sind mehrheitlich unbereinigt. Sowohl bei der erstmaligen Katalogisierung der Objekte, wie auch bei der Abschrift in die Datenbank gab es Inkonsistenzen, Fehler und Auslassungen. Darin enthaltene Terminologien k\u{f6}nnen inzwischen unzutreffend, veraltet oder rassistisch beleidigend sein.\u{a0}</font></div><div><font color=\"#404040\" face=\"Helvetica, sans-serif\"><br/></font></div><div><font color=\"#404040\" face=\"Helvetica, sans-serif\">Der Code zur Datenbereinigung ist hier (https://github.com/opendatabs/data-processing/blob/master/mkb_sammlung_europa/etl.py) zu finden. Gerne nehmen wir Erg\u{e4}nzungen dazu via Pull Request an.\u{a0}<br/></font></div><div><br/></div>"]
 pub mod sammlung_europa {
     use super::*;
 
@@ -33730,7 +34427,7 @@ pub mod sammlung_europa {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Inventarnummer,
         Einlaufnummer,
@@ -33759,7 +34456,7 @@ pub mod sammlung_europa {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -33784,7 +34481,7 @@ pub mod sammlung_europa {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -33870,7 +34567,9 @@ pub mod sammlung_europa {
     }
 }
 
-/// Abstimmung vom 27. November 2022 Details
+#[doc = "Abstimmung vom 27. November 2022 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 27. November 2022 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_vom_27_november_2022_details {
     use super::*;
 
@@ -33921,6 +34620,10 @@ pub mod abstimmung_vom_27_november_2022_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -33982,7 +34685,7 @@ pub mod abstimmung_vom_27_november_2022_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -34049,7 +34752,7 @@ pub mod abstimmung_vom_27_november_2022_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -34074,7 +34777,7 @@ pub mod abstimmung_vom_27_november_2022_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -34160,7 +34863,9 @@ pub mod abstimmung_vom_27_november_2022_details {
     }
 }
 
-/// Kandidaturen für Gerichtspräsidienwahlen
+#[doc = "Kandidaturen f\u{fc}r Gerichtspr\u{e4}sidienwahlen"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz enth\u{e4}lt Informationen zu den Kandidaturen f\u{fc}r alle Gerichtspr\u{e4}sidienwahlen seit 2024<br></p>"]
 pub mod kandidaturen_fuer_gerichtspraesidienwahlen {
     use super::*;
 
@@ -34173,6 +34878,10 @@ pub mod kandidaturen_fuer_gerichtspraesidienwahlen {
         /// Wahltermin
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Anzahl Sitze
         ///
@@ -34217,7 +34926,7 @@ pub mod kandidaturen_fuer_gerichtspraesidienwahlen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Titel,
         Datum,
@@ -34252,7 +34961,7 @@ pub mod kandidaturen_fuer_gerichtspraesidienwahlen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -34277,7 +34986,7 @@ pub mod kandidaturen_fuer_gerichtspraesidienwahlen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -34363,7 +35072,9 @@ pub mod kandidaturen_fuer_gerichtspraesidienwahlen {
     }
 }
 
-/// Coronavirus (Covid-19): Tests nach Nachweismethode
+#[doc = "Coronavirus (Covid-19): Tests nach Nachweismethode"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Anzahl Tests auf SARS-CoV-2 f\u{fc}r jeden Kanton, die gesamte Schweiz und das F\u{fc}rstentum Liechtenstein sowie die entsprechenden Testresultate (positiv/negativ) auf t\u{e4}glicher Basis. Die Angaben werden t\u{e4}glich durch das Bundesamt f\u{fc}r Gesundheit (BAG) zur Verf\u{fc}gung gestellt im <a href=\"https://www.covid19.admin.ch/\" target=\"_blank\">Covid-19 Situationsbericht </a>bzw. \u{fc}ber dessen <a href=\"https://www.covid19.admin.ch/api/data/context\" target=\"_blank\">API</a>.</p>"]
 pub mod coronavirus_covid_19_tests_nach_nachweismethode {
     use super::*;
 
@@ -34372,6 +35083,10 @@ pub mod coronavirus_covid_19_tests_nach_nachweismethode {
         /// Datum
         ///
         /// Falldatum, entspricht in der Regel dem Datum der Probeentnahme
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Region
         ///
@@ -34411,7 +35126,7 @@ pub mod coronavirus_covid_19_tests_nach_nachweismethode {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Georegion,
@@ -34452,7 +35167,7 @@ pub mod coronavirus_covid_19_tests_nach_nachweismethode {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -34477,7 +35192,7 @@ pub mod coronavirus_covid_19_tests_nach_nachweismethode {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -34563,7 +35278,9 @@ pub mod coronavirus_covid_19_tests_nach_nachweismethode {
     }
 }
 
-/// Abstimmung vom 28. November 2021 Details
+#[doc = "Abstimmung vom 28. November 2021 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 28. November 2021 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_vom_28_november_2021_details {
     use super::*;
 
@@ -34610,6 +35327,10 @@ pub mod abstimmung_vom_28_november_2021_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -34639,7 +35360,7 @@ pub mod abstimmung_vom_28_november_2021_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -34686,7 +35407,7 @@ pub mod abstimmung_vom_28_november_2021_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -34711,7 +35432,7 @@ pub mod abstimmung_vom_28_november_2021_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -34797,7 +35518,9 @@ pub mod abstimmung_vom_28_november_2021_details {
     }
 }
 
-/// Abstimmung vom 15. Mai 2022 Details
+#[doc = "Abstimmung vom 15. Mai 2022 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 15. Mai 2022 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_vom_15_mai_2022_details {
     use super::*;
 
@@ -34844,6 +35567,10 @@ pub mod abstimmung_vom_15_mai_2022_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -34874,7 +35601,7 @@ pub mod abstimmung_vom_15_mai_2022_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -34923,7 +35650,7 @@ pub mod abstimmung_vom_15_mai_2022_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -34948,7 +35675,7 @@ pub mod abstimmung_vom_15_mai_2022_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -35034,7 +35761,9 @@ pub mod abstimmung_vom_15_mai_2022_details {
     }
 }
 
-/// Kennzahlen der Abstimmung vom 3. März 2024
+#[doc = "Kennzahlen der Abstimmung vom 3. M\u{e4}rz 2024"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 3. M\u{e4}rz 2024 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_3_maerz_2024 {
     use super::*;
 
@@ -35081,6 +35810,10 @@ pub mod kennzahlen_der_abstimmung_vom_3_maerz_2024 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -35130,7 +35863,7 @@ pub mod kennzahlen_der_abstimmung_vom_3_maerz_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -35185,7 +35918,7 @@ pub mod kennzahlen_der_abstimmung_vom_3_maerz_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -35210,7 +35943,7 @@ pub mod kennzahlen_der_abstimmung_vom_3_maerz_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -35296,7 +36029,9 @@ pub mod kennzahlen_der_abstimmung_vom_3_maerz_2024 {
     }
 }
 
-/// Kennzahlen der Abstimmung vom 26. November 2023
+#[doc = "Kennzahlen der Abstimmung vom 26. November 2023"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 26. November 2023\u{a0}f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_26_november_2023 {
     use super::*;
 
@@ -35343,6 +36078,10 @@ pub mod kennzahlen_der_abstimmung_vom_26_november_2023 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -35392,7 +36131,7 @@ pub mod kennzahlen_der_abstimmung_vom_26_november_2023 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -35447,7 +36186,7 @@ pub mod kennzahlen_der_abstimmung_vom_26_november_2023 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -35472,7 +36211,7 @@ pub mod kennzahlen_der_abstimmung_vom_26_november_2023 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -35558,7 +36297,9 @@ pub mod kennzahlen_der_abstimmung_vom_26_november_2023 {
     }
 }
 
-/// Kennzahlen der Abstimmung vom 7. März 2021
+#[doc = "Kennzahlen der Abstimmung vom 7. M\u{e4}rz 2021"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 7. M\u{e4}rz 2021 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_7_maerz_2021 {
     use super::*;
 
@@ -35605,6 +36346,10 @@ pub mod kennzahlen_der_abstimmung_vom_7_maerz_2021 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -35643,7 +36388,7 @@ pub mod kennzahlen_der_abstimmung_vom_7_maerz_2021 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -35694,7 +36439,7 @@ pub mod kennzahlen_der_abstimmung_vom_7_maerz_2021 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -35719,7 +36464,7 @@ pub mod kennzahlen_der_abstimmung_vom_7_maerz_2021 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -35805,7 +36550,9 @@ pub mod kennzahlen_der_abstimmung_vom_7_maerz_2021 {
     }
 }
 
-/// Abstimmung vom 12. März 2023 Details
+#[doc = "Abstimmung vom 12. M\u{e4}rz 2023 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 12. M\u{e4}rz 2023 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_vom_12_maerz_2023_details {
     use super::*;
 
@@ -35852,6 +36599,10 @@ pub mod abstimmung_vom_12_maerz_2023_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -35885,7 +36636,7 @@ pub mod abstimmung_vom_12_maerz_2023_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -35934,7 +36685,7 @@ pub mod abstimmung_vom_12_maerz_2023_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -35959,7 +36710,7 @@ pub mod abstimmung_vom_12_maerz_2023_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -36045,7 +36796,9 @@ pub mod abstimmung_vom_12_maerz_2023_details {
     }
 }
 
-/// Abstimmung 7. März 2021 Details
+#[doc = "Abstimmung 7. M\u{e4}rz 2021 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 7. M\u{e4}rz 2021 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_7_maerz_2021_details {
     use super::*;
 
@@ -36092,6 +36845,10 @@ pub mod abstimmung_7_maerz_2021_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -36120,7 +36877,7 @@ pub mod abstimmung_7_maerz_2021_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -36167,7 +36924,7 @@ pub mod abstimmung_7_maerz_2021_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -36192,7 +36949,7 @@ pub mod abstimmung_7_maerz_2021_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -36278,7 +37035,9 @@ pub mod abstimmung_7_maerz_2021_details {
     }
 }
 
-/// Abstimmung vom 3. März 2024 Details
+#[doc = "Abstimmung vom 3. M\u{e4}rz 2024 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 3. M\u{e4}rz 2024 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_vom_3_maerz_2024_details {
     use super::*;
 
@@ -36325,6 +37084,10 @@ pub mod abstimmung_vom_3_maerz_2024_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -36358,7 +37121,7 @@ pub mod abstimmung_vom_3_maerz_2024_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -36407,7 +37170,7 @@ pub mod abstimmung_vom_3_maerz_2024_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -36432,7 +37195,7 @@ pub mod abstimmung_vom_3_maerz_2024_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -36518,7 +37281,9 @@ pub mod abstimmung_vom_3_maerz_2024_details {
     }
 }
 
-/// Abstimmung vom 13. Februar 2022 Details
+#[doc = "Abstimmung vom 13. Februar 2022 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 13. Februar 2022 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.\u{a0}</p>"]
 pub mod abstimmung_vom_13_februar_2022_details {
     use super::*;
 
@@ -36565,6 +37330,10 @@ pub mod abstimmung_vom_13_februar_2022_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -36595,7 +37364,7 @@ pub mod abstimmung_vom_13_februar_2022_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -36644,7 +37413,7 @@ pub mod abstimmung_vom_13_februar_2022_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -36669,7 +37438,7 @@ pub mod abstimmung_vom_13_februar_2022_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -36755,7 +37524,9 @@ pub mod abstimmung_vom_13_februar_2022_details {
     }
 }
 
-/// Resultate der Nationalratswahlen 2023
+#[doc = "Resultate der Nationalratswahlen 2023"]
+#[doc = ""]
+#[doc = "<p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Dieser Datensatz zeigt die Resultate der Nationalratswahl vom 22. Oktober 2023.<o:p></o:p></p><p style=\"font-family: sans-serif;\"></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod resultate_der_nationalratswahlen_2023 {
     use super::*;
 
@@ -36772,6 +37543,10 @@ pub mod resultate_der_nationalratswahlen_2023 {
         /// Wahltermin
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wahltermin: Option<Date>,
         /// Anzahl Sitze
         ///
@@ -37048,7 +37823,7 @@ pub mod resultate_der_nationalratswahlen_2023 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         Amtsdauer,
@@ -37249,7 +38024,7 @@ pub mod resultate_der_nationalratswahlen_2023 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -37274,7 +38049,7 @@ pub mod resultate_der_nationalratswahlen_2023 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -37360,7 +38135,9 @@ pub mod resultate_der_nationalratswahlen_2023 {
     }
 }
 
-/// Smarte Strasse: Sensoren
+#[doc = "Smarte Strasse: Sensoren"]
+#[doc = ""]
+#[doc = "<p>Im Rahmen des Projekts\u{a0}\u{ab}Smarte Strasse\u{bb} wurden Sensoren an verschiedenen Standorten angebracht.\u{a0}</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Weitere Informationen und Daten rund um das Projekt \u{ab}Smarte Strasse\u{bb} finden Sie unter den folgenden Links:</span></p><ul><li>Weitere Informationen zum Projekt \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html\" target=\"_blank\">https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html</a>\u{a0}</li><li>Weitere Datens\u{e4}tze rund um das Thema \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://data.bs.ch/explore/?refine.tags=smarte+strasse\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=smarte+strasse</a>\u{a0}</li></ul>"]
 pub mod smarte_strasse_sensoren {
     use super::*;
 
@@ -37386,7 +38163,7 @@ pub mod smarte_strasse_sensoren {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WasWirdGemessen,
         Verantwortlich,
@@ -37407,7 +38184,7 @@ pub mod smarte_strasse_sensoren {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -37432,7 +38209,7 @@ pub mod smarte_strasse_sensoren {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -37518,7 +38295,9 @@ pub mod smarte_strasse_sensoren {
     }
 }
 
-/// Resultate der Ersatzwahl Regierungsrat 3. März 2024
+#[doc = "Resultate der Ersatzwahl Regierungsrat 3. M\u{e4}rz 2024"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Resultate des ersten Wahlgangs der Regierungsrats-Ersatzwahl vom 3. M\u{e4}rz 2024. Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden. "]
 pub mod resultate_der_ersatzwahl_regierungsrat_3_maerz_2024 {
     use super::*;
 
@@ -37535,6 +38314,10 @@ pub mod resultate_der_ersatzwahl_regierungsrat_3_maerz_2024 {
         /// Wahltermin
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wahltermin: Option<Date>,
         /// Anzahl Sitze
         ///
@@ -37664,7 +38447,7 @@ pub mod resultate_der_ersatzwahl_regierungsrat_3_maerz_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         Amtsdauer,
@@ -37747,7 +38530,7 @@ pub mod resultate_der_ersatzwahl_regierungsrat_3_maerz_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -37772,7 +38555,7 @@ pub mod resultate_der_ersatzwahl_regierungsrat_3_maerz_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -37858,7 +38641,9 @@ pub mod resultate_der_ersatzwahl_regierungsrat_3_maerz_2024 {
     }
 }
 
-/// Grosser Rat: Gremien
+#[doc = "Grosser Rat: Gremien"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">Dieser Datensatz zeigt Gremien im Grossen Rat des Kantons Basel-Stadt.</p><p style=\"font-family: sans-serif;\">Die Daten k\u{f6}nnen auch auf der Webseite des Grossen Rates eingesehen werden:<br/><a href=\"https://grosserrat.bs.ch/\" target=\"_blank\">https://grosserrat.bs.ch</a></p>"]
 pub mod grosser_rat_gremien {
     use super::*;
 
@@ -37904,7 +38689,7 @@ pub mod grosser_rat_gremien {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IstAktuellesGremium,
         Kurzname,
@@ -37931,7 +38716,7 @@ pub mod grosser_rat_gremien {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -37956,7 +38741,7 @@ pub mod grosser_rat_gremien {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -38042,7 +38827,9 @@ pub mod grosser_rat_gremien {
     }
 }
 
-/// Kandidierende der Ersatzwahl Regierungsrat 3. März 2024
+#[doc = "Kandidierende der Ersatzwahl Regierungsrat 3. M\u{e4}rz 2024"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">F\u{fc}r die Ersatzwahl eines Mitglieds des Regierungsrat vom 3. M\u{e4}rz 2024 kandidieren vier Personen.</p><p style=\"font-family: sans-serif; margin-bottom: 1em;\">Dieser Datensatz zeigt die Kandidierenden des ersten Wahlgangs nach Geschlecht, Jahrgang und Beruf.</p>"]
 pub mod kandidierende_der_ersatzwahl_regierungsrat_3_maerz_2024 {
     use super::*;
 
@@ -38088,7 +38875,7 @@ pub mod kandidierende_der_ersatzwahl_regierungsrat_3_maerz_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         ListenNr,
         Listenbezeichnung,
@@ -38117,7 +38904,7 @@ pub mod kandidierende_der_ersatzwahl_regierungsrat_3_maerz_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -38142,7 +38929,7 @@ pub mod kandidierende_der_ersatzwahl_regierungsrat_3_maerz_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -38228,7 +39015,9 @@ pub mod kandidierende_der_ersatzwahl_regierungsrat_3_maerz_2024 {
     }
 }
 
-/// Ein- und Ausfahrten öffentlicher Parkhäuser Basel
+#[doc = "Ein- und Ausfahrten \u{f6}ffentlicher Parkh\u{e4}user Basel"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt die Anzahl Ein- und Ausfahrten pro Stunde in bzw. aus \u{f6}ffentlichen Parkh\u{e4}usern Basel. Die Daten werden j\u{e4}hrlich erg\u{e4}nzt. Aus technischen Gr\u{fc}nden sind die Daten des Parkhauses City erst ab 2021 vorhanden.\u{a0}<br></p><p>Im Parkhaus St. Jakob werden manchmal bei Grossanl\u{e4}ssen keine Ein- und Ausfahrten gez\u{e4}hlt. Diese Metriken sind f\u{fc}r dieses Parkhaus deshalb mit Vorsicht zu analysieren.\u{a0}<br></p>"]
 pub mod ein_und_ausfahrten_oeffentlicher_parkhaeuser_basel {
     use super::*;
 
@@ -38261,7 +39050,7 @@ pub mod ein_und_ausfahrten_oeffentlicher_parkhaeuser_basel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         Title,
@@ -38282,7 +39071,7 @@ pub mod ein_und_ausfahrten_oeffentlicher_parkhaeuser_basel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -38307,7 +39096,7 @@ pub mod ein_und_ausfahrten_oeffentlicher_parkhaeuser_basel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -38393,7 +39182,9 @@ pub mod ein_und_ausfahrten_oeffentlicher_parkhaeuser_basel {
     }
 }
 
-/// Abstimmung vom 9. Juni 2024 Details
+#[doc = "Abstimmung vom 9. Juni 2024 Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmung vom 9. Juni 2024 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im <a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">Kantonsblatt</a>\u{a0}(<a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">https://www.kantonsblatt.ch/#!/search/publications</a>) des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod abstimmung_vom_9_juni_2024_details {
     use super::*;
 
@@ -38440,6 +39231,10 @@ pub mod abstimmung_vom_9_juni_2024_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -38473,7 +39268,7 @@ pub mod abstimmung_vom_9_juni_2024_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         StimmrAnz,
@@ -38522,7 +39317,7 @@ pub mod abstimmung_vom_9_juni_2024_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -38547,7 +39342,7 @@ pub mod abstimmung_vom_9_juni_2024_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -38633,7 +39428,9 @@ pub mod abstimmung_vom_9_juni_2024_details {
     }
 }
 
-/// Coronavirus (Covid-19): Massentests an Schulen der Sekundarstufe II
+#[doc = "Coronavirus (Covid-19): Massentests an Schulen der Sekundarstufe II"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der SARS-CoV-2-Tests, welche an Sch\u{fc}ler:innen und Lehrpersonen in baselst\u{e4}dtischen Schulen der Sekundarstufe II durchgef\u{fc}hrt wurden. An dieser Schulstufe werden Einzeltests durchgef\u{fc}hrt. Weitere Informationen zum Coronavirus in Basel-Stadt:\u{a0}<a href=\"https://www.bs.ch/gd/md/gesundheitsschutz/uebertragbarekrankheiten/grippe-corona-und-co\" target=\"_blank\">https://www.bs.ch/gd/md/gesundheitsschutz/uebertragbarekrankheiten/grippe-corona-und-co</a></p><p>Dieser Datensatz wird seit Ende Februar 2022 nicht mehr aktualisiert. Seit Mitte M\u{e4}rz 2022 werden die Daten zu Tests in Basler Schulen in einem neuen Datensatz ver\u{f6}ffentlich:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100183\" target=\"_blank\">https://data.bs.ch/explore/dataset/100183</a></p>"]
 pub mod coronavirus_covid_19_massentests_an_schulen_der_sekundarstufe_ii {
     use super::*;
 
@@ -38642,6 +39439,10 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_sekundarstufe_ii {
         /// Datum Wochenstart
         ///
         /// Datum des Montags der Woche
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub firstdayofweek: Option<Date>,
         /// Kalenderwoche
         ///
@@ -38675,7 +39476,7 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_sekundarstufe_ii {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Firstdayofweek,
         Weekofyear,
@@ -38700,7 +39501,7 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_sekundarstufe_ii {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -38725,7 +39526,7 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_sekundarstufe_ii {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -38811,7 +39612,9 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_sekundarstufe_ii {
     }
 }
 
-/// Gesundheitsversorgung (GSV): Pflegeheimbewohnende
+#[doc = "Gesundheitsversorgung (GSV): Pflegeheimbewohnende"]
+#[doc = ""]
+#[doc = "Wichtige Kennzahlen zu den Pflegeheimbewohnenden im Kanton Basel-Stadt. Dieser Datensatz fliesst zum Teil in Form eines Dashboard in den online Bericht des Bereiches Gesundheitsversorgung (GSV) des Gesundheitsdepartement Basel-Stadt.Die Kennzahlen werden per Stichtag Anfangs Jahr erhoben."]
 pub mod gesundheitsversorgung_gsv_pflegeheimbewohnende {
     use super::*;
 
@@ -38881,7 +39684,7 @@ pub mod gesundheitsversorgung_gsv_pflegeheimbewohnende {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Id,
@@ -38920,7 +39723,7 @@ pub mod gesundheitsversorgung_gsv_pflegeheimbewohnende {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -38945,7 +39748,7 @@ pub mod gesundheitsversorgung_gsv_pflegeheimbewohnende {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -39031,7 +39834,9 @@ pub mod gesundheitsversorgung_gsv_pflegeheimbewohnende {
     }
 }
 
-/// Kennzahlen zu den Basler Wohnvierteln und Landgemeinden
+#[doc = "Kennzahlen zu den Basler Wohnvierteln und Landgemeinden"]
+#[doc = ""]
+#[doc = "Ausgew\u{e4}hlte statistische Kennzahlen der 19 Wohnviertel der Stadt Basel sowie der zwei Gemeinden Riehen und Bettingen seit 2015. Aufgrund einer ver\u{e4}nderten Datenlage k\u{f6}nnen die Indikatoren 3 (Religionszugeh\u{f6}rigkeit) und 18 (Arbeitslosenquote) ab der Ausgabe 2020 nicht mehr dargestellt werden. Die Berechnungsmethode f\u{fc}r die Sozialhilfequote wurde 2022 f\u{fc}r die Jahre ab 2017 r\u{fc}ckwirkend angepasst. Zur Definition: <a href=\"https://statistik.bs.ch/files/faltblatt/Erlaeuterungen-Quartierradar.pdf\" target=\"_blank\">https://statistik.bs.ch/files/faltblatt/Erlaeuterungen-Quartierradar.pdf</a>."]
 pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden {
     use super::*;
 
@@ -39129,7 +39934,7 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Publikationsjahr,
         WohnviertelId,
@@ -39186,7 +39991,7 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -39211,7 +40016,7 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -39297,7 +40102,9 @@ pub mod kennzahlen_zu_den_basler_wohnvierteln_und_landgemeinden {
     }
 }
 
-/// Grosser Rat: Sitzungskalender
+#[doc = "Grosser Rat: Sitzungskalender"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Termine der Sitzungen des Grossen Rates Basel-Stadt.\u{a0}</p>"]
 pub mod grosser_rat_sitzungskalender {
     use super::*;
 
@@ -39325,7 +40132,7 @@ pub mod grosser_rat_sitzungskalender {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Summary,
         Dtstart,
@@ -39342,7 +40149,7 @@ pub mod grosser_rat_sitzungskalender {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -39367,7 +40174,7 @@ pub mod grosser_rat_sitzungskalender {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -39453,7 +40260,9 @@ pub mod grosser_rat_sitzungskalender {
     }
 }
 
-/// Coronavirus (Covid-19): Positiv getestete Minderjährige in 3-Jahresklassen
+#[doc = "Coronavirus (Covid-19): Positiv getestete Minderj\u{e4}hrige in 3-Jahresklassen"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die minderj\u{e4}hrigen Personen, welche positiv auf SARS-CoV-2 getestet wurden in 3-Jahresklassen. Die erste Klasse (0 bis 3 Jahre) enth\u{e4}lt 4 Jahre. Es werden ausschliesslich Personen mit Wohnsitz im Kanton Basel-Stadt gezeigt. Als \u{ab}Datum Testresultat\u{bb} gilt das Datum, an welchem das Testresultat vorlag.</p><p>Weitere Datens\u{e4}tze zu Covid-19:</p><p>Fallzahlen Basel-Stadt:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100073\" target=\"_blank\">https://data.bs.ch/explore/dataset/100073</a></p><p>Tests Basel-Stadt:<a href=\"https://data.bs.ch/explore/dataset/100094\" target=\"_blank\">https://data.bs.ch/explore/dataset/100094</a></p><p>Todesf\u{e4}lle Basel-Stadt nach Alter und Geschlecht:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100076\" target=\"_blank\">https://data.bs.ch/explore/dataset/100076</a></p><p>Covid-19 Dashboard:\u{a0}<a href=\"https://data.bs.ch/pages/covid-19-dashboard\" target=\"_blank\">https://data.bs.ch/pages/covid-19-dashboard</a><a href=\"https://data.bs.ch/pages/covid-19-dashboard\" target=\"_blank\"></a></p><p><span style=\"font-weight: bolder;\">\u{c4}nderungsprotokoll:</span></p><ul><li>Die Erhebung der Werte wurde per 19. Juni 2023 sistiert. Der Datensatz wird nicht mehr aktualisiert.\u{a0}Aktualisierungsintervall von \"DAILY\" auf \"NEVER\" ge\u{e4}ndert.</li></ul><p><br/></p>"]
 pub mod coronavirus_covid_19_positiv_getestete_minderjaehrige_in_3_jahresklassen {
     use super::*;
 
@@ -39462,6 +40271,10 @@ pub mod coronavirus_covid_19_positiv_getestete_minderjaehrige_in_3_jahresklassen
         /// Datum Testresultat
         ///
         /// Datum, an dem das Testresultat vorlag
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub test_datum: Option<Date>,
         /// Altersklasse
         ///
@@ -39479,7 +40292,7 @@ pub mod coronavirus_covid_19_positiv_getestete_minderjaehrige_in_3_jahresklassen
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         TestDatum,
         PersAlter,
@@ -39496,7 +40309,7 @@ pub mod coronavirus_covid_19_positiv_getestete_minderjaehrige_in_3_jahresklassen
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -39521,7 +40334,7 @@ pub mod coronavirus_covid_19_positiv_getestete_minderjaehrige_in_3_jahresklassen
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -39607,7 +40420,9 @@ pub mod coronavirus_covid_19_positiv_getestete_minderjaehrige_in_3_jahresklassen
     }
 }
 
-/// Kennzahlen der Abstimmung vom 12. März 2023
+#[doc = "Kennzahlen der Abstimmung vom 12. M\u{e4}rz 2023"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 12. M\u{e4}rz 2023 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_12_maerz_2023 {
     use super::*;
 
@@ -39654,6 +40469,10 @@ pub mod kennzahlen_der_abstimmung_vom_12_maerz_2023 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -39699,7 +40518,7 @@ pub mod kennzahlen_der_abstimmung_vom_12_maerz_2023 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -39752,7 +40571,7 @@ pub mod kennzahlen_der_abstimmung_vom_12_maerz_2023 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -39777,7 +40596,7 @@ pub mod kennzahlen_der_abstimmung_vom_12_maerz_2023 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -39863,7 +40682,9 @@ pub mod kennzahlen_der_abstimmung_vom_12_maerz_2023 {
     }
 }
 
-/// Baumkronenbedeckung
+#[doc = "Baumkronenbedeckung"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die gesamte durch B\u{e4}ume beschattete Fl\u{e4}che (Baumkronenbedeckung) im Kanton Basel-Stadt in verschiedenen Jahren. Der Kanton Basel-Stadt erhebt durch Laserabtastung der Oberfl\u{e4}che (LiDAR) Daten zur Baumkronenbedeckung (durch B\u{e4}ume beschattete Fl\u{e4}che) \u{fc}ber die gesamte Kantonsfl\u{e4}che. Die von LiDAR abgeleitete Baumkronenbedeckung und Kennzahlen wurden f\u{fc}r 2012 und 2021 berechnet. Die Nachf\u{fc}hrung wird in Zukunft alle drei Jahre stattfinden (2024 und 2027), so dass die Entwicklung der Baumkronendeckung in Basel genau verfolgt werden kann.</p><p>Der Flug f\u{fc}r die Erhebung neuer Daten in 2024 hat bereits stattgefunden, die Daten zu den B\u{e4}umen werden ausgewertet und im Herbst publiziert. In Zukunft werden, f\u{fc}r ein genaues Monitoring, alle 3 Jahre neue Daten erhoben.</p><p>Die Stadtg\u{e4}rtnerei stellt der interessierten \u{d6}ffentlichkeit dieses digitale Wissen zur Verf\u{fc}gung: <a href=\"https://www.stadtgaertnerei.bs.ch/stadtgruen/stadtbaeume/baumkronenbedeckung.html\" target=\"_blank\">Stadtg\u{e4}rtnerei des Kantons Basel-Stadt - Baumkronenbedeckung (https://www.stadtgaertnerei.bs.ch/stadtgruen/stadtbaeume/baumkronenbedeckung.html)</a>\n</p><p>\n\nMan kann die LiDAR-Daten in Form einer png- und pgw-Datei in der Tabellenansicht herunterladen. Eine PGW-Datei ist eine Weltdatei, die Georeferenzierungsdaten f\u{fc}r ein zugeh\u{f6}riges Bild im PNG-Format enth\u{e4}lt, um dessen genaue Positionierung auf einer Karte zu erm\u{f6}glichen.</p><p>Hier finden Sie die URLs zu den Zip-Dateien, die beide Dateien enthalten:<br> \n<a href=\"https://data-bs.ch/stata/stadtgaertnerei/Baumkronenbedeckung_2012.zip\" target=\"_blank\">https://data-bs.ch/stata/stadtgaertnerei/Baumkronenbedeckung_2012.zip</a><br><a href=\"https://data-bs.ch/stata/stadtgaertnerei/Baumkronenbedeckung_2021.zip\" target=\"_blank\">https://data-bs.ch/stata/stadtgaertnerei/Baumkronenbedeckung_2021.zip</a></p><p>Auf der Website des Tiefbauamts k\u{f6}nnen Sie die Daten mit dem GeoViewer betrachten: <a href=\"https://tiefbauamt-bs.ch/geoviewer/lidar\" target=\"_blank\">https://tiefbauamt-bs.ch/geoviewer/lidar</a></p><p>Detailinformationen zur LiDAR-Technologie finden Sie hier: <a href=\"https://www.swisstopo.admin.ch/de/lidar-daten-swisstopo\" target=\"_blank\">https://www.swisstopo.admin.ch/de/lidar-daten-swisstopo</a> </p>"]
 pub mod baumkronenbedeckung {
     use super::*;
 
@@ -39887,7 +40708,7 @@ pub mod baumkronenbedeckung {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         UrlPng,
@@ -39904,7 +40725,7 @@ pub mod baumkronenbedeckung {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -39929,7 +40750,7 @@ pub mod baumkronenbedeckung {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -40015,7 +40836,9 @@ pub mod baumkronenbedeckung {
     }
 }
 
-/// Nationalratswahlen 2023: Veränderte Wahlzettel
+#[doc = "Nationalratswahlen 2023: Ver\u{e4}nderte Wahlzettel"]
+#[doc = ""]
+#[doc = "<p>Bei den Nationalratswahlen im Kanton Basel-Stadt am 22. Oktober 2023 kandidierten 122 Personen auf 32 Listen (<a href=\"https://data.bs.ch/explore/dataset/100316\" target=\"_blank\">verf\u{fc}gbar unter https://data.bs.ch/explore/dataset/100316</a>) f\u{fc}r insgesamt vier zu vergebende Sitze.</p><p> Es gingen insgesamt 56 235 g\u{fc}ltigen Wahlzettel ein, von denen 29 637 Wahlzettel ver\u{e4}ndert wurden. Dieser Datensatz zeigt diese 29 637 Wahlzettel und jegliche Details dazu.\u{a0}</p><p>Die Wahlergebnisse sind in einem separaten Datensatz (<a href=\"https://data.bs.ch/explore/dataset/100281\" target=\"_blank\">https://data.bs.ch/explore/dataset/100281</a><a href=\"https://data.bs.ch/explore/dataset/100281\" target=\"_blank\"></a>\u{a0}und <a href=\"https://data.bs.ch/explore/dataset/100297\" target=\"_blank\">https://data.bs.ch/explore/dataset/100297</a>) einsehbar, der die Verteilung der Stimmen und die gew\u{e4}hlten Vertreter detailliert darstellt.</p><p>Das Statistische Amt hat zu diesem Datensatz einen Dossier-Artikel verfasst, der hier einsehbar ist: <a href=\"https://data-bs.ch/stata/wahlen_abstimmungen/wahlen/nr/wahlzettel_2023/6-wahlen.pdf\" target=\"_blank\">https://data-bs.ch/stata/wahlen_abstimmungen/wahlen/nr/wahlzettel_2023/6-wahlen.pdf\u{a0}</a></p>"]
 pub mod nationalratswahlen_2023_veraenderte_wahlzettel {
     use super::*;
 
@@ -40085,7 +40908,7 @@ pub mod nationalratswahlen_2023_veraenderte_wahlzettel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Column1,
         Wahljahr,
@@ -40132,7 +40955,7 @@ pub mod nationalratswahlen_2023_veraenderte_wahlzettel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -40157,7 +40980,7 @@ pub mod nationalratswahlen_2023_veraenderte_wahlzettel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -40243,7 +41066,9 @@ pub mod nationalratswahlen_2023_veraenderte_wahlzettel {
     }
 }
 
-/// Nationalratswahlen 2023: Kandidierende aus Basel-Stadt
+#[doc = "Nationalratswahlen 2023: Kandidierende aus Basel-Stadt"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">F\u{fc}r die Nationalratswahlen vom 22. Oktober 2023 kandidieren 122 Personen auf insgesamt 32 Listen f\u{fc}r den Kanton Basel-Stadt. Insgesamt werden vier Sitze im Nationalrat gew\u{e4}hlt.</p><p style=\"font-family: sans-serif; margin-bottom: 1em;\">Dieser Datensatz zeigt die Kandidierenden aus dem Kanton Basel-Stadt nach Geschlecht, Jahrgang und Beruf sowie alle Listen und ihre Haupt- und Unterlistenverbindungen.</p>"]
 pub mod nationalratswahlen_2023_kandidierende_aus_basel_stadt {
     use super::*;
 
@@ -40317,7 +41142,7 @@ pub mod nationalratswahlen_2023_kandidierende_aus_basel_stadt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         ListenNr,
         Listenkurzbezeichnung,
@@ -40360,7 +41185,7 @@ pub mod nationalratswahlen_2023_kandidierende_aus_basel_stadt {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -40385,7 +41210,7 @@ pub mod nationalratswahlen_2023_kandidierende_aus_basel_stadt {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -40471,7 +41296,9 @@ pub mod nationalratswahlen_2023_kandidierende_aus_basel_stadt {
     }
 }
 
-/// Ständeratswahlen 2023: Kandidierende aus Basel-Stadt
+#[doc = "St\u{e4}nderatswahlen 2023: Kandidierende aus Basel-Stadt"]
+#[doc = ""]
+#[doc = "<p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">F\u{fc}r die St\u{e4}nderatswahlen vom 22. Oktober 2023 kandidieren vier Personen\u{a0} f\u{fc}r den Kanton Basel-Stadt. Insgesamt wird 1 Sitz im St\u{e4}nderat gew\u{e4}hlt.<o:p></o:p></span></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Dieser Datensatz zeigt die Kandidierenden aus dem Kanton\nBasel-Stadt nach Geschlecht, Jahrgang und Beruf sowie die jeweiligen Listen.<o:p></o:p></span></p><p style=\"font-family: sans-serif;\">\n\n\n\n</p><p class=\"MsoNormal\"><o:p>\u{a0}</o:p></p>"]
 pub mod staenderatswahlen_2023_kandidierende_aus_basel_stadt {
     use super::*;
 
@@ -40519,7 +41346,7 @@ pub mod staenderatswahlen_2023_kandidierende_aus_basel_stadt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         ListenNr,
         Listenbezeichnung,
@@ -40548,7 +41375,7 @@ pub mod staenderatswahlen_2023_kandidierende_aus_basel_stadt {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -40573,7 +41400,7 @@ pub mod staenderatswahlen_2023_kandidierende_aus_basel_stadt {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -40659,7 +41486,9 @@ pub mod staenderatswahlen_2023_kandidierende_aus_basel_stadt {
     }
 }
 
-/// Wahllokale Kanton Basel-Stadt
+#[doc = "Wahllokale Kanton Basel-Stadt"]
+#[doc = ""]
+#[doc = "<p>In diesem Datensatz sind die Wahllokale des Kantons Basel-Stadt aufgef\u{fc}hrt, zusammen mit Informationen zu den entsprechenden Wahllokal-IDs, Gemeinde-IDs und den zugeh\u{f6}rigen Gemeinden.<br/>Insgesamt enth\u{e4}lt der Datensatz Informationen zu verschiedenen Wahllokalen im Kanton Basel-Stadt, einschlie\u{df}lich der Angaben zu brieflichen, elektronischen und pers\u{f6}nlichen Stimmenden an den einzelnen Standorten.<br/></p>"]
 pub mod wahllokale_kanton_basel_stadt {
     use super::*;
 
@@ -40681,7 +41510,7 @@ pub mod wahllokale_kanton_basel_stadt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahllokName,
         WahllokId,
@@ -40700,7 +41529,7 @@ pub mod wahllokale_kanton_basel_stadt {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -40725,7 +41554,7 @@ pub mod wahllokale_kanton_basel_stadt {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -40811,7 +41640,9 @@ pub mod wahllokale_kanton_basel_stadt {
     }
 }
 
-/// Lebendgeborene seit 1901
+#[doc = "Lebendgeborene seit 1901"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die j\u{e4}hrliche Anzahl Lebendgeburten nach demografischen Merkmalen des Kindes und der Mutter und nach Geschlecht des Kindes seit 1901."]
 pub mod lebendgeborene_seit_1901 {
     use super::*;
 
@@ -40865,7 +41696,7 @@ pub mod lebendgeborene_seit_1901 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Total,
@@ -40896,7 +41727,7 @@ pub mod lebendgeborene_seit_1901 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -40921,7 +41752,7 @@ pub mod lebendgeborene_seit_1901 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -41007,7 +41838,9 @@ pub mod lebendgeborene_seit_1901 {
     }
 }
 
-/// Perimeter der Schülerprognosen Basel-Stadt
+#[doc = "Perimeter der Sch\u{fc}lerprognosen Basel-Stadt"]
+#[doc = ""]
+#[doc = "Die Karte zeigt Schulperimeter im Kanton Basel-Stadt. Die Perimeter werden zu Planungszwecken vom Erziehungsdepartement Basel-Stadt und von der Gemeinde Riehen verwendet. Insbesondere dienen sie als r\u{e4}umliche Grundlage f\u{fc}r die kleinr\u{e4}umigen Sch\u{fc}lerprognosen, die im Auftrag des Erziehungsdepartements Basel-Stadt und der Gemeinde Riehen erstellt werden. Die Perimeter dienen als Planungsgrundlage und nicht als effektive Einzugsgebiete."]
 pub mod perimeter_der_schuelerprognosen_basel_stadt {
     use super::*;
 
@@ -41033,7 +41866,7 @@ pub mod perimeter_der_schuelerprognosen_basel_stadt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Nummer,
         Zonen,
@@ -41048,7 +41881,7 @@ pub mod perimeter_der_schuelerprognosen_basel_stadt {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -41073,7 +41906,7 @@ pub mod perimeter_der_schuelerprognosen_basel_stadt {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -41159,7 +41992,9 @@ pub mod perimeter_der_schuelerprognosen_basel_stadt {
     }
 }
 
-/// Geschwindigkeitsklassen motorisierter Individualverkehr
+#[doc = "Geschwindigkeitsklassen motorisierter Individualverkehr"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz enth\u{e4}lt die Geschwindigkeitsklassen des motorisierten Individualverkehrs. Die Daten werden vor der Ver\u{f6}ffentlichung nicht \u{fc}berpr\u{fc}ft oder erg\u{e4}nzt. Daher k\u{f6}nnen jederzeit Datenl\u{fc}cken oder falsche Messungen aufgrund technischer Probleme oder Verkehrsbehinderungen auftreten.</p><p>Aus Kostengr\u{fc}nden sind nur die Werte des aktuellen Jahres und der letzten zwei Jahre als Tabelle / Visualisierung sichtbar bzw. via API abgreifbar. Die vollst\u{e4}ndigen Daten ab dem Jahr 2014 k\u{f6}nnen hier heruntergeladen werden:\u{a0}<br><br>Leicht aufbereiteter Datensatz: <a href=\"https://data-bs.ch/mobilitaet/converted_MIV_Speed.csv\" target=\"_blank\">https://data-bs.ch/mobilitaet/converted_MIV_Speed.csv\u{a0}</a><br>Rohdaten: <a href=\"https://data-bs.ch/mobilitaet/MIV_Speed.csv\" target=\"_blank\">https://data-bs.ch/mobilitaet/MIV_Speed.csv</a><br><br>Die Daten einzelner Jahre ab dem Jahr 2014 k\u{f6}nnen heruntergeladen werden unter der URL mit dem Muster https://data-bs.ch/mobilitaet/[JAHR]_MIV_Speed.csv, als zum Beispiel f\u{fc}r das Jahr 2020 hier: <a href=\"https://data-bs.ch/mobilitaet/2020_MIV_Speed.csv\" target=\"_blank\">https://data-bs.ch/mobilitaet/2020_MIV_Speed.csv.</a></p>"]
 pub mod geschwindigkeitsklassen_motorisierter_individualverkehr {
     use super::*;
 
@@ -41184,6 +42019,10 @@ pub mod geschwindigkeitsklassen_motorisierter_individualverkehr {
         /// Name der Spur
         pub lanename: Option<String>,
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Messbeginn Uhrzeit
         pub timefrom: Option<String>,
@@ -41273,7 +42112,7 @@ pub mod geschwindigkeitsklassen_motorisierter_individualverkehr {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         ZstId,
         Sitename,
@@ -41346,7 +42185,7 @@ pub mod geschwindigkeitsklassen_motorisierter_individualverkehr {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -41371,7 +42210,7 @@ pub mod geschwindigkeitsklassen_motorisierter_individualverkehr {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -41457,7 +42296,9 @@ pub mod geschwindigkeitsklassen_motorisierter_individualverkehr {
     }
 }
 
-/// Überwachung Luftqualität Transformation Areal Rosental: Baustellenbereich
+#[doc = "\u{dc}berwachung Luftqualit\u{e4}t Transformation Areal Rosental: Baustellenbereich"]
+#[doc = ""]
+#[doc = "<p>Bedingt durch die fr\u{fc}here Nutzung des Rosental Areals \u{2013} auch bekannt als die Wiege der Basler Chemie - ist der Untergrund mit Schadstoffen belastet. W\u{e4}hrend der Tiefbauarbeiten im Rahmen der \u{ab}Transformation <a href=\"https://rosentalmitte.ch\" target=\"_blank\">Rosental Mitte</a>\u{bb} \u{fc}berwacht das <a href=\"http://www.basler-luft.ch/\" target=\"_blank\">Lufthygieneamt beider Basel (LHA)</a> die Immissionen mittels Messungen der Luft <a href=\"https://data.bs.ch/pages/rosental-dashboard/\" target=\"_blank\">(Dashboard)</a>.\u{a0}</p><div><br/></div>"]
 pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_baustellenbereich {
     use super::*;
 
@@ -41476,7 +42317,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_baustellenberei
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         N,
     }
@@ -41489,7 +42330,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_baustellenberei
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -41514,7 +42355,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_baustellenberei
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -41600,7 +42441,9 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_baustellenberei
     }
 }
 
-/// Steuerstatistik Basel-Stadt: Kennzahlen seit 1991 nach Gemeinde und Wohnviertel
+#[doc = "Steuerstatistik Basel-Stadt: Kennzahlen seit 1991 nach Gemeinde und Wohnviertel"]
+#[doc = ""]
+#[doc = "Zentrale Gr\u{f6}ssen der Steuerstatistik Basel-Stadt seit 1991 nach Gemeinde und Wohnviertel. Die Daten stammen aus den Steuerdaten der ordentlichen Veranlagung von ganzj\u{e4}hrig in Basel-Stadt steuerpflichtigen Personen (ohne Ausw\u{e4}rtige). Die Verm\u{f6}genssteuer 2000 wurde zusammen mit der Einkommenssteuer 1999 bezogen. In der Steuerperiode 2000 sind nur F\u{e4}lle mit Beginn der Steuerpflicht im Jahr 2000 aufgef\u{fc}hrt, da die Verm\u{f6}genssteuer 2001 wegen der Steuerharmonisierung erst zusammen mit der Einkommenssteuer 2001 bezogen worden ist."]
 pub mod steuerstatistik_basel_stadt_kennzahlen_seit_1991_nach_gemeinde_und_wohnviertel {
     use super::*;
 
@@ -41676,6 +42519,10 @@ pub mod steuerstatistik_basel_stadt_kennzahlen_seit_1991_nach_gemeinde_und_wohnv
         ///
         /// Median des Vermögenssteuertrags in Fr. (Kantons- und Gemeindesteuer); ordentliche Veranlagungen von natürlichen Personen in Basel-Stadt; Quelle: Steuerstatistik Basel-Stadt
         pub vermoegen_steuerbetrag_ktgde_median: Option<i64>,
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub steuerjahr_zahl: Option<Date>,
     }
 
@@ -41685,7 +42532,7 @@ pub mod steuerstatistik_basel_stadt_kennzahlen_seit_1991_nach_gemeinde_und_wohnv
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Steuerjahr,
         Wohnviertel,
@@ -41738,7 +42585,7 @@ pub mod steuerstatistik_basel_stadt_kennzahlen_seit_1991_nach_gemeinde_und_wohnv
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -41763,7 +42610,7 @@ pub mod steuerstatistik_basel_stadt_kennzahlen_seit_1991_nach_gemeinde_und_wohnv
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -41849,7 +42696,9 @@ pub mod steuerstatistik_basel_stadt_kennzahlen_seit_1991_nach_gemeinde_und_wohnv
     }
 }
 
-/// Eingebürgerte Ausländerinnen und Ausländer nach Geschlecht, Alter, Geburtsland und Staatsangehörigkeit bei Gesuchsstellung
+#[doc = "Eingeb\u{fc}rgerte Ausl\u{e4}nderinnen und Ausl\u{e4}nder nach Geschlecht, Alter, Geburtsland und Staatsangeh\u{f6}rigkeit bei Gesuchsstellung"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die eingeb\u{fc}rgerten Ausl\u{e4}nderinnen und Ausl\u{e4}nder des Kantons Basel-Stadt nach Geschlecht, Alter, Geburtsland und Staatsangeh\u{f6}rigkeit bei der Gesuchstellung. Die Staatsangeh\u{f6}rigen aus Serbien, Montenegro und Kosovo werden bis zum Jahr 2014 unter \u{ab}Serbien, Montenegro und Kosovo\u{bb} zusammengefasst, seit dem Jahr 2015 k\u{f6}nnen sie separat ausgewiesen werden. Der Datensatz wird j\u{e4}hrlich aktualisiert. Ausl\u{e4}ndische Staatsangeh\u{f6}rige, die zehn Jahre in der Schweiz gelebt haben und eine Niederlassungsbewilligung C besitzen, k\u{f6}nnen sich um die ordentliche Einb\u{fc}rgerung bewerben. Die im Alter von 8 bis 18 in der Schweiz verbrachten Jahre z\u{e4}hlen doppelt. Unter bestimmten Voraussetzungen ist nach k\u{fc}rzerer Aufenthaltsdauer eine erleichterte Einb\u{fc}rgerung m\u{f6}glich, z. B. nach f\u{fc}nf Jahren Aufenthalt und drei Jahren Ehe mit einer Schweizerin bzw. einem Schweizer. Auch in der Schweiz geborene ausl\u{e4}ndische Staatsangeh\u{f6}rige der dritten Generation k\u{f6}nnen sich bis zum Alter von 25 Jahren erleichtert einb\u{fc}rgern lassen, falls ein Grosseltern- und ein Elternteil in der Schweiz gelebt haben. Bis 2017 galten teilweise andere Bestimmungen, die bei bis zu diesem Zeitpunkt eingereichten Einb\u{fc}rgerungsgesuchen zum Tragen kamen. Neben den ordentlichen und den erleichterten Einb\u{fc}rgerungen gibt es weitere Einb\u{fc}rgerungen (z. B. infolge Anerkennung der Vaterschaft, Adoption, Wiedereinb\u{fc}rgerung oder Feststellung der Schweizer Staatsangeh\u{f6}rigkeit), die hier ebenfalls ber\u{fc}cksichtigt werden."]
 pub mod eingebuergerte_auslaenderinnen_und_auslaender_nach_geschlecht_alter_geburtsland_und_staatsangehoerigkeit_bei_gesuchsstellung {
     use super::*;
 
@@ -41889,7 +42738,7 @@ pub mod eingebuergerte_auslaenderinnen_und_auslaender_nach_geschlecht_alter_gebu
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Geschlecht,
@@ -41914,7 +42763,7 @@ pub mod eingebuergerte_auslaenderinnen_und_auslaender_nach_geschlecht_alter_gebu
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -41939,7 +42788,7 @@ pub mod eingebuergerte_auslaenderinnen_und_auslaender_nach_geschlecht_alter_gebu
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -42025,7 +42874,9 @@ pub mod eingebuergerte_auslaenderinnen_und_auslaender_nach_geschlecht_alter_gebu
     }
 }
 
-/// Schutzsuchende im Kanton Basel-Stadt nach Geschlecht, Altersklasse, Staatsangehörigkeit, Zuzugs- und Wegzugsmonat
+#[doc = "Schutzsuchende im Kanton Basel-Stadt nach Geschlecht, Altersklasse, Staatsangeh\u{f6}rigkeit, Zuzugs- und Wegzugsmonat"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Schutzsuchenden im Kanton Basel-Stadt nach Geschlecht, Altersgruppe, Staatsangeh\u{f6}rigkeit, Zuzugs- und Wegzugsmonat. Er wird monatlich aktualisiert."]
 pub mod schutzsuchende_im_kanton_basel_stadt_nach_geschlecht_altersklasse_staatsangehoerigkeit_zuzugs_und_wegzugsmonat {
     use super::*;
 
@@ -42091,7 +42942,7 @@ pub mod schutzsuchende_im_kanton_basel_stadt_nach_geschlecht_altersklasse_staats
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Laufnummer,
         Jahr,
@@ -42132,7 +42983,7 @@ pub mod schutzsuchende_im_kanton_basel_stadt_nach_geschlecht_altersklasse_staats
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -42157,7 +43008,7 @@ pub mod schutzsuchende_im_kanton_basel_stadt_nach_geschlecht_altersklasse_staats
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -42243,7 +43094,9 @@ pub mod schutzsuchende_im_kanton_basel_stadt_nach_geschlecht_altersklasse_staats
     }
 }
 
-/// Überwachung Luftqualität Sanierung Areal Walkeweg
+#[doc = "\u{dc}berwachung Luftqualit\u{e4}t Sanierung Areal Walkeweg"]
+#[doc = ""]
+#[doc = "<div>Immobilien Basel-Stadt (IBS) erstellt auf dem Familiengarten Areal Walkeweg Nord in Basel eine Neubebauung mit Wohneigentum und Schule. Bereiche des Neubauprojektes sind im Kataster der belasteten Standorte des Kantons Basel-Stadt gef\u{fc}hrt. Es handelt sich dabei um eine ehemalige Kiesentnahmestelle (ab ca. 1892), welche in Etappen ab 1917 sukzessive wieder mit Abfall aufgef\u{fc}llt wurde. Im Rahmen des Projekts ist eine Totalsanierung mit Bodenaustausch am Standort vorgesehen.</div><div>Neben beh\u{f6}rdlichen Auflagen und Schutzmassnahmen, welche w\u{e4}hrend den baulichen Massnahmen im Untergrund eine Belastung der Umgebung (Schutz der Umwelt und Allgemeinbev\u{f6}lkerung) mindern sollen, sieht das Lufthygieneamt beider Basel (LHA) vor, w\u{e4}hrend der relevanten baulichen Eingriffe die Immissionen mittels Messungen der Luft zu \u{fc}berwachen. Auf Basis der Ergebnisse der technischen Untersuchung des Areals wurde in erster Linie die Staubdeposition (mittels Bergerhoff-Methode) und fl\u{fc}chtige organische Stoffe (mittels Passivsammler) als zu \u{fc}berwachende Parameter ausgew\u{e4}hlt.\u{a0}</div><div>F\u{fc}r die vorliegende \u{dc}berwachung wurden Warn- und Interventionswerte festgelegt. Die Interventionswerte beruhen auf beh\u{f6}rdlichen Grenzwerten und toxikologischen Studien. Der Warnwert wurde bei jeweils 50 % des Interventionswertes festgelegt.</div><div><br/></div><div>\u{c4}nderungsprotokoll:<br/>27.06.2023 - Aktualisierungsintervall von \"MONTHLY\" auf \"NEVER\" ge\u{e4}ndert.</div><div>\n</div>"]
 pub mod ueberwachung_luftqualitaet_sanierung_areal_walkeweg {
     use super::*;
 
@@ -42252,10 +43105,18 @@ pub mod ueberwachung_luftqualitaet_sanierung_areal_walkeweg {
         /// Messbeginn
         ///
         /// Beginn der Messung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messbeginn: Option<Date>,
         /// Messende
         ///
         /// Ende der Messung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messende: Option<Date>,
         /// Standort
         ///
@@ -42289,7 +43150,7 @@ pub mod ueberwachung_luftqualitaet_sanierung_areal_walkeweg {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Messbeginn,
         Messende,
@@ -42318,7 +43179,7 @@ pub mod ueberwachung_luftqualitaet_sanierung_areal_walkeweg {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -42343,7 +43204,7 @@ pub mod ueberwachung_luftqualitaet_sanierung_areal_walkeweg {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -42429,7 +43290,9 @@ pub mod ueberwachung_luftqualitaet_sanierung_areal_walkeweg {
     }
 }
 
-/// Resultate der Ständeratswahlen 2023
+#[doc = "Resultate der St\u{e4}nderatswahlen 2023"]
+#[doc = ""]
+#[doc = "<p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Dieser Datensatz zeigt die Resultate der St\u{e4}nderatswahl vom 22. Oktober 2023.<o:p></o:p></p><p style=\"font-family: sans-serif;\"></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod resultate_der_staenderatswahlen_2023 {
     use super::*;
 
@@ -42446,6 +43309,10 @@ pub mod resultate_der_staenderatswahlen_2023 {
         /// Wahltermin
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wahltermin: Option<Date>,
         /// Anzahl Sitze
         ///
@@ -42580,7 +43447,7 @@ pub mod resultate_der_staenderatswahlen_2023 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         Amtsdauer,
@@ -42667,7 +43534,7 @@ pub mod resultate_der_staenderatswahlen_2023 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -42692,7 +43559,7 @@ pub mod resultate_der_staenderatswahlen_2023 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -42778,7 +43645,9 @@ pub mod resultate_der_staenderatswahlen_2023 {
     }
 }
 
-/// Coronavirus (Covid-19): Erweiterte Daten zu Impfungen nach Altersgruppe
+#[doc = "Coronavirus (Covid-19): Erweiterte Daten zu Impfungen nach Altersgruppe"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die SARS-CoV-2-Impfungen, welche an Personen mit Wohnsitz im Kanton Basel-Stadt verabreicht wurden nach Altersklasse.\u{a0}</p><p>Anmerkung: Die geimpften Personen wohnen im Kanton Basel-Stadt, m\u{fc}ssen aber nicht zwingend auch im Kanton Basel-Stadt geimpft worden sein. Aus diesem Grund unterscheiden sich die hier publizierten Zahlen auch von jenen im <a href=\"https://data.bs.ch/explore/dataset/100111\" target=\"_blank\">Datensatz mit den im Kanton Basel-Stadt verabreichten Impfungen</a>.\u{a0}</p><p>Dieser Datensatz wurde mit verschiedenen Variablen aus diesem Datensatz (<a href=\"https://data.bs.ch/explore/dataset/100128\" target=\"_blank\">https://data.bs.ch/explore/dataset/100128</a>) erg\u{e4}nzt, um die Anteile der geimpften Personen nach Altersklasse f\u{fc}r die Visualisierungen berechnen zu k\u{f6}nnen. Die rohen Werte zu den geimpften Personen nach Altersklasse finden Sie in diesem Datensatz:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100135\" target=\"_blank\">https://data.bs.ch/explore/dataset/100135</a><a href=\"https://data.bs.ch/explore/dataset/100135\" target=\"_blank\"></a></p><p>Ab 2. Juli 2021 werden auch geimpfte Personen in der Altersklasse von 12 bis 15 Jahren gezeigt. 12- bis 15-J\u{e4}hrige konnten sich ab 28. Juni 2021 impfen lassen. Die impfberechtigte Bev\u{f6}lkerung wurde entsprechend ab dem 28. Juni um die 12- bis 15-j\u{e4}hrigen Personen erg\u{e4}nzt.\u{a0}</p><p>\nAb 5. August 2021 k\u{f6}nnen dritte Impfungen in den Daten enthalten sein. Initial sind ausschliesslich immundefiziente Personen oder Personen mit Stammzellentransplantation zu einer dritten Impfung berechtigt.</p><p>Die Meldepflicht der COVID-Impfungen via VMDL Plattform des Bundes wurde per 1. Juli 2023 aufgehoben. Nach diesem Datum wurden Impfungen deshalb nicht mehr systematisch erfasst. Der vorliegende Datensatz zeigt deshalb Impfungen nur bis 1. Juli 2023.<br></p><p> \n</p>"]
 pub mod coronavirus_covid_19_erweiterte_daten_zu_impfungen_nach_altersgruppe {
     use super::*;
 
@@ -42787,6 +43656,10 @@ pub mod coronavirus_covid_19_erweiterte_daten_zu_impfungen_nach_altersgruppe {
         /// Impfdatum
         ///
         /// Datum der Impfung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub vacc_day: Option<Date>,
         /// Altersgruppe
         ///
@@ -42824,7 +43697,7 @@ pub mod coronavirus_covid_19_erweiterte_daten_zu_impfungen_nach_altersgruppe {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         VaccDay,
         AgeGroup,
@@ -42851,7 +43724,7 @@ pub mod coronavirus_covid_19_erweiterte_daten_zu_impfungen_nach_altersgruppe {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -42876,7 +43749,7 @@ pub mod coronavirus_covid_19_erweiterte_daten_zu_impfungen_nach_altersgruppe {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -42962,7 +43835,9 @@ pub mod coronavirus_covid_19_erweiterte_daten_zu_impfungen_nach_altersgruppe {
     }
 }
 
-/// Coronavirus (Covid-19): Massentests an Schulen der Primar- und Sekundarstufe I
+#[doc = "Coronavirus (Covid-19): Massentests an Schulen der Primar- und Sekundarstufe I"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die auf SARS-CoV-2 getesteten Klassen-Pools aus baselst\u{e4}dtischen Schulen der Primarstufe und der Sekundarstufe I. Es wird jeweils die Anzahl getesteter Pools sowie die Test-Positivit\u{e4}tsrate pro Woche angegeben. Weitere Informationen zum Coronavirus im Kanton Basel-Stadt:\u{a0}<a href=\"https://www.bs.ch/gd/md/gesundheitsschutz/uebertragbarekrankheiten/grippe-corona-und-co\" target=\"_blank\">https://www.bs.ch/gd/md/gesundheitsschutz/uebertragbarekrankheiten/grippe-corona-und-co</a></p><p>Dieser Datensatz wird seit Ende Februar 2022 nicht mehr aktualisiert. Seit Mitte M\u{e4}rz 2022 werden die Daten zu Tests in Basler Schulen in einem neuen Datensatz ver\u{f6}ffentlich:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100183\" target=\"_blank\">https://data.bs.ch/explore/dataset/100183</a></p>"]
 pub mod coronavirus_covid_19_massentests_an_schulen_der_primar_und_sekundarstufe_i {
     use super::*;
 
@@ -42971,6 +43846,10 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_primar_und_sekundarstufe
         /// Datum Wochenstart
         ///
         /// Datum des Montags der Woche
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub firstdayofweek: Option<Date>,
         /// Kalenderwoche
         ///
@@ -43004,7 +43883,7 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_primar_und_sekundarstufe
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Firstdayofweek,
         Weekofyear,
@@ -43029,7 +43908,7 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_primar_und_sekundarstufe
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -43054,7 +43933,7 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_primar_und_sekundarstufe
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -43140,7 +44019,9 @@ pub mod coronavirus_covid_19_massentests_an_schulen_der_primar_und_sekundarstufe
     }
 }
 
-/// Gefahrenstufen für Hochwasser
+#[doc = "Gefahrenstufen f\u{fc}r Hochwasser"]
+#[doc = ""]
+#[doc = "<p style=\'margin-bottom: 11px; font-size: 1.1em; line-height: 1.5; color: rgb(69, 69, 69); font-family: \"Frutiger Neue Regular\", Arial, sans-serif;\'><span style=\'font-family: \"Frutiger Neue Bold\", Arial, sans-serif; font-size: 15.4px;\'>Entsprechend den Bestimmungen der Alarmierungsverordnung verwendet das BAFU f\u{fc}r die Warnung vor Hochwasser eine f\u{fc}nfstufige Gefahrenskala. Die Gefahrenstufen geben Auskunft \u{fc}ber die Intensit\u{e4}t des Ereignisses, die m\u{f6}glichen Auswirkungen und Verhaltensempfehlungen.</span><br/></p><p style=\'margin-bottom: 11px; font-size: 1.1em; line-height: 1.5; color: rgb(69, 69, 69); font-family: \"Frutiger Neue Regular\", Arial, sans-serif;\'>Die Schwellenwerte, die die Gefahrenstufen abgrenzen, werden ausgehend vom vorhandenen Wissen \u{fc}ber das Verhalten des jeweiligen Fliessgew\u{e4}ssers festgelegt (Pegel, ab dem das Gew\u{e4}sser \u{fc}ber die Ufer tritt, ab dem erste Sch\u{e4}den eintreten usw.). Diese Schwellenwerte entsprechen in etwa der J\u{e4}hrlichkeit von Hochwasserereignissen, also einer Wiederkehrperiode von durchschnittlich 2, 10, 30 oder 100 Jahren.</p><ul style=\'line-height: 1.5; margin: 1.5em 0px 0px; padding: 0px 0px 0px 0.4em; list-style-type: square; color: rgb(69, 69, 69); font-family: \"Frutiger Neue Regular\", Arial, sans-serif;\'><li style=\"font-size: 1.1em; line-height: 1.5; margin-left: 0.8em;\">Die\u{a0}<span style=\'font-family: \"Frutiger Neue Bold\", Arial, sans-serif;\'>Gefahrenstufe 1 </span>entspricht ungef\u{e4}hr einer Abflussmenge, die unter dem Wert liegt, der im Durchschnitt einmal in 2 Jahren erreicht wird.</li><li style=\"font-size: 1.1em; line-height: 1.5; margin-left: 0.8em;\">Die\u{a0}<span style=\'font-family: \"Frutiger Neue Bold\", Arial, sans-serif;\'>Gefahrenstufe 2 </span>entspricht ungef\u{e4}hr einer Abflussmenge, die durchschnittlich einmal innerhalb von 2 bis 10 Jahren auftritt.</li><li style=\"font-size: 1.1em; line-height: 1.5; margin-left: 0.8em;\">Die\u{a0}<span style=\'font-family: \"Frutiger Neue Bold\", Arial, sans-serif;\'>Gefahrenstufe 3 </span>entspricht ungef\u{e4}hr einer Abflussmenge, die im Durchschnitt einmal innerhalb von 10 bis 30 Jahren auftritt.</li><li style=\"font-size: 1.1em; line-height: 1.5; margin-left: 0.8em;\">Die\u{a0}<span style=\'font-family: \"Frutiger Neue Bold\", Arial, sans-serif;\'>Gefahrenstufe 4 </span>entspricht ungef\u{e4}hr einer Abflussmenge, die im Durchschnitt einmal innerhalb von 30 bis 100 Jahren auftritt.</li><li style=\"font-size: 1.1em; line-height: 1.5; margin-left: 0.8em;\">Die\u{a0}<span style=\'font-family: \"Frutiger Neue Bold\", Arial, sans-serif;\'>Gefahrenstufe 5 </span>entspricht ungef\u{e4}hr einer Abflussmenge, die im Durchschnitt h\u{f6}chstens einmal in 100 Jahren auftritt.</li></ul><p style=\"font-size: 1.1em; line-height: 1.5; margin-left: 0.8em;\"><br/></p><p style=\"line-height: 1.5; margin-left: 0.8em;\"><span style=\"font-size: 15.4px;\">F\u{fc}r weitere Informationen siehe\u{a0}</span><a href=\"https://www.hydrodaten.admin.ch/de/die-5-gefahrenstufen-fur-hochwasser.html\" target=\"_blank\">https://www.hydrodaten.admin.ch/de/die-5-gefahrenstufen-fur-hochwasser.html</a><span style=\"font-size: 15.4px;\">\u{a0}</span><br/></p>"]
 pub mod gefahrenstufen_fuer_hochwasser {
     use super::*;
 
@@ -43198,7 +44079,7 @@ pub mod gefahrenstufen_fuer_hochwasser {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         StationId,
         StationName,
@@ -43233,7 +44114,7 @@ pub mod gefahrenstufen_fuer_hochwasser {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -43258,7 +44139,7 @@ pub mod gefahrenstufen_fuer_hochwasser {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -43344,7 +44225,9 @@ pub mod gefahrenstufen_fuer_hochwasser {
     }
 }
 
-/// Resultate der Bürgergemeinderatswahlen 2023 auf Listenebene
+#[doc = "Resultate der B\u{fc}rgergemeinderatswahlen 2023 auf Listenebene"]
+#[doc = ""]
+#[doc = "<p>Der vorliegende Datensatz beinhaltet Resultate der B\u{fc}rgergemeinderatswahlen Basel 2023 auf Listenebene. Weitere Informationen zu den Wahlen sind hier zu finden:\u{a0}<a href=\"https://bgbasel.ch/de/politische-organe/buergergemeinderat/wahlen2023.html\" target=\"_blank\">https://bgbasel.ch/de/politische-organe/buergergemeinderat/wahlen2023.html</a></p>"]
 pub mod resultate_der_buergergemeinderatswahlen_2023_auf_listenebene {
     use super::*;
 
@@ -43361,6 +44244,10 @@ pub mod resultate_der_buergergemeinderatswahlen_2023_auf_listenebene {
         /// Wahltermin
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wahltermin: Option<Date>,
         /// Anzahl Sitze Wahlkreis
         ///
@@ -43494,7 +44381,7 @@ pub mod resultate_der_buergergemeinderatswahlen_2023_auf_listenebene {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         Amtsdauer,
@@ -43585,7 +44472,7 @@ pub mod resultate_der_buergergemeinderatswahlen_2023_auf_listenebene {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -43610,7 +44497,7 @@ pub mod resultate_der_buergergemeinderatswahlen_2023_auf_listenebene {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -43696,7 +44583,9 @@ pub mod resultate_der_buergergemeinderatswahlen_2023_auf_listenebene {
     }
 }
 
-/// Coronavirus (Covid-19): Impfungen nach Altersgruppe
+#[doc = "Coronavirus (Covid-19): Impfungen nach Altersgruppe"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die SARS-CoV-2-Impfungen, welche an Personen mit Wohnsitz im Kanton Basel-Stadt verabreicht wurden nach Altersklasse.\u{a0}</p><p>Anmerkung: Die geimpften Personen wohnen im Kanton Basel-Stadt, m\u{fc}ssen aber nicht zwingend auch im Kanton Basel-Stadt geimpft worden sein. Aus diesem Grund unterscheiden sich die hier publizierten Zahlen auch von jenen im <a href=\"https://data.bs.ch/explore/dataset/100111\" target=\"_blank\">Datensatz mit den im Kanton Basel-Stadt verabreichten Impfungen</a>.\u{a0}</p><p>Ab 2. Juli 2021 werden auch geimpfte Personen in der Altersklasse von 12 bis 15 Jahren gezeigt. 12- bis 15-J\u{e4}hrige konnten sich ab 28. Juni 2021 impfen lassen.</p><p>\nAb 5. August 2021 k\u{f6}nnen dritte Impfungen in den Daten enthalten sein. Initial sind ausschliesslich immundefiziente Personen oder Personen mit Stammzellentransplantation zu einer dritten Impfung berechtigt.\u{a0}</p><p>Die Meldepflicht der COVID-Impfungen via VMDL Plattform des Bundes wurde per 1. Juli 2023 aufgehoben. Nach diesem Datum wurden Impfungen deshalb nicht mehr systematisch erfasst. Der vorliegende Datensatz zeigt deshalb Impfungen nur bis 1. Juli 2023.<br></p><p> </p>"]
 pub mod coronavirus_covid_19_impfungen_nach_altersgruppe {
     use super::*;
 
@@ -43705,6 +44594,10 @@ pub mod coronavirus_covid_19_impfungen_nach_altersgruppe {
         /// Impfdatum
         ///
         /// Datum der Impfung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub vacc_day: Option<Date>,
         /// Altersgruppe
         pub age_group: Option<String>,
@@ -43724,7 +44617,7 @@ pub mod coronavirus_covid_19_impfungen_nach_altersgruppe {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         VaccDay,
         AgeGroup,
@@ -43743,7 +44636,7 @@ pub mod coronavirus_covid_19_impfungen_nach_altersgruppe {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -43768,7 +44661,7 @@ pub mod coronavirus_covid_19_impfungen_nach_altersgruppe {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -43854,7 +44747,9 @@ pub mod coronavirus_covid_19_impfungen_nach_altersgruppe {
     }
 }
 
-/// Grosser Rat: Mitgliedschaften in Gremien
+#[doc = "Grosser Rat: Mitgliedschaften in Gremien"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">Dieser Datensatz zeigt die Mitgliedschaften in Gremien der Ratsmitglieder des Grossen Rates des Kantons Basel-Stadt.</p><p style=\"font-family: sans-serif;\">Funktionen in Gremien werden als separate Mitgliedschaft eingetragen, damit gelesen werden kann in welchem Zeitraum eine Ratsmitglied einer besonderen Funktion nachging.</p><p style=\"font-family: sans-serif;\">Die Daten k\u{f6}nnen auch auf der Webseite des Grossen Rates eingesehen werden:<br/><a href=\"https://grosserrat.bs.ch\" target=\"_blank\">https://grosserrat.bs.ch</a></p>"]
 pub mod grosser_rat_mitgliedschaften_in_gremien {
     use super::*;
 
@@ -43883,10 +44778,18 @@ pub mod grosser_rat_mitgliedschaften_in_gremien {
         /// Beginn Gremiumsmitgliedschaft
         ///
         /// Startdatum der Mitgliedschaft im Gremium
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub beginn_mit: Option<Date>,
         /// Ende Gremiumsmitgliedschaft
         ///
         /// Enddatum der Mitgliedschaft im Gremium
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub ende_mit: Option<Date>,
         /// Funktion
         ///
@@ -43932,7 +44835,7 @@ pub mod grosser_rat_mitgliedschaften_in_gremien {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         KurznameGre,
         NameGre,
@@ -43975,7 +44878,7 @@ pub mod grosser_rat_mitgliedschaften_in_gremien {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -44000,7 +44903,7 @@ pub mod grosser_rat_mitgliedschaften_in_gremien {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -44086,7 +44989,9 @@ pub mod grosser_rat_mitgliedschaften_in_gremien {
     }
 }
 
-/// Entwicklungszusammenarbeit: Unterstützte Projekte
+#[doc = "Entwicklungszusammenarbeit: Unterst\u{fc}tzte Projekte"]
+#[doc = ""]
+#[doc = "<p>Basel engagiert sich f\u{fc}r die Verbesserung der Lebensumst\u{e4}nde der \u{c4}rmsten dieser Welt. F\u{fc}r Projekte der ausl\u{e4}ndischen Entwicklungszusammenarbeit stellt der Kanton j\u{e4}hrlich 2 Mio. Franken bereit. Mit den finanziellen Beitr\u{e4}gen sollen die Entwicklungschancen der Bev\u{f6}lkerung in den \u{e4}rmsten L\u{e4}ndern der Welt oder in speziell benachteiligten Regionen nachhaltig verbessert werden. Die Entwicklungszusammenarbeit des Kantons Basel-Stadt engagiert sich ausschliesslich im Rahmen von Projekten im Ausland, wobei thematische Schwerpunkte im Fokus stehen (medizinische Versorgung, Landwirtschaft, Bildung, Gewerbef\u{f6}rderung etc.).</p>\n<p>Die <a href=\"https://www.marketing.bs.ch/Aussenbeziehungen/eza/kommission.html\" target=\"_blank\">Kommission f\u{fc}r Entwicklungszusammenarbeit</a> (<a href=\"https://www.marketing.bs.ch/Aussenbeziehungen/eza/kommission.html\" target=\"_blank\">https://www.marketing.bs.ch/Aussenbeziehungen/eza/kommission.html</a>) trifft sich zwei Mal j\u{e4}hrlich zur Auswahl von Projekten. Bei der Beurteilung von Projektantr\u{e4}gen orientiert sich die Kommission an einem Kriterienkatalog (Qualit\u{e4}t, Relevanz, Effektivit\u{e4}t, Wirkung, Nachhaltigkeit, Transparenz der Finanzierung, ethische Aspekte). Es wird darauf geachtet, dass bei der Vergabe der Mittel ein gewisser Turnus angewendet wird und Hilfswerke, welche in der Region domiziliert sind, besonders ber\u{fc}cksichtigt werden.</p>\n<p>Die Regierungsratsbeschl\u{fc}sse zur Auswahl der zu unterst\u{fc}tzenden Projekte werden jeweils ver\u{f6}ffentlicht unter: <a href=\"https://www.regierungsrat.bs.ch/geschaefte/regierungsratsbeschluesse.html\" target=\"_blank\">https://www.regierungsrat.bs.ch/geschaefte/regierungsratsbeschluesse.html</a> (Stichwort: Entwicklungszusammenarbeit)</p>"]
 pub mod entwicklungszusammenarbeit_unterstuetzte_projekte {
     use super::*;
 
@@ -44095,6 +45000,10 @@ pub mod entwicklungszusammenarbeit_unterstuetzte_projekte {
         /// Jahr
         ///
         /// Das Jahr, in dem das Projekt finanziell unterstützt wird.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub jahr: Option<Date>,
         /// Projekt-Titel
         ///
@@ -44132,7 +45041,7 @@ pub mod entwicklungszusammenarbeit_unterstuetzte_projekte {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         ProjektTitel,
@@ -44159,7 +45068,7 @@ pub mod entwicklungszusammenarbeit_unterstuetzte_projekte {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -44184,7 +45093,7 @@ pub mod entwicklungszusammenarbeit_unterstuetzte_projekte {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -44270,7 +45179,9 @@ pub mod entwicklungszusammenarbeit_unterstuetzte_projekte {
     }
 }
 
-/// Resultate der Wahl eines zusätzl. Strafgerichtspräsidiums 18. August 2024
+#[doc = "Resultate der Wahl eines zus\u{e4}tzl. Strafgerichtspr\u{e4}sidiums 18. August 2024"]
+#[doc = ""]
+#[doc = "<p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Dieser Datensatz zeigt die Resultate der Wahl\u{a0}eines zus\u{e4}tzlichen Strafgerichtspr\u{e4}sidiums vom 18. August 2024.</p><p style=\"font-family: sans-serif;\"></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\">Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im <a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">Kantonsblatt</a>\u{a0}(<a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">www.kantonsblatt.ch</a>) des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod resultate_der_wahl_eines_zusaetzl_strafgerichtspraesidiums_18_august_2024 {
     use super::*;
 
@@ -44287,6 +45198,10 @@ pub mod resultate_der_wahl_eines_zusaetzl_strafgerichtspraesidiums_18_august_202
         /// Wahltermin
         ///
         /// Datum der Wahl
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wahltermin: Option<Date>,
         /// Anzahl Sitze
         ///
@@ -44414,7 +45329,7 @@ pub mod resultate_der_wahl_eines_zusaetzl_strafgerichtspraesidiums_18_august_202
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         Amtsdauer,
@@ -44497,7 +45412,7 @@ pub mod resultate_der_wahl_eines_zusaetzl_strafgerichtspraesidiums_18_august_202
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -44522,7 +45437,7 @@ pub mod resultate_der_wahl_eines_zusaetzl_strafgerichtspraesidiums_18_august_202
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -44608,7 +45523,9 @@ pub mod resultate_der_wahl_eines_zusaetzl_strafgerichtspraesidiums_18_august_202
     }
 }
 
-/// Coronavirus (Covid-19): Positiv getestete Personen nach Alter und Geschlecht
+#[doc = "Coronavirus (Covid-19): Positiv getestete Personen nach Alter und Geschlecht"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Personen, welche positiv auf SARS-CoV-2 getestet wurden nach Geschlecht und Altersklasse. Es werden ausschliesslich Personen mit Wohnsitz im Kanton Basel-Stadt gezeigt. Als \u{ab}Datum Testresultat\u{bb} gilt das Datum, an welchem das Testresultat vorlag.</p>\n<p>Weitere Datens\u{e4}tze zu\nCovid-19:</p>\n<p>Fallzahlen Basel-Stadt: <a href=\"https://data.bs.ch/explore/dataset/100073/table\">https://data.bs.ch/explore/dataset/100073/table</a></p>\n<p>Tests Basel-Stadt:<a href=\"https://data.bs.ch/explore/dataset/100094/table\" target=\"_blank\">https://data.bs.ch/explore/dataset/100094/table</a></p>\n<p>Todesf\u{e4}lle Basel-Stadt nach Alter und Geschlecht: <a href=\"https://data.bs.ch/explore/dataset/100076/table\" target=\"_blank\">https://data.bs.ch/explore/dataset/100076/table</a>\n</p>\n<p>Covid-19 Dashboard: <a href=\"https://data.bs.ch/pages/covid-19-dashboard\" target=\"_blank\">https://data.bs.ch/pages/covid-19-dashboard</a><a href=\"https://data.bs.ch/pages/covid-19-dashboard\"></a></p><p></p><ul style=\"box-sizing: border-box; color: rgb(0, 0, 0); font-family: sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;\"></ul><p></p><p><b style=\"box-sizing: border-box; font-weight: bolder;\">\u{c4}nderungsprotokoll:</b></p><p></p><ul><li>Die Erhebung der Werte wurde per 30. Juni 2023 sistiert. Der Datensatz wird nicht mehr aktualisiert.\u{a0}Aktualisierungsintervall von \"DAILY\" auf \"NEVER\" ge\u{e4}ndert.</li></ul>"]
 pub mod coronavirus_covid_19_positiv_getestete_personen_nach_alter_und_geschlecht {
     use super::*;
 
@@ -44617,6 +45534,10 @@ pub mod coronavirus_covid_19_positiv_getestete_personen_nach_alter_und_geschlech
         /// Datum Testresultat
         ///
         /// Datum, an dem das Testresultat vorlag
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub test_datum: Option<Date>,
         /// Altersklasse
         ///
@@ -44638,7 +45559,7 @@ pub mod coronavirus_covid_19_positiv_getestete_personen_nach_alter_und_geschlech
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         TestDatum,
         PersAlter,
@@ -44657,7 +45578,7 @@ pub mod coronavirus_covid_19_positiv_getestete_personen_nach_alter_und_geschlech
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -44682,7 +45603,7 @@ pub mod coronavirus_covid_19_positiv_getestete_personen_nach_alter_und_geschlech
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -44768,7 +45689,9 @@ pub mod coronavirus_covid_19_positiv_getestete_personen_nach_alter_und_geschlech
     }
 }
 
-/// Geschwindigkeitsmonitoring: Kennzahlen pro Mess-Standort
+#[doc = "Geschwindigkeitsmonitoring: Kennzahlen pro Mess-Standort"]
+#[doc = ""]
+#[doc = "<p>In diesem Datensatz werden zu jeder Messung (ein Messger\u{e4}t an einem Standort) die Kennzahlen V50, V85, Anzahl Fahrzeuge und \u{dc}bertretungsquote pro Richtung angegeben. Die einzelnen Fahrten finden Sie im Datensatz Einzelmessungen (<a href=\"https://data.bs.ch/explore/dataset/100097/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100097</a>)</p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Bei den dargestellten\nDaten handelt es sich ausschliesslich um statistische Erhebungen. Diese stehen\nnicht in einem Zusammenhang mit Ordnungsbussen oder einer strafrechtlichen\nVerfolgung. Die statistischen Geschwindigkeitsmessungen dienen der\nKantonspolizei Basel-Stadt zur \u{dc}berpr\u{fc}fung der Geschwindigkeit sowie der\nVerkehrssicherheit (z.B. Sicherheit an Fussg\u{e4}ngerstreifen) an der betreffenden\n\u{d6}rtlichkeit. Die Ergebnisse dienen zur Entscheidung, an welchen \u{d6}rtlichkeiten\nHandlungsbedarf in Form von Geschwindigkeitskontrollen besteht. Jedes\nStatistikger\u{e4}t besitzt eine einzige Punktgeometrie und ist meist mit zwei\nRichtungen versehen (Richtung 1 und 2).<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Hinweis: Die\nMessungen sind nicht zwingend repr\u{e4}sentativ f\u{fc}r das ganze Jahr und m\u{fc}ssen im\nKontext des Erhebungsdatums betrachtet werden. Dar\u{fc}ber hinaus wurden gewisse\nMessungen w\u{e4}hrend einer ausserordentlichen Verkehrsf\u{fc}hrung (z.B.\nUmleitungsverkehr infolge von Baustellent\u{e4}tigkeiten etc.) erhoben.\nManipulationen an Ger\u{e4}ten k\u{f6}nnen zu fehlerhaften Messungen f\u{fc}hren.<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif; margin-bottom: 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; line-height: normal;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Zum Geschwindigkeitsmonitoring sind folgende Datens\u{e4}tze vorhanden:<o:p></o:p></span></p><ul><li>Einzelmessungen ab 2024:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100097\" target=\"_blank\">https://data.bs.ch/explore/dataset/100097</a></li><li>Einzelmessungen von 2021 bis 2023:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100358\" target=\"_blank\">https://data.bs.ch/explore/dataset/100358</a><br></li><li>Einzelmessungen bis 2020:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100200\" target=\"_blank\">https://data.bs.ch/explore/dataset/100200</a></li><li>Kennzahlen pro Mess-Standort (dieser Datensatz):\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100112\" target=\"_blank\">https://data.bs.ch/explore/dataset/100112</a></li></ul><p>Die Mess-Standorte werden auch auf dem Geoportal Basel-Stadt publiziert:\u{a0}<a href=\"https://map.geo.bs.ch/s/geschwindigkeit\" target=\"_blank\">https://map.geo.bs.ch/s/geschwindigkeit</a></p>"]
 pub mod geschwindigkeitsmonitoring_kennzahlen_pro_mess_standort {
     use super::*;
 
@@ -44781,10 +45704,18 @@ pub mod geschwindigkeitsmonitoring_kennzahlen_pro_mess_standort {
         /// Messbeginn
         ///
         /// Datum, an welchem ein Messgerät an einem Standort ausgebracht wurde
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messbeginn: Option<Date>,
         /// Messende
         ///
         /// Datum, bis zu welchem ein Messgerät an einem Standort im Einsatz war
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messende: Option<Date>,
         /// Strasse
         ///
@@ -44866,7 +45797,7 @@ pub mod geschwindigkeitsmonitoring_kennzahlen_pro_mess_standort {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Id,
         Messbeginn,
@@ -44917,7 +45848,7 @@ pub mod geschwindigkeitsmonitoring_kennzahlen_pro_mess_standort {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -44942,7 +45873,7 @@ pub mod geschwindigkeitsmonitoring_kennzahlen_pro_mess_standort {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -45028,7 +45959,9 @@ pub mod geschwindigkeitsmonitoring_kennzahlen_pro_mess_standort {
     }
 }
 
-/// Witterung
+#[doc = "Witterung"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt f\u{fc}r die Messstation Basel-Binningen am Observatorium St. Margarethen f\u{fc}r jeden Monat die in Bezug auf Temperatur, Niederschlag und Bew\u{f6}lkung registrierten Witterungserscheinungen seit 1921.Methodischer Hinweis:Daten von 1921 bis 1940 stammen von der astronomisch-meteorologischen Anstalt im Bernoullianum."]
 pub mod witterung {
     use super::*;
 
@@ -45037,6 +45970,10 @@ pub mod witterung {
         /// Monat und Jahr
         ///
         /// Monat und Jahr, in dem der Wert registriert wurde
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Jahr
         ///
@@ -45134,7 +46071,7 @@ pub mod witterung {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Jahr,
@@ -45191,7 +46128,7 @@ pub mod witterung {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -45216,7 +46153,7 @@ pub mod witterung {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -45302,7 +46239,9 @@ pub mod witterung {
     }
 }
 
-/// Smarte Strasse: Aufrufe der Microsites
+#[doc = "Smarte Strasse: Aufrufe der Microsites"]
+#[doc = ""]
+#[doc = "<p>Im Rahmen des Projekts\u{a0}\u{ab}Smarte Strasse\u{bb} wurden Sensoren an verschiedenen Standorten angebracht.\u{a0}Um\ndie Transparenz zu erh\u{f6}hen, werden im Projekt \u{ab}Smarte Strasse\u{bb} die Sensoren sowie die Daten,\ndie damit erfasst werden, vor Ort mit Piktogrammen und QR-Codes leicht verst\u{e4}ndlich sichtbar\ngemacht.<br/>Der vorliegende Datensatz zeigt die Anzahl der Seitenaufrufe der Microsites, die \u{fc}ber die QR-Codes auf der Infotafel zug\u{e4}nglich sind. Jeder Seitenaufruf \u{fc}ber den QR-Code generiert eine Datenabfrage. Mit der Anzahl an Datenabfragen kann man bestimmen, wie oft eine Seite aufgerufen worden ist.</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Weitere Informationen und Daten rund um das Projekt \u{ab}Smarte Strasse\u{bb} finden Sie unter den folgenden Links:</span></p><ul><li>Weitere Informationen zum Projekt \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html\" target=\"_blank\">https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html</a>\u{a0}</li><li>Weitere Datens\u{e4}tze rund um das Thema \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://data.bs.ch/explore/?refine.tags=smarte+strasse\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=smarte+strasse</a>\u{a0}</li></ul>"]
 pub mod smarte_strasse_aufrufe_der_microsites {
     use super::*;
 
@@ -45315,6 +46254,10 @@ pub mod smarte_strasse_aufrufe_der_microsites {
         /// Zeitstempel
         ///
         /// Gibt das Datum der Datenaufzeichnung an.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub timestamp: Option<Date>,
         /// Dataset-ID
         ///
@@ -45344,7 +46287,7 @@ pub mod smarte_strasse_aufrufe_der_microsites {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Id,
         Timestamp,
@@ -45369,7 +46312,7 @@ pub mod smarte_strasse_aufrufe_der_microsites {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -45394,7 +46337,7 @@ pub mod smarte_strasse_aufrufe_der_microsites {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -45480,7 +46423,9 @@ pub mod smarte_strasse_aufrufe_der_microsites {
     }
 }
 
-/// Geschwindigkeitsmonitoring: Einzelmessungen bis 2020
+#[doc = "Geschwindigkeitsmonitoring: Einzelmessungen bis 2020"]
+#[doc = ""]
+#[doc = "<p></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Einzelmessungen des\nGeschwindigkeitsmonitorings der Kantonspolizei Basel-Stadt bis zum Jahr 2020 (Zeitpunkt des Beginns der Messung).\u{a0}<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Bei den dargestellten\nDaten handelt es sich ausschliesslich um statistische Erhebungen. Diese stehen\nnicht in einem Zusammenhang mit Ordnungsbussen oder einer strafrechtlichen\nVerfolgung. Die statistischen Geschwindigkeitsmessungen dienen der Kantonspolizei\nBasel-Stadt zur \u{dc}berpr\u{fc}fung der Geschwindigkeit sowie der Verkehrssicherheit\n(z.B. Sicherheit an Fussg\u{e4}ngerstreifen) an der betreffenden \u{d6}rtlichkeit. Die\nErgebnisse dienen zur Entscheidung, an welchen \u{d6}rtlichkeiten Handlungsbedarf in\nForm von Geschwindigkeitskontrollen besteht. Jedes Statistikger\u{e4}t besitzt eine\neinzige Punktgeometrie und ist meist mit zwei Richtungen versehen (Richtung 1\nund 2).<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Hinweis: Die\nMessungen sind nicht zwingend repr\u{e4}sentativ f\u{fc}r das ganze Jahr und m\u{fc}ssen im\nKontext des Erhebungsdatums betrachtet werden. Dar\u{fc}ber hinaus wurden gewisse\nMessungen w\u{e4}hrend einer ausserordentlichen Verkehrsf\u{fc}hrung (z.B.\nUmleitungsverkehr infolge von Baustellent\u{e4}tigkeiten etc.) erhoben.\nManipulationen an Ger\u{e4}ten k\u{f6}nnen zu fehlerhaften Messungen f\u{fc}hren.<o:p></o:p></span></p><p>\n\n\n\n\n\n</p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Zum\nGeschwindigkeitsmonitoring sind folgende Datens\u{e4}tze vorhanden:<o:p></o:p></span></p><ul><li>Einzelmessungen ab 2024:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100097\" target=\"_blank\">https://data.bs.ch/explore/dataset/100097</a></li><li>Einzelmessungen von 2021 bis 2023:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100358\" target=\"_blank\">https://data.bs.ch/explore/dataset/100358</a><br></li><li>Einzelmessungen bis 2020 (dieser Datensatz):\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100200\" target=\"_blank\">https://data.bs.ch/explore/dataset/100200</a></li><li>Kennzahlen pro Mess-Standort:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100112\" target=\"_blank\">https://data.bs.ch/explore/dataset/100112</a>\u{a0}</li></ul>Aufgrund der grossen Datenmenge kann es vorkommen, dass der Datensatz nicht vollst\u{e4}ndig heruntergeladen werden kann. Falls dieses Problem auftritt, kann man den vollst\u{e4}ndigen Datensatz und die Einzelmessungen der Messstationen hier herunterladen:<p></p><ul><li>vollst\u{e4}ndiger Datensatz:\u{a0}<a href=\"https://data-bs.ch/stata/kapo/geschwindigkeitsmonitoring/all_data/geschwindigkeitsmonitoring_data.csv\">https://data-bs.ch/stata/kapo/geschwindigkeitsmonitoring/all_data/geschwindigkeitsmonitoring_data.csv</a></li><li>Einzelmessungen der Messstationen:\u{a0}<a href=\"https://data-bs.ch/stata/kapo/geschwindigkeitsmonitoring/data/\">https://data-bs.ch/stata/kapo/geschwindigkeitsmonitoring/data/</a></li></ul><p>Die Mess-Standorte werden auch auf dem Geoportal Basel-Stadt publiziert:\u{a0}<a \"=\"\" href=\"https://map.geo.bs.ch/s/geschwindigkeit\" target=\"_blank\">https://map.geo.bs.ch/s/geschwindigkeit</a></p>"]
 pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
     use super::*;
 
@@ -45516,10 +46461,18 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
         /// Messbeginn
         ///
         /// Datum, an welchem ein Messgerät an einem Standort ausgebracht wurde
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messbeginn: Option<Date>,
         /// Messende
         ///
         /// Datum, bis zu welchem ein Messgerät an einem Standort im Einsatz war
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messende: Option<Date>,
         /// Zone
         ///
@@ -45577,7 +46530,7 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         MessungId,
@@ -45628,7 +46581,7 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -45653,7 +46606,7 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -45739,7 +46692,9 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_bis_2020 {
     }
 }
 
-/// Fahrgastzahlen BVB
+#[doc = "Fahrgastzahlen BVB"]
+#[doc = ""]
+#[doc = "<div>Die Daten umfassen die w\u{f6}chentlichen Fahrgastzahlen der Basler Verkehrsbetriebe (BVB) von 2020 bis 2023. Ab 2024 werden monatliche Werte erfasst. Sie beruhen auf Messungen mit dem automatischen Fahrgastz\u{e4}hlsystem und anschliessender Hochrechnung, und zwar f\u{fc}r das gesamte Liniennetz der BVB. Tramlinien: 1, 2, 3, 6, 8, 14, 15, 16, 21; Buslinien: 30, 31, 32, 33, 34, 35, 36, 38, 42, 45, 46, 48, 50, Tramersatzverkehr.</div><div><br></div><div>Nicht enthalten sind hingegen die Fahrgastzahlen der SBB, BLT oder ausl\u{e4}ndischer Transportunternehmen.</div><div><br>Die Daten werden jeweils am 10. jeden Monats resp. am darauffolgenden Werktag aktualisiert.</div><div><br>In Ausnahmef\u{e4}llen kann es aus technischen Gr\u{fc}nden zu Verz\u{f6}gerungen im Prozess der Bereitstellung und Auswertung von Z\u{e4}hldaten kommen. Nachtr\u{e4}glich verf\u{fc}gbare Messdaten werden in der hier vorliegenden Auswertung ber\u{fc}cksichtigt, was in diesem Fall zu r\u{fc}ckwirkenden Korrekturen f\u{fc}hren kann.</div><div><br></div><div>\u{c4}nderungsprotokoll: </div><div>02.02.2024: Die Auswertungen auf Wochenbasis werden eingestellt und nur noch die Zeitreihe der Monatswerte werden fortgef\u{fc}hrt.<br></div>"]
 pub mod fahrgastzahlen_bvb {
     use super::*;
 
@@ -45748,6 +46703,10 @@ pub mod fahrgastzahlen_bvb {
         /// Startdatum Kalenderwoche/Monat
         ///
         /// Das Attribut 'Startdatum Kalenderwoche/Monat' gibt den Anfang des Zeitraums an, für den die Fahrgastzahlen erfasst wurden, entweder den ersten Tag der Woche oder den ersten Tag des Monats entsprechend der Granularität.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub startdatum_kalenderwoche_monat: Option<Date>,
         /// Fahrgäste (Einsteiger)
         ///
@@ -45760,6 +46719,10 @@ pub mod fahrgastzahlen_bvb {
         /// Das Attribut 'Granularität' bestimmt, ob die Fahrgastdaten auf wöchentlicher oder monatlicher Basis erfasst wurden, um die zeitliche Detailgenauigkeit der Daten zu definieren.
         pub granularitat: Option<String>,
         /// Datum der Monatswerte
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_der_monatswerte: Option<Date>,
     }
 
@@ -45769,7 +46732,7 @@ pub mod fahrgastzahlen_bvb {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         StartdatumKalenderwocheMonat,
         FahrgaesteEinsteiger,
@@ -45790,7 +46753,7 @@ pub mod fahrgastzahlen_bvb {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -45815,7 +46778,7 @@ pub mod fahrgastzahlen_bvb {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -45901,7 +46864,9 @@ pub mod fahrgastzahlen_bvb {
     }
 }
 
-/// Bevölkerungsszenarien Basel-Stadt 2024-2045
+#[doc = "Bev\u{f6}lkerungsszenarien Basel-Stadt 2024-2045"]
+#[doc = ""]
+#[doc = "Die Bev\u{f6}lkerungsszenarien liefern kleinr\u{e4}umige Ergebnisse auf der Ebene Wahlkreise der Stadt Basel sowie gemeinsam f\u{fc}r die Gemeinden Riehen und Bettingen. Neben der absoluten Bev\u{f6}lkerungsentwicklung stellen die Szenarien auch die Entwicklung der Bev\u{f6}lkerungsstruktur bis 2045 dar: Die Bev\u{f6}lkerung wird nach Alter, Geschlecht und Staatsangeh\u{f6}rigkeit (Schweiz und Ausland) ausgewiesen. Auch stehen verschiedene demografische Komponenten wie Geburten und Sterbef\u{e4}lle, Einb\u{fc}rgerungen oder Wanderungsbewegungen zur Verf\u{fc}gung. Aufgrund von Meldeverz\u{f6}gerungen werden die Nullj\u{e4}hrigen in Datenjahren der Vergangenheit geringf\u{fc}gig untersch\u{e4}tzt."]
 pub mod bevoelkerungsszenarien_basel_stadt_2024_2045 {
     use super::*;
 
@@ -46175,7 +47140,7 @@ pub mod bevoelkerungsszenarien_basel_stadt_2024_2045 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Alter,
         Geo,
@@ -46316,7 +47281,7 @@ pub mod bevoelkerungsszenarien_basel_stadt_2024_2045 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -46341,7 +47306,7 @@ pub mod bevoelkerungsszenarien_basel_stadt_2024_2045 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -46427,7 +47392,9 @@ pub mod bevoelkerungsszenarien_basel_stadt_2024_2045 {
     }
 }
 
-/// Geborene nach Geschlecht, Staatsangehörigkeit, Wohnviertel und Geburtsdatum
+#[doc = "Geborene nach Geschlecht, Staatsangeh\u{f6}rigkeit, Wohnviertel und Geburtsdatum"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Geborenen im Kanton Basel-Stadt nach Geschlecht, Staatsangeh\u{f6}rigkeit, Wohnviertel und Geburtsdatum. Die Daten werden t\u{e4}glich aktualisiert, wobei nur Geburten ber\u{fc}cksichtigt werden, die mindestens 15 Tage zur\u{fc}ckliegen. Aufgrund von Nachmeldungen kann es jederzeit zu \u{c4}nderungen bei bereits ver\u{f6}ffentlichten Werten kommen. In den Daten des laufenden Jahres und bis ca. Juli auch in jenen des zur\u{fc}ckliegenden Jahres sind ausser den Lebendgeborenen auch die Totgeborenen ber\u{fc}cksichtigt, weil die Angabe zur Lebensf\u{e4}higkeit jeweils erst im Juli des Folgejahres verf\u{fc}gbar ist. In weiter zur\u{fc}ckliegenden Jahren sind nur die Lebendgeborenen ber\u{fc}cksichtigt. Auch die Angabe zur Anzahl Kinder, die zusammen geboren wurden (Mehrlingsgeburten) ist jeweils erst ca. im Juli des Folgejahrs verf\u{fc}gbar. <br><br>Die hier ver\u{f6}ffentlichten Werte k\u{f6}nnen aus methodischen Gr\u{fc}nden von denjenigen in der <a href=\"https://statistik.bs.ch/unterthema/3\" target=\"_blank\">kantonalen \u{f6}ffentlichen Statistik (https://statistik.bs.ch/unterthema/3)</a> abweichen: In Letzterer werden nachtr\u{e4}glich gemeldete Geburten w\u{e4}hrend vier Monaten gesammelt, danach gelten die Zahlen als definitiv. Sp\u{e4}ter eintreffende Meldungen werden im letzten noch nicht abgeschlossenen Monat gez\u{e4}hlt. In diesem Datensatz werden sie im Monat des Geburtsdatums gez\u{e4}hlt.<br><br>Aus Gr\u{fc}nden des Pers\u{f6}nlichkeitsschutzes k\u{f6}nnen im <a href=\"https://data.bs.ch/explore/dataset/100092/\" target=\"_blank\">monatlichen Datensatz (https://data.bs.ch/explore/dataset/100092/)</a> mehr Attribute ver\u{f6}ffentlicht werden als im vorliegenden Datensatz."]
 pub mod geborene_nach_geschlecht_staatsangehoerigkeit_wohnviertel_und_geburtsdatum {
     use super::*;
 
@@ -46436,6 +47403,10 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_wohnviertel_und_geburtsdat
         /// Geburtsdatum
         ///
         /// Tag der Geburt
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub geburts_datum: Option<Date>,
         /// Jahr
         ///
@@ -46452,6 +47423,10 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_wohnviertel_und_geburtsdat
         /// Datum Wochenstart
         ///
         /// Datum des Montags der Geburtswoche
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_wochenstart_geburtsdatum: Option<Date>,
         /// Tag in Jahr
         ///
@@ -46493,7 +47468,7 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_wohnviertel_und_geburtsdat
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GeburtsDatum,
         Jahr,
@@ -46538,7 +47513,7 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_wohnviertel_und_geburtsdat
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -46563,7 +47538,7 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_wohnviertel_und_geburtsdat
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -46649,7 +47624,9 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_wohnviertel_und_geburtsdat
     }
 }
 
-/// Wohnungen (Gebäude- und Wohnungsregister GWR)
+#[doc = "Wohnungen (Geb\u{e4}ude- und Wohnungsregister GWR)"]
+#[doc = ""]
+#[doc = "Wohnungen gem\u{e4}ss Geb\u{e4}ude- und Wohnungsregister (GWR). <br><br>Eine Wohnung ist eine Gesamtheit von R\u{e4}umen, die f\u{fc}r eine Wohnnutzung geeignet sind, eine bauliche Einheit bilden, einen Zugang entweder von aussen oder von einem gemeinsam mit anderen Wohnungen genutzten Bereich innerhalb des Geb\u{e4}udes haben, \u{fc}ber eine Kocheinrichtung (oder mindestens der technischen Installation f\u{fc}r den Einbau einer Kocheinrichtung) verf\u{fc}gen und keine Fahrnis darstellen.<br><br>Einen \u{dc}berblick \u{fc}ber die im Register gef\u{fc}hrten Merkmal gibt folgendes Dokument: <a href=\"https://www.housing-stat.ch/files/881-2200.pdf\" target=\"_blank\">https://www.housing-stat.ch/files/881-2200.pdf (Merkmalskatalog 4.2)</a> bzw. online unter <a href=\"https://www.housing-stat.ch/de/help/42.html\" target=\"_blank\">https://www.housing-stat.ch/de/help/42.html (Online-Merkmalskatalog 4.2)</a><br><br>Die rechtliche Grundlage stellt die entsprechende eidgen\u{f6}ssische Gesetzgebung dar: <a href=\"https://www.fedlex.admin.ch/eli/cc/2017/376/de\" target=\"_blank\">https://www.fedlex.admin.ch/eli/cc/2017/376/de (Verordnung \u{fc}ber das eidgen\u{f6}ssische Geb\u{e4}ude- und Wohnungsregister (VGWR))</a><br><br>"]
 pub mod wohnungen_gebaeude_und_wohnungsregister_gwr {
     use super::*;
 
@@ -46700,6 +47677,10 @@ pub mod wohnungen_gebaeude_und_wohnungsregister_gwr {
         /// Kocheinrichtung Bezeichnung
         pub wkche_decoded: Option<String>,
         /// Exportdatum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wexpdat: Option<Date>,
     }
 
@@ -46709,7 +47690,7 @@ pub mod wohnungen_gebaeude_und_wohnungsregister_gwr {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Egid,
         Ewid,
@@ -46758,7 +47739,7 @@ pub mod wohnungen_gebaeude_und_wohnungsregister_gwr {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -46783,7 +47764,7 @@ pub mod wohnungen_gebaeude_und_wohnungsregister_gwr {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -46869,7 +47850,9 @@ pub mod wohnungen_gebaeude_und_wohnungsregister_gwr {
     }
 }
 
-/// Statistiken der Smiley-Geschwindigkeitsanzeigen
+#[doc = "Statistiken der Smiley-Geschwindigkeitsanzeigen"]
+#[doc = ""]
+#[doc = "<p>Die Statistik der Smiley-Geschwindigkeitsanzeigen fasst die Daten \u{fc}ber die verschiedenen Phasen zusammen (Vormessung, Betrieb, Nachmessung). Die Smiley-Geschwindigkeitsanzeigen sind nicht geeicht und entsprechend k\u{f6}nnen die Werte von der tats\u{e4}chlich gefahrenen Geschwindigkeit abweichen.<br/></p>"]
 pub mod statistiken_der_smiley_geschwindigkeitsanzeigen {
     use super::*;
 
@@ -46934,7 +47917,7 @@ pub mod statistiken_der_smiley_geschwindigkeitsanzeigen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Zyklus,
         Phase,
@@ -46969,7 +47952,7 @@ pub mod statistiken_der_smiley_geschwindigkeitsanzeigen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -46994,7 +47977,7 @@ pub mod statistiken_der_smiley_geschwindigkeitsanzeigen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -47080,7 +48063,9 @@ pub mod statistiken_der_smiley_geschwindigkeitsanzeigen {
     }
 }
 
-/// Vorhersagen Birs: Wasserstand und Abfluss
+#[doc = "Vorhersagen Birs: Wasserstand und Abfluss"]
+#[doc = ""]
+#[doc = "<p>Hydrologische Vorhersagen (Wasserstand und Abfluss) f\u{fc}r die Station \"Birs - M\u{fc}nchenstein, Hofmatt\".\u{a0}</p><p style=\"font-family: sans-serif;\">Die Vorhersagen basieren\u{a0} auf den Meteo-Modellen ICON-CH1-EPS, ICON-CH2-EPS und IFS. Am Anfang der Zeitreihen stehen 24 Std. Messwerte, anschliessend fangen die Prognosen an.\u{a0}</p><p style=\"font-family: sans-serif;\">Bei den ICON-Modellen wird der Kontroll-Lauf in den Spalten \"Wasserstand\" und \"Abflussmenge\" ausgewiesen. Der Kontroll-Lauf ist die\u{a0}hydrologische Vorhersage basierend auf der meteorologischen Kontrollvorhersage.</p><p>Stationsinfo: Die Station befindet sich bei \"Hofmatt\" in M\u{fc}nchenstein etwa auf H\u{f6}he der Br\u{fc}cke \"Baselstrasse\" \u{fc}ber die Birs.</p><p>Weitere Informationen sind hier zu finden:\u{a0}<a href=\"https://www.hydrodaten.admin.ch/de/2106.html\" target=\"_blank\">https://www.hydrodaten.admin.ch/de/2106.html</a><a href=\"https://www.hydrodaten.admin.ch/de/2106.html\" target=\"_blank\"></a></p><p style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">\u{c4}nderungsprotokoll:</span></p><p style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">30.05.2024:</span>\u{a0}F\u{fc}r die numerische Vorhersage wurde das Wettermodell COSMO mit dem neuen Wettermodell ICON (Icosahedral Nonhydrostatic Weather and Climate Model) ersetzt.\u{a0}Mehr Infos dazu finden Sie hier:\u{a0}<a href=\"https://www.meteoschweiz.admin.ch/ueber-uns/forschung-und-zusammenarbeit/projekte/2023/icon-22.html\" target=\"_blank\">https://www.meteoschweiz.admin.ch/ueber-uns/forschung-und-zusammenarbeit/projekte/2023/icon-22.html</a></p>"]
 pub mod vorhersagen_birs_wasserstand_und_abfluss {
     use super::*;
 
@@ -47166,7 +48151,7 @@ pub mod vorhersagen_birs_wasserstand_und_abfluss {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         Wasserstand,
@@ -47211,7 +48196,7 @@ pub mod vorhersagen_birs_wasserstand_und_abfluss {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -47236,7 +48221,7 @@ pub mod vorhersagen_birs_wasserstand_und_abfluss {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -47322,13 +48307,19 @@ pub mod vorhersagen_birs_wasserstand_und_abfluss {
     }
 }
 
-/// Effektiver und erwarteter täglicher Gasverbrauch
+#[doc = "Effektiver und erwarteter t\u{e4}glicher Gasverbrauch"]
+#[doc = ""]
+#[doc = "Dieser Datensatz beinhaltet den t\u{e4}glichen Gasverbrauch sowie den mittels eines Modells berechneten, anhand des Kalendertages und der Witterung zu erwartenden Gasverbrauch.<br>Der t\u{e4}gliche Gasverbrauch ergibt sich als Summe des st\u{fc}ndlich ausgewiesenen Gasverbrauchs im OGD-Datensatz \"Gasverbrauch im Versorgungsgebiet der IWB\" (<a href=\"https://data.bs.ch/explore/dataset/100304/\">https://data.bs.ch/explore/dataset/100304/</a>). <br><br> F\u{fc}r die Modellevaluierung wurde der Datensatz in drei Teile unterteilt. Der Trainingsdatensatz dient zum Trainieren des Modells, der Tesdatensatz zur Bewertung der Modellleistung. Der Prognosedatensatz enth\u{e4}lt neue, unbekannte Daten zur Vorhersage durch das mit Training- und Testdaten trainierte Modell.<br><br>Mehr Informationen zu den gewonnenen Kentnissen findet man im Webartikel: <a href=\"https://charts.basleratlas.ch/energie/webartikel_gasverbrauch.html\">https://charts.basleratlas.ch/energie/webartikel_gasverbrauch.html</a><br><br>Der Code des Modells kann selber ausgef\u{fc}hrt und weiterentwickelt werden. Hierf\u{fc}r wird Renku verwendet. Renku ist eine Plattform, die verschiedene Werkzeuge f\u{fc}r reproduzierbare und kollaborative Datenanalyseprojekte b\u{fc}ndelt: <a href=\"https://renkulab.io/projects/statabs/reproducible-research/erwarteter-gasverbrauch-basel-stadt\">https://renkulab.io/projects/statabs/reproducible-research/erwarteter-gasverbrauch-basel-stadt</a>"]
 pub mod effektiver_und_erwarteter_taeglicher_gasverbrauch {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub time: Option<Date>,
         /// Gasverbrauch effektiv
         ///
@@ -47362,7 +48353,7 @@ pub mod effektiver_und_erwarteter_taeglicher_gasverbrauch {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Time,
         Gasverbrauch,
@@ -47387,7 +48378,7 @@ pub mod effektiver_und_erwarteter_taeglicher_gasverbrauch {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -47412,7 +48403,7 @@ pub mod effektiver_und_erwarteter_taeglicher_gasverbrauch {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -47498,7 +48489,9 @@ pub mod effektiver_und_erwarteter_taeglicher_gasverbrauch {
     }
 }
 
-/// Geborene nach Geschlecht, Staatsangehörigkeit und Geburtsmonat
+#[doc = "Geborene nach Geschlecht, Staatsangeh\u{f6}rigkeit und Geburtsmonat"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Geborenen im Kanton Basel-Stadt nach Geschlecht, Staatsangeh\u{f6}rigkeit und Geburtsmonat sowie nach Alter, Staatsangeh\u{f6}rigkeit und Zivilstand der Eltern. Die Daten werden monatlich aktualisiert, wobei die Zahlen eines Monats jeweils am 16. Tag des n\u{e4}chsten Monats publiziert werden. Aufgrund von Nachmeldungen kann es jederzeit zu \u{c4}nderungen bei bereits ver\u{f6}ffentlichten Werten kommen. In den Daten der Jahre bis 2021 sind nur die Lebendgeborenen ber\u{fc}cksichtigt, in denjenigen der Jahre seit 2022 auch die Totgeborenen. Dies liegt daran, dass die Angabe zur Lebensf\u{e4}higkeit jeweils erst im Juli des Folgejahres verf\u{fc}gbar ist. Auch die Angaben zur Geburtenfolge und zum Zivilstand der Eltern sind jeweils erst im Juli des Folgejahres verf\u{fc}gbar. <br><br>Die hier ver\u{f6}ffentlichten Werte k\u{f6}nnen aus methodischen Gr\u{fc}nden von denjenigen in der <a href=\"https://statistik.bs.ch/unterthema/3\" target=\"_blank\">kantonalen \u{f6}ffentlichen Statistik (https://statistik.bs.ch/unterthema/3)</a> abweichen: In Letzterer werden nachtr\u{e4}glich gemeldete Geburten w\u{e4}hrend vier Monaten gesammelt, danach gelten die Zahlen als definitiv. Sp\u{e4}ter eintreffende Meldungen werden im letzten noch nicht abgeschlossenen Monat gez\u{e4}hlt. In diesem Datensatz werden sie im Monat des Geburtsdatums gez\u{e4}hlt. <br><br>Aus Gr\u{fc}nden des Pers\u{f6}nlichkeitsschutzes k\u{f6}nnen im <a href=\"https://data.bs.ch/explore/dataset/100092/\" target=\"_blank\">Datensatz mit dem Geburtsdatum (https://data.bs.ch/explore/dataset/100092/)</a> weniger Attribute ver\u{f6}ffentlicht werden als im vorliegenden Datensatz. <br><br>Eine leere Zelle bedeutet \u{ab}Wert unbekannt\u{bb}."]
 pub mod geborene_nach_geschlecht_staatsangehoerigkeit_und_geburtsmonat {
     use super::*;
 
@@ -47554,7 +48547,7 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_und_geburtsmonat {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Monat,
@@ -47587,7 +48580,7 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_und_geburtsmonat {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -47612,7 +48605,7 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_und_geburtsmonat {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -47698,13 +48691,19 @@ pub mod geborene_nach_geschlecht_staatsangehoerigkeit_und_geburtsmonat {
     }
 }
 
-/// Wohnbevölkerung nach Geschlecht, Alter, Staatsangehörigkeit und Wohnviertel
+#[doc = "Wohnbev\u{f6}lkerung nach Geschlecht, Alter, Staatsangeh\u{f6}rigkeit und Wohnviertel"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Wohnbev\u{f6}lkerung des Kantons Basel-Stadt nach Geschlecht, Alter und Staatsangeh\u{f6}rigkeit (Schweiz/Ausland) auf der Ebene Wohnviertel. Die Daten werden j\u{e4}hrlich aktualisiert. <br>Die hier ver\u{f6}ffentlichten Werte der Jahre 1979 bis 2011 weichen aus methodischen Gr\u{fc}nden von denjenigen in der kantonalen \u{f6}ffentlichen Statistik ab: In Letzterer wurde bis zum Jahr 2011 die Bev\u{f6}lkerungszahl durch Fortschreibung ermittelt. Seit dem Jahr 2012 basiert sie direkt auf Auswertungen aus dem kantonalen Einwohnerregister. Die hier ver\u{f6}ffentlichten Werte hingegen basieren seit 1979 auf Auswertungen aus dem Einwohnerregister."]
 pub mod wohnbevoelkerung_nach_geschlecht_alter_staatsangehoerigkeit_und_wohnviertel {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Jahr
         pub jahr: Option<String>,
@@ -47746,7 +48745,7 @@ pub mod wohnbevoelkerung_nach_geschlecht_alter_staatsangehoerigkeit_und_wohnvier
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Jahr,
@@ -47783,7 +48782,7 @@ pub mod wohnbevoelkerung_nach_geschlecht_alter_staatsangehoerigkeit_und_wohnvier
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -47808,7 +48807,7 @@ pub mod wohnbevoelkerung_nach_geschlecht_alter_staatsangehoerigkeit_und_wohnvier
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -47894,13 +48893,19 @@ pub mod wohnbevoelkerung_nach_geschlecht_alter_staatsangehoerigkeit_und_wohnvier
     }
 }
 
-/// Wohnbevölkerung nach Geschlecht und Staatsangehörigkeit
+#[doc = "Wohnbev\u{f6}lkerung nach Geschlecht und Staatsangeh\u{f6}rigkeit"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Wohnbev\u{f6}lkerung des Kantons Basel-Stadt nach Geschlecht und detaillierter Staatsangeh\u{f6}rigkeit auf der Ebene Gemeinde. Die Daten werden j\u{e4}hrlich aktualisiert.<br>Die hier ver\u{f6}ffentlichten Werte der Jahre 1979 bis 2011 weichen aus methodischen Gr\u{fc}nden von denjenigen in der kantonalen \u{f6}ffentlichen Statistik ab: In Letzterer wurde bis zum Jahr 2011 die Bev\u{f6}lkerungszahl durch Fortschreibung ermittelt. Seit dem Jahr 2012 basiert sie direkt auf Auswertungen aus dem kantonalen Einwohnerregister. Die hier ver\u{f6}ffentlichten Werte hingegen basieren seit 1979 auf Auswertungen aus dem Einwohnerregister."]
 pub mod wohnbevoelkerung_nach_geschlecht_und_staatsangehoerigkeit {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Gemeinde
         pub gemeinde: Option<String>,
@@ -47924,7 +48929,7 @@ pub mod wohnbevoelkerung_nach_geschlecht_und_staatsangehoerigkeit {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Gemeinde,
@@ -47947,7 +48952,7 @@ pub mod wohnbevoelkerung_nach_geschlecht_und_staatsangehoerigkeit {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -47972,7 +48977,7 @@ pub mod wohnbevoelkerung_nach_geschlecht_und_staatsangehoerigkeit {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -48058,7 +49063,9 @@ pub mod wohnbevoelkerung_nach_geschlecht_und_staatsangehoerigkeit {
     }
 }
 
-/// Kantonales Leistungsverzeichnis: Gebühren
+#[doc = "Kantonales Leistungsverzeichnis: Geb\u{fc}hren"]
+#[doc = ""]
+#[doc = "<p><b>Der Geb\u{fc}hrenkatalog enth\u{e4}lt die aktuellen Geb\u{fc}hren und Verweise auf die g\u{fc}ltigen Geb\u{fc}hrenordnungen im Kanton Basel-Stadt. Mit der Ver\u{f6}ffentlichung dieser Informationen entspricht die kantonale Verwaltung ihrer Informationspflicht gem\u{e4}ss dem f\u{fc}r Basel-Stadt verabschiedeten \u{ab}\u{d6}ffentlichkeitsprinzip\u{bb}, basierend auf dem Ratschlag des RR vom 07.09.2011.</b>\u{a0}</p><p>Die Ver\u{f6}ffentlichung des aktuellen Geb\u{fc}hrenkatalog auf dem kantonalen Datenportal <a href=\"https://data.bs.ch\" target=\"_blank\">https://data.bs.ch</a> als \u{ab}Open Government Data\u{bb} (OGD) erg\u{e4}nzt die bisherige Ver\u{f6}ffentlichung der Geb\u{fc}hren als Excel Datei auf der Webseite <a href=\"https://www.bs.ch/publikationen/fd/gebuehrendatenbank1.html\" target=\"_blank\">des Kanton Basel-Stadt</a>.\u{a0}</p><p>Das kantonale Datenportal f\u{fc}hrt stets die aktuellen und g\u{fc}ltigen Datens\u{e4}tze. Erg\u{e4}nzungen durch die Dienststellen werden ebenfalls automatisch nach einem Tag angezeigt. Das kantonale Datenportal ist als Informationsquelle und f\u{fc}r Auswertungen die neue \u{ab}Heimat\u{bb} des Geb\u{fc}hrenkatalogs.</p><p>Um die Daten lesbarer zu gestalten, wurden bisher als \u{ab}Geb\u{fc}hrenbl\u{f6}cke\u{bb} oder \u{ab}Sammelgeb\u{fc}hren\u{bb} ver\u{f6}ffentlichte Geb\u{fc}hren von den zust\u{e4}ndigen Dienststellen weiter aufgel\u{f6}st. Die Daten werden neu granular und damit lesbarer dargestellt. Auch die Informationen zu Geb\u{fc}hren aus anderen Kantonen (Benchmarks) wurden weiter erg\u{e4}nzt, damit die dargestellten Informationen vergleichbar und transparent sind.</p><u><b>Warum machen wir das?</b></u><p>Ein Legislaturziel ist es, einen \u{ab}niederschwelligen Service public\u{bb} anzubieten. Die Ver\u{f6}ffentlichung des Geb\u{fc}hrenkatalogs setzt den Ratschlag des RR vom 07.09.2011 um. Die Ver\u{f6}ffentlichung von Informationen erm\u{f6}glicht es Aussenstehenden, die Bedeutung und den Wert der Institutionen und Beh\u{f6}rden besser einzusch\u{e4}tzen.\u{a0}</p><p>S\u{e4}mtliche angezeigte Daten sind \u{f6}ffentlich. Siewerden hiermit allen Interessierten zug\u{e4}nglich gemacht und verletzen keine Pers\u{f6}nlichkeitsrechte, sind nicht sicherheitskritisch und unterliegen keinen Drittrechten (wie Copyrights).</p><u><b>Bitte geben Sie uns R\u{fc}ckmeldung!</b></u><p>Gerne nehmen wir Ihr gesch\u{e4}tztes Feedback und Anregungen entgegen, wie wir die Beschreibung und Auswertung aktueller Geb\u{fc}hren sinnvoll erweitern und anreichern k\u{f6}nnten, um diese \u{ab}auswertbarer\u{bb} zu machen. Entsprechende Vorschl\u{e4}ge werden auf Umsetzbarkeit gepr\u{fc}ft.\u{a0}</p><p>\u{dc}ber Ihre R\u{fc}ckmeldungen m\u{f6}chten wir verstehen, wer unsere Daten nutzt und wof\u{fc}r, damit wir die Qualit\u{e4}t und Quantit\u{e4}t der angebotenen Informationen weiter verbessern k\u{f6}nnen.</p><div><br/></div>"]
 pub mod kantonales_leistungsverzeichnis_gebuehren {
     use super::*;
 
@@ -48100,7 +49107,7 @@ pub mod kantonales_leistungsverzeichnis_gebuehren {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Departement,
         Diensstelle,
@@ -48127,7 +49134,7 @@ pub mod kantonales_leistungsverzeichnis_gebuehren {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -48152,7 +49159,7 @@ pub mod kantonales_leistungsverzeichnis_gebuehren {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -48238,7 +49245,9 @@ pub mod kantonales_leistungsverzeichnis_gebuehren {
     }
 }
 
-/// Treppen und Ausstiegsleitern an Gewässern
+#[doc = "Treppen und Ausstiegsleitern an Gew\u{e4}ssern"]
+#[doc = ""]
+#[doc = "<p>Ein- und Ausstigsm\u{f6}glichkeiten in bzw. aus Rhein, Birs und Wiese, welche z.B. in der BachApp publiziert werden.\u{a0}</p>"]
 pub mod treppen_und_ausstiegsleitern_an_gewaessern {
     use super::*;
 
@@ -48264,7 +49273,7 @@ pub mod treppen_und_ausstiegsleitern_an_gewaessern {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         TypBez,
         AusstiegMoeglich,
@@ -48279,7 +49288,7 @@ pub mod treppen_und_ausstiegsleitern_an_gewaessern {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -48304,7 +49313,7 @@ pub mod treppen_und_ausstiegsleitern_an_gewaessern {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -48390,7 +49399,9 @@ pub mod treppen_und_ausstiegsleitern_an_gewaessern {
     }
 }
 
-/// Schülerprognose Basel
+#[doc = "Sch\u{fc}lerprognose Basel"]
+#[doc = ""]
+#[doc = "Das Statistische Amt erstellt kleinr\u{e4}umige Prognosen zu den Sch\u{fc}lerzahlen in den \u{f6}ffentlichen Schulen der Stadt Basel. Die Sch\u{fc}lerzahlen werden f\u{fc}r die ersten 8 Schulstufen (Kindergarten und Primarschule), 15 Schulperimeter und 5 Schuljahre in die Zukunft prognostiziert. Die Perimeter dienen als Planungsgrundlage und nicht als effektive Einzugsgebiete. Die Prognosen werden im Auftrag des Erziehungsdepartements Basel-Stadt erstellt und j\u{e4}hrlich aktualisiert. Die Prognosezahlen ber\u{fc}cksichtigen keine Sch\u{fc}lerinnen und Sch\u{fc}ler, die aufgrund von k\u{fc}nftigen Arealentwicklungen in die Schulen eintreten werden. Die Sch\u{fc}lerinnen und Sch\u{fc}ler mit dem Schutzstatus S werden in diesem Datensatz nicht ausgewiesen."]
 pub mod schuelerprognose_basel {
     use super::*;
 
@@ -48440,7 +49451,7 @@ pub mod schuelerprognose_basel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Schuljahr,
         Nummer,
@@ -48469,7 +49480,7 @@ pub mod schuelerprognose_basel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -48494,7 +49505,7 @@ pub mod schuelerprognose_basel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -48580,7 +49591,9 @@ pub mod schuelerprognose_basel {
     }
 }
 
-/// Velo-Fahrverbote (allgemein oder temporär)
+#[doc = "Velo-Fahrverbote (allgemein oder tempor\u{e4}r)"]
+#[doc = ""]
+#[doc = "Der Velostadtplan zeigt dir passende Routen zu deinem Ziel und liefert Ideen, wohin du mit deinem Velo besonders gut fahren kannst. Er ist die elektronische Version der faltbaren Papierkarte, die im Buchhandel, bei Basel Tourismus, Pro Velo und Veloplus erh\u{e4}ltlich ist."]
 pub mod velo_fahrverbote_allgemein_oder_temporaer {
     use super::*;
 
@@ -48604,7 +49617,7 @@ pub mod velo_fahrverbote_allgemein_oder_temporaer {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         IdVerbot,
@@ -48621,7 +49634,7 @@ pub mod velo_fahrverbote_allgemein_oder_temporaer {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -48646,7 +49659,7 @@ pub mod velo_fahrverbote_allgemein_oder_temporaer {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -48732,7 +49745,9 @@ pub mod velo_fahrverbote_allgemein_oder_temporaer {
     }
 }
 
-/// Elternberatung
+#[doc = "Elternberatung"]
+#[doc = ""]
+#[doc = "Elternberatung ist ein niederschwelliges Beratungsangebot f\u{fc}r Eltern mit kleinen Kindern ab Geburt bis zum Eintritt in den Kindergarten. Zentrale Aufgabe ist die Pr\u{e4}vention und Gesundheitsf\u{f6}rderung im Fr\u{fc}hbereich."]
 pub mod elternberatung {
     use super::*;
 
@@ -48784,7 +49799,7 @@ pub mod elternberatung {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdEl,
         StdName,
@@ -48813,7 +49828,7 @@ pub mod elternberatung {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -48838,7 +49853,7 @@ pub mod elternberatung {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -48924,7 +49939,9 @@ pub mod elternberatung {
     }
 }
 
-/// Temperatur Grundwasser: Langjährige Statistiken
+#[doc = "Temperatur Grundwasser: Langj\u{e4}hrige Statistiken"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz enth\u{e4}lt die absoluten extremalen Messwerte (kleinster Wert \u{201e}10YMin\u{201c} bzw. gr\u{f6}sster Wert \u{201e}10YMax\u{201c}) und den Mittelwert aller Messwerte (\u{201e}Mean\u{201c}) der Grundwassertemperaturen in \u{b0}C des kantonalen Grundwassermessnetzes und in der angegebenen Periode (startStatist bis endStatist, d.h. i. d. R. 10 Jahre).</p><p>Weitere Informationen: <a href=\"https://www.aue.bs.ch/wasser/grundwasser/grundwasserpegel-grundwasserqualitaet.html\">https://www.aue.bs.ch/wasser/grundwasser/grundwasserpegel-grundwasserqualitaet.html</a></p>"]
 pub mod temperatur_grundwasser_langjaehrige_statistiken {
     use super::*;
 
@@ -49008,7 +50025,7 @@ pub mod temperatur_grundwasser_langjaehrige_statistiken {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Stationnr,
         Stationid,
@@ -49057,7 +50074,7 @@ pub mod temperatur_grundwasser_langjaehrige_statistiken {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -49082,7 +50099,7 @@ pub mod temperatur_grundwasser_langjaehrige_statistiken {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -49168,7 +50185,9 @@ pub mod temperatur_grundwasser_langjaehrige_statistiken {
     }
 }
 
-/// Kennzahlen der Abstimmung vom 13. Februar 2022
+#[doc = "Kennzahlen der Abstimmung vom 13. Februar 2022"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate der Volksabstimmungen vom 13. Februar 2022 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p><a href=\"https://data.bs.ch/explore/dataset/100071\"></a></p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im Kantonsblatt des Kantons Basel-Stadt publiziert werden.</p>"]
 pub mod kennzahlen_der_abstimmung_vom_13_februar_2022 {
     use super::*;
 
@@ -49215,6 +50234,10 @@ pub mod kennzahlen_der_abstimmung_vom_13_februar_2022 {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Resultattyp
         ///
@@ -49257,7 +50280,7 @@ pub mod kennzahlen_der_abstimmung_vom_13_februar_2022 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         GemeinName,
         StimmrAnz,
@@ -49310,7 +50333,7 @@ pub mod kennzahlen_der_abstimmung_vom_13_februar_2022 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -49335,7 +50358,7 @@ pub mod kennzahlen_der_abstimmung_vom_13_februar_2022 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -49421,7 +50444,9 @@ pub mod kennzahlen_der_abstimmung_vom_13_februar_2022 {
     }
 }
 
-/// Entsorgungsstellen
+#[doc = "Entsorgungsstellen"]
+#[doc = ""]
+#[doc = "Der Bev\u{f6}lkerung werden die verschiedenen Entsorgungsstellen f\u{fc}r ihre Abf\u{e4}lle und Wertstoffe angezeigt. Sie erhalten zudem die Informationen, was, wann und wie sie diese entsorgen k\u{f6}nnen."]
 pub mod entsorgungsstellen {
     use super::*;
 
@@ -49463,7 +50488,7 @@ pub mod entsorgungsstellen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdEntsorg,
         Kategorie,
@@ -49498,7 +50523,7 @@ pub mod entsorgungsstellen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -49523,7 +50548,7 @@ pub mod entsorgungsstellen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -49609,7 +50634,9 @@ pub mod entsorgungsstellen {
     }
 }
 
-/// Hundesignalisation: Orte mit Leinenpflicht oder Hundeverbot
+#[doc = "Hundesignalisation: Orte mit Leinenpflicht oder Hundeverbot"]
+#[doc = ""]
+#[doc = "Der Plan zeigt \u{d6}rtlichkeiten, an welchen eine Leinenpflicht oder ein Hundeverbot gilt."]
 pub mod hundesignalisation_orte_mit_leinenpflicht_oder_hundeverbot {
     use super::*;
 
@@ -49653,7 +50680,7 @@ pub mod hundesignalisation_orte_mit_leinenpflicht_oder_hundeverbot {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Id,
         Einschraen,
@@ -49676,7 +50703,7 @@ pub mod hundesignalisation_orte_mit_leinenpflicht_oder_hundeverbot {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -49701,7 +50728,7 @@ pub mod hundesignalisation_orte_mit_leinenpflicht_oder_hundeverbot {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -49787,13 +50814,19 @@ pub mod hundesignalisation_orte_mit_leinenpflicht_oder_hundeverbot {
     }
 }
 
-/// Scheidungen nach Scheidungsdatum, Ehedauer sowie Alter und Staatsangehörigkeit der ehemaligen Ehepartner
+#[doc = "Scheidungen nach Scheidungsdatum, Ehedauer sowie Alter und Staatsangeh\u{f6}rigkeit der ehemaligen Ehepartner"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Scheidungen im Kanton Basel-Stadt nach Scheidungsdatum, Ehedauer sowie nach Alter und Staatsangeh\u{f6}rigkeit der Frau bzw. des Mannes. Die Daten werden j\u{e4}hrlich aktualisiert. Vor dem Jahr 1984 ist nur das Total der Scheidungen verf\u{fc}gbar. <br><br>Im Jahr 2000 trat ein neues Scheidungsrecht in Kraft. Im Jahr 2010 wurde dieses angepasst. <br><br>Bis zum Jahr 2006 wurde eine Scheidung in Basel-Stadt gez\u{e4}hlt, wenn die klagende Partei in Basel-Stadt Wohnsitz hatte. Seit dem Jahr 2007 wird eine Scheidung in Basel-Stadt gez\u{e4}hlt, wenn der Mann Wohnsitz in Basel-Stadt hat, oder wenn er im Ausland und die Frau in Basel-Stadt lebt. <br><br>Die hier ver\u{f6}ffentlichten Werte k\u{f6}nnen aus methodischen Gr\u{fc}nden von denjenigen in der \u{f6}ffentlichen Statistik abweichen: In Letzterer werden nachtr\u{e4}glich gemeldete Scheidungen im letzten noch nicht abgeschlossenen Jahr gez\u{e4}hlt. In diesem Datensatz werden sie im Jahr des Scheidungsdatums gez\u{e4}hlt..<br><br>Quelle: Statistik der nat\u{fc}rlichen Bev\u{f6}lkerungsbewegung (BEVNAT) des Bundesamtes f\u{fc}r Statistik (BFS)."]
 pub mod scheidungen_nach_scheidungsdatum_ehedauer_sowie_alter_und_staatsangehoerigkeit_der_ehemaligen_ehepartner {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Scheidungsdatum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub scheidungsdatum: Option<Date>,
         /// Jahr
         ///
@@ -49810,6 +50843,10 @@ pub mod scheidungen_nach_scheidungsdatum_ehedauer_sowie_alter_und_staatsangehoer
         /// Datum Wochenstart
         ///
         /// Datum des Montags der Scheidungswoche
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_wochenstart_scheidungsdatum: Option<Date>,
         /// Tag in Jahr
         ///
@@ -49849,7 +50886,7 @@ pub mod scheidungen_nach_scheidungsdatum_ehedauer_sowie_alter_und_staatsangehoer
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Scheidungsdatum,
         Jahr,
@@ -49886,7 +50923,7 @@ pub mod scheidungen_nach_scheidungsdatum_ehedauer_sowie_alter_und_staatsangehoer
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -49911,7 +50948,7 @@ pub mod scheidungen_nach_scheidungsdatum_ehedauer_sowie_alter_und_staatsangehoer
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -49997,7 +51034,9 @@ pub mod scheidungen_nach_scheidungsdatum_ehedauer_sowie_alter_und_staatsangehoer
     }
 }
 
-/// Buvetten in Gewässernähe
+#[doc = "Buvetten in Gew\u{e4}ssern\u{e4}he"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz enth\u{e4}lt Informationen zu den gew\u{e4}ssernahen Buvetten, welche z.B. auf der Karte in der BachApp verzeichnet sind.\u{a0}</p>"]
 pub mod buvetten_in_gewaessernaehe {
     use super::*;
 
@@ -50010,10 +51049,18 @@ pub mod buvetten_in_gewaessernaehe {
         /// Sichtbar_von
         ///
         /// Sichtbar ab
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_von: Option<Date>,
         /// Sichtbar_bis
         ///
         /// Sichtbar bis
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_bis: Option<Date>,
         /// Name
         ///
@@ -50029,7 +51076,7 @@ pub mod buvetten_in_gewaessernaehe {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Id,
         Status,
@@ -50052,7 +51099,7 @@ pub mod buvetten_in_gewaessernaehe {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -50077,7 +51124,7 @@ pub mod buvetten_in_gewaessernaehe {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -50163,7 +51210,9 @@ pub mod buvetten_in_gewaessernaehe {
     }
 }
 
-/// Kinder- und Jugendangebote
+#[doc = "Kinder- und Jugendangebote"]
+#[doc = ""]
+#[doc = "Die offene Kinder- und Jugendarbeit (OKJA) ist ein Freizeitangebot f\u{fc}r Kindern ab 5 Jahren bis jungen Erwachsenen im Alter von bis 25 Jahren. Sie umfasst Angebote wie Jugendzentren, mobile Jugendarbeit, Abenteuerspielpl\u{e4}tze oder Spielmobile. Spezifisches Charakteristikum ist, dass die Angebote offen, freiwillig und partizipativ organisiert sind."]
 pub mod kinder_und_jugendangebote {
     use super::*;
 
@@ -50203,7 +51252,7 @@ pub mod kinder_und_jugendangebote {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdKj,
         KiAngebot,
@@ -50236,7 +51285,7 @@ pub mod kinder_und_jugendangebote {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -50261,7 +51310,7 @@ pub mod kinder_und_jugendangebote {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -50347,7 +51396,9 @@ pub mod kinder_und_jugendangebote {
     }
 }
 
-/// Wohnbevölkerung nach Staatsangehörigkeit und Bezirk
+#[doc = "Wohnbev\u{f6}lkerung nach Staatsangeh\u{f6}rigkeit und Bezirk"]
+#[doc = ""]
+#[doc = "Dieser Datensatz beinhaltet Angaben zur Wohnbev\u{f6}lkerung des Kantons Basel-Stadt am Jahresende nach Staatsangeh\u{f6}rigkeit (Schweiz/Ausland) und Kantonsb\u{fc}rgerschaft auf Ebene Bezirk. Personen an administrativen Meldeadressen sind nicht ber\u{fc}cksichtigt. An administrativen Meldeadressen sind Personen aus administrativen Gr\u{fc}nden gemeldet, welche dort aber keinen physischen Wohnsitz haben (z.B. KESB)."]
 pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_bezirk {
     use super::*;
 
@@ -50409,7 +51460,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_bezirk {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BezName,
         Bezirk,
@@ -50448,7 +51499,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_bezirk {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -50473,7 +51524,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_bezirk {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -50559,13 +51610,19 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_bezirk {
     }
 }
 
-/// Coronavirus (COVID-19): Fallzahlen ganze Schweiz
+#[doc = "Coronavirus (COVID-19): Fallzahlen ganze Schweiz"]
+#[doc = ""]
+#[doc = "<p style=\"margin-bottom: 1em; background-color: rgb(244, 245, 246);\"><font face=\"Arial, Helvetica, sans-serif\"><span style=\"font-size: 14px;\">This dataset is based on the <a href=\"https://github.com/openZH/covid_19\" target=\"_blank\">Github repository organized by OpenZH</a>, its contents are filled by employees of the Cantons and volunteers based on official sources. Data for Basel-Stadt are inserted by <a href=\"https://opendata.bs.ch\" target=\"_blank\">Fachstelle f\u{fc}r OGD Basel-Stadt</a> based on the official website of Canton Basel-Stadt. The dataset is refreshed from github every hour, 5 minutes past the hour. Geographical data for the cantons has been added by Opendatasoft in order to produce visualisations.\u{a0}</span></font><br/></p><table class=\"table table-bordered\" style=\"width: 881px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; background-color: rgb(244, 245, 246);\"><tbody><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Field Name</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Description</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Format</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Note<br/></td></tr><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">update</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Date and time of notification</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">\u{a0}YYYY-MM-DD-HH-MM</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\"><br/></td></tr><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">name<br/></td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Name of the reporting canton<br/></td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Text<br/></td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\"><br/></td></tr><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">abbreviation_canton_and_fl</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Abbreviation of the reporting canton</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Text</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\"><br/></td></tr><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">ncumul_tested</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Reported number of tests performed as of date</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Number</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Irrespective of canton of residence</td></tr><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">ncumul_conf</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Reported number of confirmed cases as of date</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Number</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Only cases that reside in the current canton</td></tr><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">current_hosp (formerly ncumul_hosp) *<br/></td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Reported number of hospitalised patients on date</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Number</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Irrespective of canton of residence</td></tr><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">current_icu (formerly ncumul_icu) *<br/></td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Reported number of hospitalised patients in ICUs on date</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Number</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Irrespective of canton of residence</td></tr><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">current_vent(formerly ncumul_vent) *<br/></td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Reported number of patients requiring ventilation on date</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Number</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Irrespective of canton of residence</td></tr><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">ncumul_released</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Reported number of patients released from hospitals or reported recovered as of date</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Number</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Irrespective of canton of residence</td></tr><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">ncumul_deceased</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Reported number of deceased as of date</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Number</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Only cases that reside in the current canton</td></tr><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">new_hosp *<br/></td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Number of new hospitalisations since last date<br/></td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Number<br/></td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Irrespective of canton of residence</td></tr><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">source</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Source of the information</td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">URL link<br/></td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\"><br/></td></tr><tr><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">geo_point_2d<br/></td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">Geographical centroid of the canton<br/></td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\">geo_point_2d<br/></td><td style=\"padding: 0.25em; border-color: rgb(238, 238, 238);\"><br/></td></tr></tbody></table><p style=\"font-family: Arial, Helvetica, sans-serif; margin-bottom: 1em; font-size: 14px; background-color: rgb(244, 245, 246);\"><br/></p><p style=\"font-family: Arial, Helvetica, sans-serif; margin-bottom: 1em; font-size: 14px; background-color: rgb(244, 245, 246);\">*<em>These variables were affected by the format change on April 9th, 2020, which consists in:</em></p><p style=\"font-family: Arial, Helvetica, sans-serif; margin-bottom: 0px; font-size: 14px; background-color: rgb(244, 245, 246);\"><em>- new variable \"new_hosp\"<br/>- variables \"ncumul_hosp\", \"ncumul_icu\", \"ncumul_vent\" have been renamed to \"current_hosp\", \"current_icu\", \"current_vent\", to fit with their nature.<br/>To ensure compatibility with already made dashboards or reuses, these fields have been duplicated to avoid errors when their old names are used; but we strongly recommand to replace their old names by the new as soon as possible.</em></p>"]
 pub mod coronavirus_covid_19_fallzahlen_ganze_schweiz {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Date
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Last update
         ///
@@ -50642,7 +51699,7 @@ pub mod coronavirus_covid_19_fallzahlen_ganze_schweiz {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         Update,
@@ -50697,7 +51754,7 @@ pub mod coronavirus_covid_19_fallzahlen_ganze_schweiz {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -50722,7 +51779,7 @@ pub mod coronavirus_covid_19_fallzahlen_ganze_schweiz {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -50808,7 +51865,9 @@ pub mod coronavirus_covid_19_fallzahlen_ganze_schweiz {
     }
 }
 
-/// Statistische Raumeinheiten: Bezirke
+#[doc = "Statistische Raumeinheiten: Bezirke"]
+#[doc = ""]
+#[doc = "Die Bezirke sind Untereinheiten der Wohnviertel. Jedes Wohnviertel mit Ausnahme von Klybeck und Kleinh\u{fc}ningen ist in 2 bis 8 Bezirke unterteilt. Insgesamt werden auf dem gesamten Kantonsgebiet 69 Bezirke unterschieden.\n\nStatistische Nummerierung:\nDie Nummerierung der Bezirke setzt sich zusammen aus der zweistelligen Wohnviertel-Nr. und der einstelligen Bezirks-Nr. (im Label durch einen Punkt getrennt):\n- Beispiel f\u{fc}r den Bezirk Flora (1) im Wohnviertel Matth\u{e4}us (17): BEZ_ID 171, die Bezeichnung (BEZ_Label) lautet 17.1\n- Beispiel f\u{fc}r das Wohnviertel Kleinh\u{fc}ningen ohne Bezirke (19.0): BEZ_ID 190, die Bezeichnung (BEZ_Label) lautet 19.0"]
 pub mod statistische_raumeinheiten_bezirke {
     use super::*;
 
@@ -50834,7 +51893,7 @@ pub mod statistische_raumeinheiten_bezirke {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BezId,
         BezLabel,
@@ -50853,7 +51912,7 @@ pub mod statistische_raumeinheiten_bezirke {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -50878,7 +51937,7 @@ pub mod statistische_raumeinheiten_bezirke {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -50964,7 +52023,9 @@ pub mod statistische_raumeinheiten_bezirke {
     }
 }
 
-/// Geschwindigkeitsmonitoring: Einzelmessungen von 2021 bis 2023
+#[doc = "Geschwindigkeitsmonitoring: Einzelmessungen von 2021 bis 2023"]
+#[doc = ""]
+#[doc = "<p></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Einzelmessungen des\nGeschwindigkeitsmonitorings der Kantonspolizei Basel-Stadt vom Jahr 2021 bis und mit Jahr 2023 (Zeitpunkt des Beginns der Messung).\u{a0}<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Bei den dargestellten\nDaten handelt es sich ausschliesslich um statistische Erhebungen. Diese stehen\nnicht in einem Zusammenhang mit Ordnungsbussen oder einer strafrechtlichen\nVerfolgung. Die statistischen Geschwindigkeitsmessungen dienen der Kantonspolizei\nBasel-Stadt zur \u{dc}berpr\u{fc}fung der Geschwindigkeit sowie der Verkehrssicherheit\n(z.B. Sicherheit an Fussg\u{e4}ngerstreifen) an der betreffenden \u{d6}rtlichkeit. Die\nErgebnisse dienen zur Entscheidung, an welchen \u{d6}rtlichkeiten Handlungsbedarf in\nForm von Geschwindigkeitskontrollen besteht. Jedes Statistikger\u{e4}t besitzt eine\neinzige Punktgeometrie und ist meist mit zwei Richtungen versehen (Richtung 1\nund 2).<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Hinweis: Die\nMessungen sind nicht zwingend repr\u{e4}sentativ f\u{fc}r das ganze Jahr und m\u{fc}ssen im\nKontext des Erhebungsdatums betrachtet werden. Dar\u{fc}ber hinaus wurden gewisse\nMessungen w\u{e4}hrend einer ausserordentlichen Verkehrsf\u{fc}hrung (z.B.\nUmleitungsverkehr infolge von Baustellent\u{e4}tigkeiten etc.) erhoben.\nManipulationen an Ger\u{e4}ten k\u{f6}nnen zu fehlerhaften Messungen f\u{fc}hren.<o:p></o:p></span></p><p>\n\n\n\n\n\n</p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Zum\nGeschwindigkeitsmonitoring sind folgende Datens\u{e4}tze vorhanden:<o:p></o:p></span></p><ul><li>Einzelmessungen ab 2024:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100097\" target=\"_blank\">https://data.bs.ch/explore/dataset/100097</a><a href=\"https://data.bs.ch/explore/dataset/100097\" target=\"_blank\"></a></li><li>Einzelmessungen von 2021 bis 2023 (dieser Datensatz):\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100358\" target=\"_blank\">https://data.bs.ch/explore/dataset/100358</a></li><li>Einzelmessungen bis 2020:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100200\" target=\"_blank\">https://data.bs.ch/explore/dataset/100200</a></li><li>Kennzahlen pro Mess-Standort:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100112\" target=\"_blank\">https://data.bs.ch/explore/dataset/100112</a>\u{a0}</li></ul>Aufgrund der grossen Datenmenge kann es vorkommen, dass der Datensatz nicht vollst\u{e4}ndig heruntergeladen werden kann. Falls dieses Problem auftritt, kann man den vollst\u{e4}ndigen Datensatz und die Einzelmessungen der Messstationen hier herunterladen:<p></p><ul><li>vollst\u{e4}ndiger Datensatz:\u{a0}<a href=\"https://data-bs.ch/stata/kapo/geschwindigkeitsmonitoring/all_data/geschwindigkeitsmonitoring_data.csv\">https://data-bs.ch/stata/kapo/geschwindigkeitsmonitoring/all_data/geschwindigkeitsmonitoring_data.csv</a></li><li>Einzelmessungen der Messstationen:\u{a0}<a href=\"https://data-bs.ch/stata/kapo/geschwindigkeitsmonitoring/data/\">https://data-bs.ch/stata/kapo/geschwindigkeitsmonitoring/data/</a></li></ul><p>Die Mess-Standorte werden auch auf dem Geoportal Basel-Stadt publiziert:\u{a0}<a \"=\"\" href=\"https://map.geo.bs.ch/s/geschwindigkeit\" target=\"_blank\">https://map.geo.bs.ch/s/geschwindigkeit</a></p>"]
 pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
     use super::*;
 
@@ -51000,10 +52061,18 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
         /// Messbeginn
         ///
         /// Datum, an welchem ein Messgerät an einem Standort ausgebracht wurde
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messbeginn: Option<Date>,
         /// Messende
         ///
         /// Datum, bis zu welchem ein Messgerät an einem Standort im Einsatz war
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messende: Option<Date>,
         /// Zone
         ///
@@ -51061,7 +52130,7 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         MessungId,
@@ -51112,7 +52181,7 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -51137,7 +52206,7 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -51223,7 +52292,9 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_von_2021_bis_2023 {
     }
 }
 
-/// Fischereistatistik Basel-Stadt
+#[doc = "Fischereistatistik Basel-Stadt"]
+#[doc = ""]
+#[doc = "<p>Die Fischereistatistik enth\u{e4}lt alle Fische, die aus Gew\u{e4}ssern des Kantons Basel-Stadt entnommen worden sind. F\u{e4}nge invasiver Schwarzmeergrundeln (Schwarzmundgrundeln und Kesslergrundeln) werden separat registriert.\u{a0}</p><p>Die Karte der verschiedenen Gew\u{e4}sser gibt einen Hinweis auf die Orte, an denen gefischt wird. Es kann aus ihr nicht abgeleitet werden, wo das Fischen nicht erlaubt ist.\u{a0}</p><p>Die Daten werden j\u{e4}hrlich erg\u{e4}nzt.</p>"]
 pub mod fischereistatistik_basel_stadt {
     use super::*;
 
@@ -51232,10 +52303,18 @@ pub mod fischereistatistik_basel_stadt {
         /// Jahr
         ///
         /// Jahr des Fangs
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub jahr: Option<Date>,
         /// Jahr und Monat
         ///
         /// Jahr und Monat des Fangs
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub monat: Option<Date>,
         /// Fischereikarte
         ///
@@ -51274,7 +52353,7 @@ pub mod fischereistatistik_basel_stadt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Monat,
@@ -51303,7 +52382,7 @@ pub mod fischereistatistik_basel_stadt {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -51328,7 +52407,7 @@ pub mod fischereistatistik_basel_stadt {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -51414,7 +52493,9 @@ pub mod fischereistatistik_basel_stadt {
     }
 }
 
-/// Wohnbevölkerung nach Staatsangehörigkeit und Block
+#[doc = "Wohnbev\u{f6}lkerung nach Staatsangeh\u{f6}rigkeit und Block"]
+#[doc = ""]
+#[doc = "Dieser Datensatz beinhaltet Angaben zur Wohnbev\u{f6}lkerung des Kantons Basel-Stadt am Jahresende nach Staatsangeh\u{f6}rigkeit (Schweiz/Ausland) und Kantonsb\u{fc}rgerschaft auf Ebene Block. Personen an administrativen Meldeadressen sind nicht ber\u{fc}cksichtigt. An administrativen Meldeadressen sind Personen aus administrativen Gr\u{fc}nden gemeldet, welche dort aber keinen physischen Wohnsitz haben (z.B. KESB). Aus Datenschutzgr\u{fc}nden werden nur Raumeinheiten mit mindestens 4 Einwohnern ausgewiesen."]
 pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_block {
     use super::*;
 
@@ -51478,7 +52559,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_block {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Block,
         BloLabel,
@@ -51519,7 +52600,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_block {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -51544,7 +52625,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_block {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -51630,7 +52711,9 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_block {
     }
 }
 
-/// Kantonsblatt
+#[doc = "Kantonsblatt"]
+#[doc = ""]
+#[doc = "<p>Das Kantonsblatt ist das offizielle Publikationsorgan des Kantons Basel-Stadt. Darin werden Meldungen (Gesetze, Verordnungen, Staatsvertr\u{e4}ge usw.) des Grossen Rats, des Regierungsrats und der Verwaltung ver\u{f6}ffentlicht. Im vorliegenden Datensatz sind die aktuellen \u{fc}ber das offizielle API des Kantonsblatts beziehbaren Meldungen in Tabellenform enthalten.\u{a0}</p><p>Bitte beachten Sie auch die Datenschutzerkl\u{e4}rung des Kantonsblattes und die Hinweise zur Rechtsg\u{fc}ltigkeit der Meldungen unter\u{a0}<a href=\"https://kantonsblatt.ch/tenant-kabbs#!/search/info/privacy-policy\" target=\"_blank\">https://kantonsblatt.ch/tenant-kabbs#!/search/info/privacy-policy</a>.\u{a0}</p>"]
 pub mod kantonsblatt {
     use super::*;
 
@@ -51651,10 +52734,18 @@ pub mod kantonsblatt {
         /// Veröffentlichungsdatum
         ///
         /// Datum, an dem die Veröffentlichung im Kantonsblatt für die Öffentlichkeit zugänglich gemacht wurde.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub publicationdate: Option<Date>,
         /// Öffentlich einsehbar bis
         ///
         /// Das Dokument kann nur bis zum angegebenen Datum aufgerufen werden.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub expirationdate: Option<Date>,
         /// Sprache
         pub language: Option<String>,
@@ -51764,7 +52855,7 @@ pub mod kantonsblatt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         RubricDe,
         Rubric,
@@ -51849,7 +52940,7 @@ pub mod kantonsblatt {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -51874,7 +52965,7 @@ pub mod kantonsblatt {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -51960,7 +53051,9 @@ pub mod kantonsblatt {
     }
 }
 
-/// Kunst im öffentlichen Raum
+#[doc = "Kunst im \u{f6}ffentlichen Raum"]
+#[doc = ""]
+#[doc = "\u{dc}berblick \u{fc}ber die \u{f6}ffentlichen Kunstwerke im Eigentum des Kantons Basel-Stadt. Es wird unterschieden zwischen Kunst im \u{f6}ffentlichen Raum (Ki\u{f6}R), die sich auf der Allmend befindet, und Kunst und Bau (KuB), die in Geb\u{e4}uden oder auf den Parzellen von \u{f6}ffentlichen Geb\u{e4}uden zu finden sind."]
 pub mod kunst_im_oeffentlichen_raum {
     use super::*;
 
@@ -52020,7 +53113,7 @@ pub mod kunst_im_oeffentlichen_raum {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdInvnr,
         Gruppe,
@@ -52051,7 +53144,7 @@ pub mod kunst_im_oeffentlichen_raum {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -52076,7 +53169,7 @@ pub mod kunst_im_oeffentlichen_raum {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -52162,7 +53255,9 @@ pub mod kunst_im_oeffentlichen_raum {
     }
 }
 
-/// Umfrage «digitale Mitwirkung» 2020
+#[doc = "Umfrage \u{ab}digitale Mitwirkung\u{bb} 2020"]
+#[doc = ""]
+#[doc = "<p>Im Auftrag der Staatskanzlei Basel-Stadt wurden 1000 im Kanton Basel-Stadt wohnhafte Schweizer Staatsb\u{fc}rgerinnen und Staatsb\u{fc}rger ab 16 Jahren zum Thema \u{ab}digitale Mitwirkung\u{bb} befragt. Die Umfrage wurde Anfang des Jahres 2020 durchgef\u{fc}hrt und fand in Form eines computergest\u{fc}tzten Telefoninterviews statt.<br/><br/>Dieser Datensatz beinhaltet die Antworten der 1000 befragten Personen. Offene Fragen wurden kategorisiert. Aus Gr\u{fc}nden des Datenschutzes werden das Alter und die h\u{f6}chste abgeschlossene Bildung der Befragten zu Gruppen zusammengefasst und auf die Bekanntgabe des Wohnquartiers verzichtet. Zudem wurden in der Variable\u{a0}\u{ab}Parteibindung\u{bb}\u{a0}nicht im Grossen Rat vertretene Parteien (Stand 6.5.2020) zusammengefasst.</p><p>Eine Abschrift des Interviews finden Sie hier:\u{a0}<a href=\"http://data-bs.ch/staatskanzlei/Umfrage-digitale-mitwirkung/2020/Fragebogen_digitale-Mitwirkung_OpenData.pdf\" target=\"_blank\">http://data-bs.ch/staatskanzlei/Umfrage-digitale-mitwirkung/2020/Fragebogen_digitale-Mitwirkung_OpenData.pdf</a>.</p><p>Den Bericht von gfs Bern zur Umfrage k\u{f6}nnen Sie hier herunterladen:\u{a0}<a href=\"https://www.digitale-mitbestimmung.bs.ch/dam/jcr:96cfb1f0-96f8-4ec0-bbf1-3f566daa1247/2020-Bevoelkerungsbefragung-Digitalisierung-und-Politik-Kanton-Basel-Stadt.pdf\">https://www.digitale-mitbestimmung.bs.ch/dam/jcr:96cfb1f0-96f8-4ec0-bbf1-3f566daa1247/2020-Bevoelkerungsbefragung-Digitalisierung-und-Politik-Kanton-Basel-Stadt.pdf</a></p><p>Weitere Informationen zur digitalen Mitwirkung in Basel-Stadt finden Sie hier: <a _blank\"=\"\" href=\"https://www.digitale-mitbestimmung.bs.ch\" target=\"_blank\">https://www.digitale-mitbestimmung.bs.ch</a>.</p>"]
 pub mod umfrage_digitale_mitwirkung_2020 {
     use super::*;
 
@@ -52401,7 +53496,7 @@ pub mod umfrage_digitale_mitwirkung_2020 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Altersgruppe,
         W92a,
@@ -52524,7 +53619,7 @@ pub mod umfrage_digitale_mitwirkung_2020 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -52549,7 +53644,7 @@ pub mod umfrage_digitale_mitwirkung_2020 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -52635,7 +53730,9 @@ pub mod umfrage_digitale_mitwirkung_2020 {
     }
 }
 
-/// Statistische Raumeinheiten: Wohnviertel
+#[doc = "Statistische Raumeinheiten: Wohnviertel "]
+#[doc = ""]
+#[doc = "Zum Kanton Basel-Stadt z\u{e4}hlen die Stadt Basel und die Gemeinden Riehen und Bettingen. Die Stadt Basel ist in 19 statistische Wohnviertel gegliedert. Diese statistische Raumeinteilungen existiert seit \u{fc}ber 100 Jahren unver\u{e4}ndert und erlaubt somit kleinr\u{e4}umige L\u{e4}ngsschnittanalysen des Kantons Basel-Stadt.\n\nStatistische Nummerierung:\nIm Gegensatz zum amtlichen Gemeindeverzeichnis der Schweiz wird f\u{fc}r r\u{e4}umliche Auswertungen auf Gemeinde-Ebene auf die Nummerierung der Wohnviertel zur\u{fc}ckgegriffen:\n- Die Stadt Basel (BFS-Code 2701) hat keine eigene Identifikationsnummer. Auswertungen beruhen auf einem Zusammenzug der 19 Wohnviertel, die von 01 bis 19 nummeriert sind.\n- Die Gemeinde Bettingen (BFS-Code 2702) hat die Wohnviertel-Nr. 20.\n- Die Gemeinde Riehen (BFS-Code 2703) hat die Wohnviertel-Nr. 30."]
 pub mod statistische_raumeinheiten_wohnviertel {
     use super::*;
 
@@ -52660,7 +53757,7 @@ pub mod statistische_raumeinheiten_wohnviertel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WovId,
         WovLabel,
@@ -52679,7 +53776,7 @@ pub mod statistische_raumeinheiten_wohnviertel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -52704,7 +53801,7 @@ pub mod statistische_raumeinheiten_wohnviertel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -52790,7 +53887,9 @@ pub mod statistische_raumeinheiten_wohnviertel {
     }
 }
 
-/// Wanderungen (Zuzug, Wegzug und Umzug) Kanton Basel-Stadt
+#[doc = "Wanderungen (Zuzug, Wegzug und Umzug) Kanton Basel-Stadt"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Anzahl Personen, die in den Kanton Basel-Stadt zuwanderten (Zuzug), aus dem Kanton Basel-Stadt abwanderten (Wegzug) oder innerhalb des Kantons umzogen (Umzug) nach Datum, Staatsangeh\u{f6}rigkeit, Geschlecht, Alter und Detailangaben zum Zuzugs- und Wegzugsort.<br>Die Wanderungsbewegungen sind seit 1985 verf\u{fc}gbar. Detailangaben der Zuzugs- und Wegzugsorte (Gemeinde, Kanton, Land) sind seit 2006 verf\u{fc}gbar.<br>Die hier ver\u{f6}ffentlichten Werte k\u{f6}nnen aus methodischen Gr\u{fc}nden von denjenigen in der kantonalen \u{f6}ffentlichen Statistik abweichen: In Letzterer werden nachtr\u{e4}glich gemeldete Wanderungsereignisse w\u{e4}hrend vier Monaten gesammelt, danach gelten die Zahlen als definitiv. Sp\u{e4}ter eintreffende Meldungen werden im letzten noch nicht abgeschlossenen Monat gez\u{e4}hlt. In diesem Datensatz werden sie im Monat des Wanderungsereignisses gez\u{e4}hlt."]
 pub mod wanderungen_zuzug_wegzug_und_umzug_kanton_basel_stadt {
     use super::*;
 
@@ -52803,6 +53902,10 @@ pub mod wanderungen_zuzug_wegzug_und_umzug_kanton_basel_stadt {
         /// Datum
         ///
         /// Datum der Wanderungsbewegung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Jahr
         ///
@@ -52819,6 +53922,10 @@ pub mod wanderungen_zuzug_wegzug_und_umzug_kanton_basel_stadt {
         /// Startdatum Woche
         ///
         /// Datum des Montags der Woche
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_wochenstart: Option<Date>,
         /// Tag-Nr.
         ///
@@ -52894,7 +54001,7 @@ pub mod wanderungen_zuzug_wegzug_und_umzug_kanton_basel_stadt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         EreignisTyp,
         Datum,
@@ -52951,7 +54058,7 @@ pub mod wanderungen_zuzug_wegzug_und_umzug_kanton_basel_stadt {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -52976,7 +54083,7 @@ pub mod wanderungen_zuzug_wegzug_und_umzug_kanton_basel_stadt {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -53062,7 +54169,9 @@ pub mod wanderungen_zuzug_wegzug_und_umzug_kanton_basel_stadt {
     }
 }
 
-/// Kandidierende der Grossratswahlen nach Berufsgruppe seit 2020
+#[doc = "Kandidierende der Grossratswahlen nach Berufsgruppe seit 2020"]
+#[doc = ""]
+#[doc = "<p style=\"\">Dieser Datensatz zeigt die Kandidierenden der Grossratswahlen nach Berufsgruppe seit 2020<br></p>"]
 pub mod kandidierende_der_grossratswahlen_nach_berufsgruppe_seit_2020 {
     use super::*;
 
@@ -53088,7 +54197,7 @@ pub mod kandidierende_der_grossratswahlen_nach_berufsgruppe_seit_2020 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahljahr,
         Berufsgruppe,
@@ -53107,7 +54216,7 @@ pub mod kandidierende_der_grossratswahlen_nach_berufsgruppe_seit_2020 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -53132,7 +54241,7 @@ pub mod kandidierende_der_grossratswahlen_nach_berufsgruppe_seit_2020 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -53218,13 +54327,19 @@ pub mod kandidierende_der_grossratswahlen_nach_berufsgruppe_seit_2020 {
     }
 }
 
-/// Nachnamen der baselstädtischen Bevölkerung
+#[doc = "Nachnamen der baselst\u{e4}dtischen Bev\u{f6}lkerung"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Wohnbev\u{f6}lkerung des Kantons Basel-Stadt nach Nachnamen. Die Daten werden j\u{e4}hrlich aktualisiert. Bei mehreren Nachnamen wird nur der erste ber\u{fc}cksichtigt, unabh\u{e4}ngig davon, ob die Nachnamen mit einem Bindestrich verbunden sind oder nicht. Nachnamen, die weniger als viermal vorkommen, werden in der Rubrik \'\u{dc}brige\' zusammengefasst. <br>Die hier ver\u{f6}ffentlichten Werte des Jahres 2011 weichen aus methodischen Gr\u{fc}nden von denjenigen in der kantonalen \u{f6}ffentlichen Statistik ab: In Letzterer wurde bis zum Jahr 2011 die Bev\u{f6}lkerungszahl durch Fortschreibung ermittelt. Seit dem Jahr 2012 basiert sie direkt auf Auswertungen aus dem kantonalen Einwohnerregister. Die hier ver\u{f6}ffentlichten Werte hingegen basieren seit 2011 auf Auswertungen aus dem Einwohnerregister."]
 pub mod nachnamen_der_baselstaedtischen_bevoelkerung {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Nachname
         pub nachname: Option<String>,
@@ -53242,7 +54357,7 @@ pub mod nachnamen_der_baselstaedtischen_bevoelkerung {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Nachname,
@@ -53261,7 +54376,7 @@ pub mod nachnamen_der_baselstaedtischen_bevoelkerung {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -53286,7 +54401,7 @@ pub mod nachnamen_der_baselstaedtischen_bevoelkerung {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -53372,7 +54487,9 @@ pub mod nachnamen_der_baselstaedtischen_bevoelkerung {
     }
 }
 
-/// Baumkataster: Fäll- und Baumersatzliste
+#[doc = "Baumkataster: F\u{e4}ll- und Baumersatzliste"]
+#[doc = ""]
+#[doc = "Der Baumkataster umfasst den durch die Stadtg\u{e4}rtnerei Basel (Gebiet Stadt Basel) und die Gemeinde Riehen (Gebiet Riehen) gepflegten Baumbestand. B\u{e4}ume sind im Kanton Basel-Stadt gem\u{e4}ss Baumschutzgesetz (BSchG) gesch\u{fc}tzt. Die F\u{e4}ll- und Baumersatzliste enth\u{e4}lt diejenigen gesch\u{fc}tzten B\u{e4}ume, welche innerhalb der n\u{e4}chsten 6 Monate gef\u{e4}llt, ersetzt und neu gepflanzt werden m\u{fc}ssen. F\u{e4}llungen werden jeweils im Winterhalbjahr vorgenommen.\n"]
 pub mod baumkataster_faell_und_baumersatzliste {
     use super::*;
 
@@ -53446,7 +54563,7 @@ pub mod baumkataster_faell_und_baumersatzliste {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         Baumnr,
@@ -53485,7 +54602,7 @@ pub mod baumkataster_faell_und_baumersatzliste {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -53510,7 +54627,7 @@ pub mod baumkataster_faell_und_baumersatzliste {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -53596,7 +54713,9 @@ pub mod baumkataster_faell_und_baumersatzliste {
     }
 }
 
-/// Leerstehende Wohnungen
+#[doc = "Leerstehende Wohnungen"]
+#[doc = ""]
+#[doc = "Als Leerwohnung gilt eine Wohnung, welche am Stichtag (1. Juni) unbesetzt, aber bewohnbar ist und zur dauernden Miete von mindestens drei Monaten oder zum Verkauf angeboten wird. Folgende Wohnungen gelten nicht als Leerwohnungen: a) unbesetzt, aber bereits vermietet oder verkauft; b) unbesetzt, aber nicht zur Miete oder zum Verkauf angeboten; c) nicht mehr als Wohnung (Arztpraxen etc.) angeboten; d) einem beschr\u{e4}nkten Personenkreis vorbehalten (z.B. Dienstwohnung); e) aus bau-, sanit\u{e4}tspolizeilichen oder richterlichen Gr\u{fc}nden gesperrt; f) f\u{fc}r weniger als drei Monate angeboten."]
 pub mod leerstehende_wohnungen {
     use super::*;
 
@@ -53764,7 +54883,7 @@ pub mod leerstehende_wohnungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         WovId,
@@ -53863,7 +54982,7 @@ pub mod leerstehende_wohnungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -53888,7 +55007,7 @@ pub mod leerstehende_wohnungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -53974,7 +55093,9 @@ pub mod leerstehende_wohnungen {
     }
 }
 
-/// Gesundheitsversorgung (GSV): Pflegeheime
+#[doc = "Gesundheitsversorgung (GSV): Pflegeheime"]
+#[doc = ""]
+#[doc = "Im vorliegenden Datensatz sind Eintr\u{e4}ge mit dem Attribut \"Heimname\" zu finden, bei denen der Wert \"Alle Pflegeheime\" verwendet wird. Diese Bezeichnung dient dazu, Daten zu aggregieren, die die Gesamtheit aller Pflegeheime repr\u{e4}sentieren. Nutzer sollten beachten, dass der Eintrag \"Alle Pflegeheime\" unter \"Heimname\" eine kollektive Perspektive auf die Daten darstellt."]
 pub mod gesundheitsversorgung_gsv_pflegeheime {
     use super::*;
 
@@ -54030,7 +55151,7 @@ pub mod gesundheitsversorgung_gsv_pflegeheime {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Id,
@@ -54061,7 +55182,7 @@ pub mod gesundheitsversorgung_gsv_pflegeheime {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -54086,7 +55207,7 @@ pub mod gesundheitsversorgung_gsv_pflegeheime {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -54172,7 +55293,9 @@ pub mod gesundheitsversorgung_gsv_pflegeheime {
     }
 }
 
-/// Gestorbene nach Altersklasse, Geschlecht und Sterbedatum
+#[doc = "Gestorbene nach Altersklasse, Geschlecht und Sterbedatum"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die verstorbenen Personen im Kanton Basel-Stadt nach Altersklasse (0-64, 65+), Geschlecht und Sterbedatum. Die Daten werden t\u{e4}glich aktualisiert, wobei nur Todesf\u{e4}lle ber\u{fc}cksichtigt werden, die mindestens 15 Tage zur\u{fc}ck liegen. Aufgrund von sp\u{e4}ter gemeldeten Todesf\u{e4}llen kann es jederzeit zu Ver\u{e4}nderungen bei bereits ver\u{f6}ffentlichten Werten kommen.<br><br>Die hier ver\u{f6}ffentlichten Werte k\u{f6}nnen aus methodischen Gr\u{fc}nden von denjenigen in der kantonalen \u{f6}ffentlichen Statistik abweichen: In Letzterer werden nachtr\u{e4}glich gemeldete Todesf\u{e4}lle w\u{e4}hrend vier Monaten gesammelt, danach gelten die Zahlen als definitiv. Sp\u{e4}ter eintreffende Meldungen werden im letzten noch nicht abgeschlossenen Monat gez\u{e4}hlt. In diesem Datensatz werden sie im Monat des Sterbedatums gez\u{e4}hlt."]
 pub mod gestorbene_nach_altersklasse_geschlecht_und_sterbedatum {
     use super::*;
 
@@ -54193,6 +55316,10 @@ pub mod gestorbene_nach_altersklasse_geschlecht_und_sterbedatum {
         /// Startdatum Woche
         ///
         /// Datum des Montags der Woche
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_wochenstart_sterbedatum: Option<Date>,
         /// Tag-Nr.
         ///
@@ -54203,6 +55330,10 @@ pub mod gestorbene_nach_altersklasse_geschlecht_und_sterbedatum {
         /// Sterbedatum
         ///
         /// Datum des Todesfalls
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sterbedatum: Option<Date>,
         /// Anzahl Männer 0-64
         ///
@@ -54232,7 +55363,7 @@ pub mod gestorbene_nach_altersklasse_geschlecht_und_sterbedatum {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Monat,
@@ -54267,7 +55398,7 @@ pub mod gestorbene_nach_altersklasse_geschlecht_und_sterbedatum {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -54292,7 +55423,7 @@ pub mod gestorbene_nach_altersklasse_geschlecht_und_sterbedatum {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -54378,7 +55509,9 @@ pub mod gestorbene_nach_altersklasse_geschlecht_und_sterbedatum {
     }
 }
 
-/// Grosser Rat: Dokumente
+#[doc = "Grosser Rat: Dokumente"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">Dieser Datensatz zeigt Dokumente von Gesch\u{e4}ften, die im Grossen Rat des Kantons Basel-Stadt behandelt werden.</p><p style=\"font-family: sans-serif;\">Die Daten k\u{f6}nnen auch auf der Webseite des Grossen Rates eingesehen werden:<br/><a href=\"https://grosserrat.bs.ch/\" target=\"_blank\">https://grosserrat.bs.ch</a></p>"]
 pub mod grosser_rat_dokumente {
     use super::*;
 
@@ -54387,6 +55520,10 @@ pub mod grosser_rat_dokumente {
         /// Dokumentendatum
         ///
         /// Datum des Dokuments (entweder letztes Bearbeitungsdatum oder im Text explizit genanntes Dokumentendatum)
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub dokudatum: Option<Date>,
         /// Laufnummer Dokument
         ///
@@ -54440,7 +55577,7 @@ pub mod grosser_rat_dokumente {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Dokudatum,
         DokLaufnr,
@@ -54475,7 +55612,7 @@ pub mod grosser_rat_dokumente {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -54500,7 +55637,7 @@ pub mod grosser_rat_dokumente {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -54586,7 +55723,9 @@ pub mod grosser_rat_dokumente {
     }
 }
 
-/// Monatliche Sterberaten nach Geschlecht und Altersgruppe
+#[doc = "Monatliche Sterberaten nach Geschlecht und Altersgruppe"]
+#[doc = ""]
+#[doc = "Rohe und standardisierte Sterberaten des Kantons Basel-Stadt nach Geschlecht und Altersgruppen seit 2012. Die Sterberaten werden monatlich aktualisiert. Aufgrund von verz\u{f6}gerten Ereignis-Meldungen k\u{f6}nnen sich die Werte der Vormonate (Anzahl Todesf\u{e4}lle, Sterbeziffer/-rate) nach einer Aktualisierung leicht \u{e4}ndern. Die standardisierte Sterberate bezieht sich auf die mittlere Bev\u{f6}lkerung des Monats Januar 2012 des Kantons Basel-Stadt. Durch die Standardisierung erh\u{e4}lt man so in der Altersgruppe \"Alle\" eine altersstandardisierte Sterberate f\u{fc}r das jeweilige Geschlecht."]
 pub mod monatliche_sterberaten_nach_geschlecht_und_altersgruppe {
     use super::*;
 
@@ -54603,6 +55742,10 @@ pub mod monatliche_sterberaten_nach_geschlecht_und_altersgruppe {
         /// Jahr und Monat
         ///
         /// Jahr und Monat des Todes in einer Spalte
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub jahr_monat: Option<Date>,
         /// Geschlecht
         pub geschlecht: Option<String>,
@@ -54642,7 +55785,7 @@ pub mod monatliche_sterberaten_nach_geschlecht_und_altersgruppe {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Monat,
@@ -54675,7 +55818,7 @@ pub mod monatliche_sterberaten_nach_geschlecht_und_altersgruppe {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -54700,7 +55843,7 @@ pub mod monatliche_sterberaten_nach_geschlecht_und_altersgruppe {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -54786,7 +55929,9 @@ pub mod monatliche_sterberaten_nach_geschlecht_und_altersgruppe {
     }
 }
 
-/// Baumkataster: Baumbestand
+#[doc = "Baumkataster: Baumbestand"]
+#[doc = ""]
+#[doc = "Der Baumkataster umfasst den durch die Stadtg\u{e4}rtnerei Basel (Gebiet Stadt Basel) und die Gemeinde Riehen (Gebiet Riehen) gepflegten Baumbestand.\u{a0}"]
 pub mod baumkataster_baumbestand {
     use super::*;
 
@@ -54821,6 +55966,10 @@ pub mod baumkataster_baumbestand {
         /// Pflanzdatum
         ///
         /// Datum der Baumpflanzung am aktuellen Ort, wenn bekannt; In der Regel werden Bäume in einem Alter von ca. 10 Jahren gepflanzt.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub pflanzdatu: Option<Date>,
         /// Baumalter
         ///
@@ -54868,7 +56017,7 @@ pub mod baumkataster_baumbestand {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         Baumnr,
@@ -54911,7 +56060,7 @@ pub mod baumkataster_baumbestand {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -54936,7 +56085,7 @@ pub mod baumkataster_baumbestand {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -55022,13 +56171,19 @@ pub mod baumkataster_baumbestand {
     }
 }
 
-/// Coronavirus (COVID-19): In Basel-Stadt verabreichte Impfungen
+#[doc = "Coronavirus (COVID-19): In Basel-Stadt verabreichte Impfungen"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt die Anzahl im Kanton Basel-Stadt gegen SARS-CoV-2 geimpfter Personen auf t\u{e4}glicher Basis. Zus\u{e4}tzlich wird angegeben, wie viele Personen im kantonalen Impfzentrum geimpft wurden und wie viele Impfungen durch baselst\u{e4}dtische Spit\u{e4}ler an ihr Gesundheitspersonal verabreicht wurden. Ebenso sind die Impfungen in Arzpraxen und Apotheken separat aufgef\u{fc}hrt. Impfungen im Impfbus werden nicht separat ausgewiesen, sondern sind in der Anzahl im Impfzentrum verabreichten Impfungen integriert. Weiter finden Sie Angaben dar\u{fc}ber, wie viele Personen mit einer ersten resp. einer zweiten Dosis geimpft wurden. \u{a0}</p><p>Die im Kanton Basel-Stadt geimpften Personen m\u{fc}ssen nicht zwingend im Kanton Basel-Stadt wohnen. Angaben zu den geimpften Personen mit Wohnsitz im Kanton Basel-Stadt finden Sie in diesem Datensatz:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100135\" target=\"_blank\">https://data.bs.ch/explore/dataset/100135</a></p><p>Die an dieser Stelle publizierten Zahlen k\u{f6}nnen von jenen Zahlen abweichen, welche \u{fc}ber Kan\u{e4}le von Bundesstellen f\u{fc}r den Kanton Basel-Stadt publiziert sind. Begr\u{fc}nden lassen sich die Differenzen mit unterschiedlichen Aktualisierungszyklen. Es wird ab Montag, 10.5.2021 dieselbe Quelle (Vaccination Monitoring Data Lake, VMDL BAG) verwendet.\u{a0}</p><p>Leider k\u{f6}nnen aufgrund der Quellen\u{e4}nderung die Impfungen der mobilen Equipen nicht mehr separat ausgewiesen werden. Sie werden zu den im Impfzentrum verabreichten Impfungen hinzugez\u{e4}hlt. Da die VMDL-Werte auch r\u{fc}ckwirkend \u{fc}bernommen werden, kommt es zu Abweichungen bei den t\u{e4}glich publizierten Werten gegen\u{fc}ber fr\u{fc}her in diesem Datensatz ver\u{f6}ffentlichten Werten.\u{a0}</p>\n<p>\nAb 5. August 2021 k\u{f6}nnen dritte Impfungen in den Daten enthalten sein. Initial sind ausschliesslich immundefiziente Personen oder Personen mit Stammzellentransplantation zu einer dritten Impfung berechtigt.</p><p>Die Meldepflicht der COVID-Impfungen via VMDL Plattform des Bundes wurde per 1. Juli 2023 aufgehoben. Nach diesem Datum wurden Impfungen deshalb nicht mehr systematisch erfasst. Der vorliegende Datensatz zeigt deshalb Impfungen nur bis 1. Juli 2023.<br></p><p> \n</p>"]
 pub mod coronavirus_covid_19_in_basel_stadt_verabreichte_impfungen {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Total verabreichte Impfungen
         ///
@@ -55182,7 +56337,7 @@ pub mod coronavirus_covid_19_in_basel_stadt_verabreichte_impfungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         TotalVerabreichteImpfungen,
@@ -55319,7 +56474,7 @@ pub mod coronavirus_covid_19_in_basel_stadt_verabreichte_impfungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -55344,7 +56499,7 @@ pub mod coronavirus_covid_19_in_basel_stadt_verabreichte_impfungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -55430,7 +56585,9 @@ pub mod coronavirus_covid_19_in_basel_stadt_verabreichte_impfungen {
     }
 }
 
-/// Grosser Rat: Tagesordnungen und Traktandenlisten der Grossratssitzungen
+#[doc = "Grosser Rat: Tagesordnungen und Traktandenlisten der Grossratssitzungen"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz bietet eine umfassende \u{dc}bersicht \u{fc}ber die Tagesordnungen und die zugeh\u{f6}rigen Traktanden der Grossratssitzungen des Kantons Basel-Stadt.</p><p>Die Daten k\u{f6}nnen auch auf der Webseite des Grossen Rates eingesehen werden:<br><a href=\"https://grosserrat.bs.ch/ratsbetrieb/tagesordnung\" target=\"_blank\">https://grosserrat.bs.ch/ratsbetrieb/tagesordnung</a><br></p>"]
 pub mod grosser_rat_tagesordnungen_und_traktandenlisten_der_grossratssitzungen {
     use super::*;
 
@@ -55448,6 +56605,10 @@ pub mod grosser_rat_tagesordnungen_und_traktandenlisten_der_grossratssitzungen {
         /// Tag 1
         ///
         /// Datum der ersten Sitzung der Tagesordnung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub tag1: Option<Date>,
         /// Sitzungstyp Tag 1
         ///
@@ -55456,6 +56617,10 @@ pub mod grosser_rat_tagesordnungen_und_traktandenlisten_der_grossratssitzungen {
         /// Tag 2
         ///
         /// Datum der zweiten Sitzung der Tagesordnung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub tag2: Option<Date>,
         /// Sitzungstyp Tag 2
         ///
@@ -55464,6 +56629,10 @@ pub mod grosser_rat_tagesordnungen_und_traktandenlisten_der_grossratssitzungen {
         /// Tag 3
         ///
         /// Datum der dritten Sitzung der Tagesordnung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub tag3: Option<Date>,
         /// Sitzungstyp Tag 3
         ///
@@ -55583,7 +56752,7 @@ pub mod grosser_rat_tagesordnungen_und_traktandenlisten_der_grossratssitzungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         TagesordnungIdnr,
         Versand,
@@ -55664,7 +56833,7 @@ pub mod grosser_rat_tagesordnungen_und_traktandenlisten_der_grossratssitzungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -55689,7 +56858,7 @@ pub mod grosser_rat_tagesordnungen_und_traktandenlisten_der_grossratssitzungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -55775,7 +56944,9 @@ pub mod grosser_rat_tagesordnungen_und_traktandenlisten_der_grossratssitzungen {
     }
 }
 
-/// Grosser Rat: Zuweisungen von Geschäften
+#[doc = "Grosser Rat: Zuweisungen von Gesch\u{e4}ften"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">Dieser Datensatz zeigt Zuweisungen von Gesch\u{e4}ften, die im Grossen Rat des Kantons Basel-Stadt behandelt werden.</p><p style=\"font-family: sans-serif;\">Die Daten k\u{f6}nnen auch auf der Webseite des Grossen Rates eingesehen werden:<br/><a href=\"https://grosserrat.bs.ch/\" target=\"_blank\">https://grosserrat.bs.ch</a></p>"]
 pub mod grosser_rat_zuweisungen_von_geschaeften {
     use super::*;
 
@@ -55800,6 +56971,10 @@ pub mod grosser_rat_zuweisungen_von_geschaeften {
         /// Erledigt Datum
         ///
         /// Datum, an dem die zugewiesene Aufgabe erledigt wurde
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub erledigt: Option<Date>,
         /// Status Zuweisung
         ///
@@ -55808,6 +56983,10 @@ pub mod grosser_rat_zuweisungen_von_geschaeften {
         /// Termin Zuweisung
         ///
         /// Datum, an dem die Zuweisung abgeschlossen sein soll.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub termin: Option<Date>,
         /// Titel Zuweisung
         ///
@@ -55869,7 +57048,7 @@ pub mod grosser_rat_zuweisungen_von_geschaeften {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         KurznameAn,
         NameAn,
@@ -55920,7 +57099,7 @@ pub mod grosser_rat_zuweisungen_von_geschaeften {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -55945,7 +57124,7 @@ pub mod grosser_rat_zuweisungen_von_geschaeften {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -56031,13 +57210,19 @@ pub mod grosser_rat_zuweisungen_von_geschaeften {
     }
 }
 
-/// EuroAirport: Tägliche Flugbewegungen, Passagiere und Fracht
+#[doc = "EuroAirport: T\u{e4}gliche Flugbewegungen, Passagiere und Fracht"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt die Flugbewegungen sowie Angaben zur Anzahl Passagiere und zur bef\u{f6}rderten Fracht auf dem EuroAirport Basel Mulhouse Freiburg f\u{fc}r jeden Tag ab 1. Januar 2019.</p>"]
 pub mod euroairport_taegliche_flugbewegungen_passagiere_und_fracht {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Kategorie
         ///
@@ -56063,7 +57248,7 @@ pub mod euroairport_taegliche_flugbewegungen_passagiere_und_fracht {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         Kategorie,
@@ -56084,7 +57269,7 @@ pub mod euroairport_taegliche_flugbewegungen_passagiere_und_fracht {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -56109,7 +57294,7 @@ pub mod euroairport_taegliche_flugbewegungen_passagiere_und_fracht {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -56195,13 +57380,19 @@ pub mod euroairport_taegliche_flugbewegungen_passagiere_und_fracht {
     }
 }
 
-/// Wohnbevölkerung nach Bezirk
+#[doc = "Wohnbev\u{f6}lkerung nach Bezirk"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Wohnbev\u{f6}lkerung des Kantons Basel-Stadt auf Ebene Bezirk. Die Daten werden monatlich aktualisiert. Bis zum Jahr 2011 sind nur die Jahresendbest\u{e4}nde verf\u{fc}gbar.<br>Die hier ver\u{f6}ffentlichten Werte der Jahre 1979 bis 2011 weichen aus methodischen Gr\u{fc}nden von denjenigen in der kantonalen \u{f6}ffentlichen Statistik ab: In Letzterer wurde bis zum Jahr 2011 die Bev\u{f6}lkerungszahl durch Fortschreibung ermittelt. Seit dem Jahr 2012 basiert sie direkt auf Auswertungen aus dem kantonalen Einwohnerregister. Die hier ver\u{f6}ffentlichten Werte hingegen basieren seit 1979 auf Auswertungen aus dem Einwohnerregister."]
 pub mod wohnbevoelkerung_nach_bezirk {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Wohnviertel
         pub wohnviertel: Option<String>,
@@ -56233,7 +57424,7 @@ pub mod wohnbevoelkerung_nach_bezirk {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Wohnviertel,
@@ -56262,7 +57453,7 @@ pub mod wohnbevoelkerung_nach_bezirk {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -56287,7 +57478,7 @@ pub mod wohnbevoelkerung_nach_bezirk {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -56373,7 +57564,9 @@ pub mod wohnbevoelkerung_nach_bezirk {
     }
 }
 
-/// Feinstaubmessungen auf BVB-Trams
+#[doc = "Feinstaubmessungen auf BVB-Trams"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt die Feinstaubmessungen (PM2.5 und PM10) vom Dach der BVB-Trams, auf denen Mikrosensoren installiert worden sind. Ein Sensor war jeweils auf einem Tram des Typs \"Flexity lang\" montiert, ausser die Sensoren 236 und 240, die zu Qualit\u{e4}tssicherungszwecken station\u{e4}r an den Luftmessstationen \"Feldbergstrasse\" und \"St. Johann-Platz\" installiert waren.</p><p>\n\nDie Messkampagne startete im Dezember 2019 und endete im M\u{e4}rz 2020. Es werden nachtr\u{e4}glich keine weiteren Messdaten dazukommen und der Datensatz wird nicht mehr aktualisiert.\n</p><p></p><p>\nWeitere Informationen zum Projekt Atmo-VISION sind in der <a href=\"https://www.bs.ch/nm/2020-atmovision-luftmessungen-auf-basler-tramlinien-wsu.html\" target=\"_blank\">Medienmitteilung</a> und auf der Website des <a href=\"https://www.baselland.ch/politik-und-behorden/direktionen/bau-und-umweltschutzdirektion/lufthygiene/lufthygiene/luftqualitat/atmovision-projekte\" target=\"_blank\">Lufthygieneamt beider Basel</a> zu finden. Den Bericht des Projektes gibt es <a href=\"https://www.baselland.ch/politik-und-behorden/direktionen/bau-und-umweltschutzdirektion/lufthygiene/lufthygiene/luftqualitat/atmovision-projekte/downloads/2020-11.pdf/@@download/file/2020-11-02_LHA_AtmoVision_Bericht_Feinstaubmesssungen_Tram.pdf\" target=\"_blank\">hier</a> als PDF-Datei.</p><p>\u{c4}nderungsprotokoll:<br/>27.06.2023 - Aktualisierungsintervall von \"IRREG\" auf \"NEVER\" ge\u{e4}ndert.</p><p></p>"]
 pub mod feinstaubmessungen_auf_bvb_trams {
     use super::*;
 
@@ -56414,7 +57607,7 @@ pub mod feinstaubmessungen_auf_bvb_trams {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Time,
         Sensornr,
@@ -56437,7 +57630,7 @@ pub mod feinstaubmessungen_auf_bvb_trams {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -56462,7 +57655,7 @@ pub mod feinstaubmessungen_auf_bvb_trams {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -56548,7 +57741,9 @@ pub mod feinstaubmessungen_auf_bvb_trams {
     }
 }
 
-/// BachApp: Extras
+#[doc = "BachApp: Extras"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz enth\u{e4}lt Informationen, welche noch in keinem anderen kantonalen System gef\u{fc}hrt werden, aber f\u{fc}r die BachApp ben\u{f6}tigt werden.\u{a0}</p>"]
 pub mod bachapp_extras {
     use super::*;
 
@@ -56557,10 +57752,18 @@ pub mod bachapp_extras {
         /// Sichtbar_von
         ///
         /// Sichtbar ab
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_von: Option<Date>,
         /// Sichtbar_bis
         ///
         /// Sichtbar bis
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_bis: Option<Date>,
         /// Status
         pub status: Option<String>,
@@ -56578,7 +57781,7 @@ pub mod bachapp_extras {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         SichtbarVon,
         SichtbarBis,
@@ -56601,7 +57804,7 @@ pub mod bachapp_extras {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -56626,7 +57829,7 @@ pub mod bachapp_extras {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -56712,7 +57915,9 @@ pub mod bachapp_extras {
     }
 }
 
-/// Veranstaltungen mit potenziellem Einfluss auf Veloverkehr
+#[doc = "Veranstaltungen mit potenziellem Einfluss auf Veloverkehr"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt ausgew\u{e4}hlte Veranstaltungen und Veranstaltungsreihen. Der Datensatz ist urspr\u{fc}nglich aufgebaut worden, um das Verkehrsaufkommen bei kantonalen Fahrrad-Z\u{e4}hlstellen \u{2013} welches unter anderem auch durch Veranstaltungen beeinflusst wird \u{2013} besser interpretieren zu k\u{f6}nnen. Aus diesem Grund sind nicht alle Veranstaltungen auf dem Kantonsgebiet im Datensatz enthalten, sondern nur diejenigen, von denen man sich einen potentiellen Einfluss auf die Anzahl an Z\u{e4}hlstellen gez\u{e4}hlten Velos erwartet. Der Datensatz wird durch das Statistische Amt Basel-Stadt nach bestem Wissen und Gewissen gepflegt und aktualisiert. Es besteht kein Anspruch auf Richtigkeit oder Vollst\u{e4}ndigkeit der gemachten Angaben. </p><p>Bei Veranstaltungen, welche nicht einer eindeutigen \u{d6}rtlichkeit zugeordnet werden konnten (z.B. Basler Fasnacht), wurde wo m\u{f6}glich eine Adresse erfasst, an der besonders viel Personenaufkommen erwartet wird. Wo dies nicht m\u{f6}glich war, wurde keine \u{d6}rtlichkeit erfasst.</p>"]
 pub mod veranstaltungen_mit_potenziellem_einfluss_auf_veloverkehr {
     use super::*;
 
@@ -56749,10 +57954,18 @@ pub mod veranstaltungen_mit_potenziellem_einfluss_auf_veloverkehr {
         /// Start der Erfassung
         ///
         /// Datum, ab welchem eine Veranstaltung erfasst wurde.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub erfasst_ab: Option<Date>,
         /// Veranstaltungstag
         ///
         /// Tag, an welchem eine Veranstaltung stattfindet
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub tag_datum: Option<Date>,
         /// Jahr
         ///
@@ -56765,10 +57978,18 @@ pub mod veranstaltungen_mit_potenziellem_einfluss_auf_veloverkehr {
         /// Startdatum
         ///
         /// Erster Tag der Veranstaltung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_von: Option<Date>,
         /// Enddatum
         ///
         /// Letzter Tag der Veranstaltung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_bis: Option<Date>,
         /// Blockseite
         ///
@@ -56850,7 +58071,7 @@ pub mod veranstaltungen_mit_potenziellem_einfluss_auf_veloverkehr {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         TerminKey,
         VeranstaltungKey,
@@ -56921,7 +58142,7 @@ pub mod veranstaltungen_mit_potenziellem_einfluss_auf_veloverkehr {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -56946,7 +58167,7 @@ pub mod veranstaltungen_mit_potenziellem_einfluss_auf_veloverkehr {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -57032,7 +58253,9 @@ pub mod veranstaltungen_mit_potenziellem_einfluss_auf_veloverkehr {
     }
 }
 
-/// Gebäudeadressen und -informationen
+#[doc = "Geb\u{e4}udeadressen und -informationen"]
+#[doc = ""]
+#[doc = "Geb\u{e4}udeadressen aller im kantonalen Datenmarkt gef\u{fc}hrten Geb\u{e4}ude (siehe <a href=\"https://www.gesetzessammlung.bs.ch/app/de/texts_of_law/153.310\" target=\"_blank\">https://www.gesetzessammlung.bs.ch/app/de/texts_of_law/153.310</a>)."]
 pub mod gebaeudeadressen_und_informationen {
     use super::*;
 
@@ -57106,7 +58329,7 @@ pub mod gebaeudeadressen_und_informationen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objid,
         Gebadrlauf,
@@ -57145,7 +58368,7 @@ pub mod gebaeudeadressen_und_informationen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -57170,7 +58393,7 @@ pub mod gebaeudeadressen_und_informationen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -57256,7 +58479,9 @@ pub mod gebaeudeadressen_und_informationen {
     }
 }
 
-/// Parkflächen
+#[doc = "Parkfl\u{e4}chen"]
+#[doc = ""]
+#[doc = "<p>In Basel stehen auf dem Stadtgebiet ungef\u{e4}hr 100\'000 \u{f6}ffentliche und private Auto-Parkpl\u{e4}tze zur Verf\u{fc}gung. Rund ein Viertel davon befindet sich auf Allmend. Ein Grossteil dieser Parkpl\u{e4}tze befinden in der Blauen Zone und stehen haupts\u{e4}chlich den Anwohnerinnen und Anwohner der Quartiere zur Verf\u{fc}gung. Daneben gibt es weitere Parkplatztypen: Geb\u{fc}hrenpflichtige Parkpl\u{e4}tze, Parkpl\u{e4}tze f\u{fc}r Velos und Motorr\u{e4}der, Parkpl\u{e4}tze f\u{fc}r Cars, usw.</p>\n\n<p>Die unterschiedlichen Bewirtschaftungsarten der Parkpl\u{e4}tze haben zum Ziel, dass nebst der Anwohnerschaft auch Besucher, der Detailhandel sowie das Gewerbe von den Parkpl\u{e4}tzen profitieren k\u{f6}nnen und der Parksuchverkehr reduziert werden kann. Bei den geb\u{fc}hrenpflichtigen Parkpl\u{e4}tzen sind die Parkgeb\u{fc}hren gebietsabh\u{e4}ngig.</p>\n\n<p>Die vorliegenden Daten zeigen den aktuellen Stand der erfassten Parkpl\u{e4}tze.\u{a0}Die nicht markierten Parkfl\u{e4}chen auf dem Bruderholz sind nicht enthalten. Grob gesch\u{e4}tzt sind dies etwa 1\'400 Parkpl\u{e4}tze in der Blauen Zone. Wegen Baustellen, Veranstaltungen oder aus anderen Gr\u{fc}nde kann es sein, dass Parkpl\u{e4}tze vor\u{fc}bergehend nicht zur Verf\u{fc}gung stehen. Auch ist es m\u{f6}glich, dass gewisse Parkpl\u{e4}tze im Rahmen von Umbauprojekten bereits aufgehoben wurden, das Projekt aber noch nicht abgeschlossen und somit auch der Datensatz noch nicht nachgef\u{fc}hrt ist.</p>\n\n"]
 pub mod parkflaechen {
     use super::*;
 
@@ -57334,7 +58559,7 @@ pub mod parkflaechen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Id,
         Strasse,
@@ -57377,7 +58602,7 @@ pub mod parkflaechen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -57402,7 +58627,7 @@ pub mod parkflaechen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -57488,7 +58713,9 @@ pub mod parkflaechen {
     }
 }
 
-/// Geschwindigkeitsmonitoring: Einzelmessungen ab 2024
+#[doc = "Geschwindigkeitsmonitoring: Einzelmessungen ab 2024"]
+#[doc = ""]
+#[doc = "<p></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-family: Arial, sans-serif; font-size: 10.5pt;\">Einzelmessungen des\nGeschwindigkeitsmonitorings der Kantonspolizei Basel-Stadt ab 2024 (Zeitpunkt des Beginns der Messung).</span><br></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Bei den dargestellten\nDaten handelt es sich ausschliesslich um statistische Erhebungen. Diese stehen\nnicht in einem Zusammenhang mit Ordnungsbussen oder einer strafrechtlichen\nVerfolgung. Die statistischen Geschwindigkeitsmessungen dienen der Kantonspolizei\nBasel-Stadt zur \u{dc}berpr\u{fc}fung der Geschwindigkeit sowie der Verkehrssicherheit\n(z.B. Sicherheit an Fussg\u{e4}ngerstreifen) an der betreffenden \u{d6}rtlichkeit. Die\nErgebnisse dienen zur Entscheidung, an welchen \u{d6}rtlichkeiten Handlungsbedarf in\nForm von Geschwindigkeitskontrollen besteht. Jedes Statistikger\u{e4}t besitzt eine\neinzige Punktgeometrie und ist meist mit zwei Richtungen versehen (Richtung 1\nund 2).<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Hinweis: Die\nMessungen sind nicht zwingend repr\u{e4}sentativ f\u{fc}r das ganze Jahr und m\u{fc}ssen im\nKontext des Erhebungsdatums betrachtet werden. Dar\u{fc}ber hinaus wurden gewisse\nMessungen w\u{e4}hrend einer ausserordentlichen Verkehrsf\u{fc}hrung (z.B.\nUmleitungsverkehr infolge von Baustellent\u{e4}tigkeiten etc.) erhoben.\nManipulationen an Ger\u{e4}ten k\u{f6}nnen zu fehlerhaften Messungen f\u{fc}hren.<o:p></o:p></span></p><p>\n\n\n\n\n\n</p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Zum\nGeschwindigkeitsmonitoring sind folgende Datens\u{e4}tze vorhanden:<o:p></o:p></span></p><ul><li>Einzelmessungen ab 2024 (dieser Datensatz):\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100097\" target=\"_blank\">https://data.bs.ch/explore/dataset/100097</a><a href=\"https://data.bs.ch/explore/dataset/100097\" target=\"_blank\"></a></li><li>Einzelmessungen von 2021 bis 2023:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100358\" target=\"_blank\">https://data.bs.ch/explore/dataset/100358</a><br></li><li>Einzelmessungen bis 2020:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100200\" target=\"_blank\">https://data.bs.ch/explore/dataset/100200</a></li><li>Kennzahlen pro Mess-Standort:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100112\" target=\"_blank\">https://data.bs.ch/explore/dataset/100112</a>\u{a0}</li></ul>Aufgrund der grossen Datenmenge kann es vorkommen, dass der Datensatz nicht vollst\u{e4}ndig heruntergeladen werden kann. Falls dieses Problem auftritt, kann man den vollst\u{e4}ndigen Datensatz und die Einzelmessungen der Messstationen hier herunterladen:<p></p><ul><li>vollst\u{e4}ndiger Datensatz:\u{a0}<a href=\"https://data-bs.ch/stata/kapo/geschwindigkeitsmonitoring/all_data/geschwindigkeitsmonitoring_data.csv\">https://data-bs.ch/stata/kapo/geschwindigkeitsmonitoring/all_data/geschwindigkeitsmonitoring_data.csv</a></li><li>Einzelmessungen der Messstationen:\u{a0}<a href=\"https://data-bs.ch/stata/kapo/geschwindigkeitsmonitoring/data/\">https://data-bs.ch/stata/kapo/geschwindigkeitsmonitoring/data/</a></li></ul><p>Die Mess-Standorte werden auch auf dem Geoportal Basel-Stadt publiziert:\u{a0}<a href=\"https://map.geo.bs.ch/s/geschwindigkeit\" target=\"_blank\">https://map.geo.bs.ch/s/geschwindigkeit</a></p>"]
 pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
     use super::*;
 
@@ -57524,10 +58751,18 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
         /// Messbeginn
         ///
         /// Datum, an welchem ein Messgerät an einem Standort ausgebracht wurde
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messbeginn: Option<Date>,
         /// Messende
         ///
         /// Datum, bis zu welchem ein Messgerät an einem Standort im Einsatz war
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messende: Option<Date>,
         /// Zone
         ///
@@ -57585,7 +58820,7 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         MessungId,
@@ -57636,7 +58871,7 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -57661,7 +58896,7 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -57747,7 +58982,9 @@ pub mod geschwindigkeitsmonitoring_einzelmessungen_ab_2024 {
     }
 }
 
-/// Abfuhrtermine
+#[doc = "Abfuhrtermine"]
+#[doc = ""]
+#[doc = "<p>Abfuhrtermine der Stadtreinigung (Tiefbauamt) der Stadt Basel. Siehe auch <a href=\"http://www.tiefbauamt.bs.ch/abfuhrplaene\" target=\"_blank\">http://www.tiefbauamt.bs.ch/abfuhrplaene</a>. Abfuhranmeldung unter <a href=\"http://www.tiefbauamt.bs.ch/abfuhranmeldung\" target=\"_blank\">http://www.tiefbauamt.bs.ch/abfuhranmeldung</a></p>"]
 pub mod abfuhrtermine {
     use super::*;
 
@@ -57756,6 +58993,10 @@ pub mod abfuhrtermine {
         /// Termin
         ///
         /// Datum der Abfuhr
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub termin: Option<Date>,
         /// Art
         ///
@@ -57784,7 +59025,7 @@ pub mod abfuhrtermine {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Termin,
         Art,
@@ -57805,7 +59046,7 @@ pub mod abfuhrtermine {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -57830,7 +59071,7 @@ pub mod abfuhrtermine {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -57916,7 +59157,9 @@ pub mod abfuhrtermine {
     }
 }
 
-/// Liegenschaften: Parzellen
+#[doc = "Liegenschaften: Parzellen"]
+#[doc = ""]
+#[doc = "Der Datensatz beinhaltet alle Liegenschaften des Kantons. Es wird zwischen Liegenschaft und Allmendparzelle unterschieden."]
 pub mod liegenschaften_parzellen {
     use super::*;
 
@@ -57968,7 +59211,7 @@ pub mod liegenschaften_parzellen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         R1ArtTxt,
         Flaechenma,
@@ -57995,7 +59238,7 @@ pub mod liegenschaften_parzellen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -58020,7 +59263,7 @@ pub mod liegenschaften_parzellen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -58106,7 +59349,9 @@ pub mod liegenschaften_parzellen {
     }
 }
 
-/// Standorte der Zählstellen für Verkehrszähldaten
+#[doc = "Standorte der Z\u{e4}hlstellen f\u{fc}r Verkehrsz\u{e4}hldaten"]
+#[doc = ""]
+#[doc = "Standorte der Dauerz\u{e4}hlstellen f\u{fc}r den motorisierten Individualverkehr (MIV) mit eigens f\u{fc}r die Z\u{e4}hlung installierten Induktionsschleifen und an den Induktionsschleifen von Lichtsignalanlagen (LSA). Zus\u{e4}tzlich die Standorte der Fussg\u{e4}nger- und Veloz\u{e4}hlstellen sowie der Kurzzeitz\u{e4}hlstellen."]
 pub mod standorte_der_zaehlstellen_fuer_verkehrszaehldaten {
     use super::*;
 
@@ -58157,7 +59402,7 @@ pub mod standorte_der_zaehlstellen_fuer_verkehrszaehldaten {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdZst,
         Name,
@@ -58200,7 +59445,7 @@ pub mod standorte_der_zaehlstellen_fuer_verkehrszaehldaten {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -58225,7 +59470,7 @@ pub mod standorte_der_zaehlstellen_fuer_verkehrszaehldaten {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -58311,7 +59556,9 @@ pub mod standorte_der_zaehlstellen_fuer_verkehrszaehldaten {
     }
 }
 
-/// Güteklassen öffentlicher Verkehr
+#[doc = "G\u{fc}teklassen \u{f6}ffentlicher Verkehr"]
+#[doc = ""]
+#[doc = "Die G\u{fc}teklassen zeigen auf, wie gut ein Gebiet mit dem \u{f6}ffentlichen Verkehr erschlossen ist. Die Klasse ist abh\u{e4}ngig von dem Transportmittel (Kleinbus, Bus, Tram, S-Bahn, Fernverkehrszug), dem jeweiligen Takt und der Distanz zur Haltestelle. Die Klasse zeigt die beste Erschliessung auf."]
 pub mod gueteklassen_oeffentlicher_verkehr {
     use super::*;
 
@@ -58333,7 +59580,7 @@ pub mod gueteklassen_oeffentlicher_verkehr {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Objectid,
         Oevgkl,
@@ -58348,7 +59595,7 @@ pub mod gueteklassen_oeffentlicher_verkehr {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -58373,7 +59620,7 @@ pub mod gueteklassen_oeffentlicher_verkehr {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -58459,12 +59706,18 @@ pub mod gueteklassen_oeffentlicher_verkehr {
     }
 }
 
-/// Tägliche Logiernächte, verfügbare und belegte Zimmer
+#[doc = "T\u{e4}gliche Logiern\u{e4}chte, verf\u{fc}gbare und belegte Zimmer"]
+#[doc = ""]
+#[doc = "Dieser Datensatz zeigt die Anzahl Logiern\u{e4}chte, verf\u{fc}gbare und belegte Zimmer in baselst\u{e4}dtischen Hotels nach Kategorie auf t\u{e4}glicher Basis."]
 pub mod taegliche_logiernaechte_verfuegbare_und_belegte_zimmer {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Hotelkategorie
         ///
@@ -58483,6 +59736,10 @@ pub mod taegliche_logiernaechte_verfuegbare_und_belegte_zimmer {
         /// Anzahl an einem bestimmten Tag belegte Zimmer in einem baselstädtischen Hotel
         pub anzzimmerbelegungen: Option<i64>,
         /// Jahr
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub jahr: Option<Date>,
         /// Monat
         pub monat: Option<i64>,
@@ -58496,7 +59753,7 @@ pub mod taegliche_logiernaechte_verfuegbare_und_belegte_zimmer {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Hotelkategorie,
@@ -58523,7 +59780,7 @@ pub mod taegliche_logiernaechte_verfuegbare_und_belegte_zimmer {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -58548,7 +59805,7 @@ pub mod taegliche_logiernaechte_verfuegbare_und_belegte_zimmer {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -58634,7 +59891,9 @@ pub mod taegliche_logiernaechte_verfuegbare_und_belegte_zimmer {
     }
 }
 
-/// Bade-, Trinkwasser- und Zierbrunnen in Basel
+#[doc = "Bade-, Trinkwasser- und Zierbrunnen in Basel"]
+#[doc = ""]
+#[doc = "<p>In der Stadt Basel betreibt IWB \u{fc}ber 200 \u{f6}ffentliche Brunnen. Sie sind Kulturgut und \u{ab}Visitenkarte\u{bb} der Stadt. <a href=\"https://www.iwb.ch/brunnen\" target=\"_blank\">https://www.iwb.ch/brunnen</a><a href=\"https://www.iwb.ch/brunnen\" target=\"_blank\"></a><br/>Wenn Sie Fragen oder Anliegen rund um die Basler Brunnen haben, empfehlen wir Ihnen, sich direkt an die Industriellen Werke Basel (IWB) zu wenden, die f\u{fc}r diese Angelegenheiten zust\u{e4}ndig sind. F\u{fc}r weitere Informationen und Kontaktdetails besuchen Sie bitte die offizielle Webseite der IWB: <a href=\"https://www.iwb.ch/servicecenter/kontakt\" target=\"_blank\">https://www.iwb.ch/servicecenter/kontakt</a><br/></p><p>In einigen Brunnen ist auch Baden m\u{f6}glich und vom Eigent\u{fc}mer, dem Kanton Basel-Stadt, toleriert, jedoch auf eigene Verantwortung und Gefahr. Wir bitten darum, die Brunnen sauber zu hinterlassen und auf Anwohner R\u{fc}cksicht zu nehmen.\u{a0}</p>"]
 pub mod bade_trinkwasser_und_zierbrunnen_in_basel {
     use super::*;
 
@@ -58658,7 +59917,7 @@ pub mod bade_trinkwasser_und_zierbrunnen_in_basel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Name,
         Desc,
@@ -58675,7 +59934,7 @@ pub mod bade_trinkwasser_und_zierbrunnen_in_basel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -58700,7 +59959,7 @@ pub mod bade_trinkwasser_und_zierbrunnen_in_basel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -58786,7 +60045,9 @@ pub mod bade_trinkwasser_und_zierbrunnen_in_basel {
     }
 }
 
-/// Coronavirus (Covid-19): Geimpfte Personen mit Wohnsitz in Basel-Stadt
+#[doc = "Coronavirus (Covid-19): Geimpfte Personen mit Wohnsitz in Basel-Stadt"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die SARS-CoV-2-Impfungen, welche an Personen mit Wohnsitz im Kanton Basel-Stadt verabreicht wurden nach Impfstatus. Unterschieden wird dabei auf oberster Ebene in teilweise geimpfte Personen, vollst\u{e4}ndig geimpfte Personen und Personen mit Auffrischimpfung. Die Definitionen dieser Einteilung finden Sie in den Spaltenbeschreibungen resp. im Datensatzschema.\u{a0}</p><p>Die Datenbasis bildet der Vaccination Monitoring Data Lake (VMDL) des BAG. Der Datensatz wird st\u{fc}ndlich aktualisiert.\u{a0}</p><p>Anmerkung: Die geimpften Personen wohnen im Kanton Basel-Stadt, m\u{fc}ssen aber nicht zwingend auch im Kanton Basel-Stadt geimpft worden sein. Aus diesem Grund unterscheiden sich die hier publizierten Zahlen auch von jenen im\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100111\" target=\"_blank\">Datensatz mit den im Kanton Basel-Stadt verabreichten Impfungen</a>.</p><p>Methodische Hinweise:<br/>Als vollst\u{e4}ndig geimpft gelten folgende Personen:</p><ul><li>Mindestens zwei Dosen einer Mehrdosisimpfung</li><li>Eine Dosis einer Einmaldosisimpfung</li><li>Genesene (positiver PCR-Test) und mindestens eine Dosis einer Einmal- oder einer Mehrdosisimpfung</li></ul><p>Als teilweise geimpft gelten folgende Personen:</p><ul><li>Erste Dosis einer Mehrdosisimpfung</li></ul><p>Als mit mindestens einer Dosis geimpft gelten folgende Personen:</p><ul><li>Mindestens eine Dosis einer Einmal- oder einer Mehrfachdosisimpfung</li></ul><p>Als Impfung aufgefrischt gelten folgende Personen:</p><ul><li>Mindestens dritte Dosis einer Mehrfachdosisimpfung nach abgeschlossener Grundimmunisierung durch Mehrdosisimpfung</li><li>Genesene (positiver PCR-Test) mit zweiter Dosis einer Mehrdosisimpfung</li><li>Erste Dosis einer Mehrdosisimpfung nach abgeschlossener Grundimmunisierung durch eine Einmaldosisimpfung</li></ul><p>Der Code f\u{fc}r die Berechnung der verschiedenen Impftypen kann unter diesem Link eingesehen werden:\u{a0}<a href=\"https://github.com/opendatabs/data-processing/blob/master/bag_coronavirus/src/etl_vmdl_impftyp.py\" target=\"_blank\">https://github.com/opendatabs/data-processing/blob/master/bag_coronavirus/src/etl_vmdl_impftyp.py</a><a href=\"https://github.com/opendatabs/data-processing/blob/master/bag_coronavirus/src/etl_vmdl_impftyp.py\" target=\"_blank\"></a></p><p>Die Meldepflicht der COVID-Impfungen via VMDL Plattform des Bundes wurde per 1. Juli 2023 aufgehoben. Nach diesem Datum wurden Impfungen deshalb nicht mehr systematisch erfasst. Der vorliegende Datensatz zeigt deshalb Impfungen nur bis 1. Juli 2023.<br/></p>"]
 pub mod coronavirus_covid_19_geimpfte_personen_mit_wohnsitz_in_basel_stadt {
     use super::*;
 
@@ -58795,6 +60056,10 @@ pub mod coronavirus_covid_19_geimpfte_personen_mit_wohnsitz_in_basel_stadt {
         /// Datum
         ///
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub vacc_day: Option<Date>,
         /// Vollständig Geimpfte
         ///
@@ -58909,7 +60174,7 @@ pub mod coronavirus_covid_19_geimpfte_personen_mit_wohnsitz_in_basel_stadt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         VaccDay,
         VollstaendigGeimpft,
@@ -58974,7 +60239,7 @@ Field::X39MindestensZweiteAuffrischimpfung => "39_mindestens_zweite_auffrischimp
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -58999,7 +60264,7 @@ Field::X39MindestensZweiteAuffrischimpfung => "39_mindestens_zweite_auffrischimp
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -59085,7 +60350,9 @@ Field::X39MindestensZweiteAuffrischimpfung => "39_mindestens_zweite_auffrischimp
     }
 }
 
-/// Wasserstand Grundwasser: Langjährige Statistiken
+#[doc = "Wasserstand Grundwasser: Langj\u{e4}hrige Statistiken"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz enth\u{e4}lt die absoluten extremalen Messwerte (kleinster Wert \u{201e}10YMin\u{201c} bzw. gr\u{f6}sster Wert \u{201e}10YMax\u{201c}) und den Mittelwert aller Messwerte (\u{201e}Mean\u{201c}) der Grundwasserst\u{e4}nde in m \u{fc}. M. des kantonalen Grundwassermessnetzes und in der angegebenen Periode (startStatist bis endStatist, d.h. i. d. R. 10 Jahre).</p><p>Weitere Informationen: <a href=\"https://www.aue.bs.ch/wasser/grundwasser/grundwasserpegel-grundwasserqualitaet.html\">https://www.aue.bs.ch/wasser/grundwasser/grundwasserpegel-grundwasserqualitaet.html</a></p>"]
 pub mod wasserstand_grundwasser_langjaehrige_statistiken {
     use super::*;
 
@@ -59169,7 +60436,7 @@ pub mod wasserstand_grundwasser_langjaehrige_statistiken {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Stationnr,
         Stationid,
@@ -59218,7 +60485,7 @@ pub mod wasserstand_grundwasser_langjaehrige_statistiken {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -59243,7 +60510,7 @@ pub mod wasserstand_grundwasser_langjaehrige_statistiken {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -59329,7 +60596,9 @@ pub mod wasserstand_grundwasser_langjaehrige_statistiken {
     }
 }
 
-/// Sauberkeitsindex pro Monat und Strassenabschnitt
+#[doc = "Sauberkeitsindex pro Monat und Strassenabschnitt"]
+#[doc = ""]
+#[doc = "<p class=\"\">Dieser Datensatz enth\u{e4}lt den Sauberkeitsindex f\u{fc}r alle Strassenabschnitte in der Stadt Basel. Zur Berechnung des Sauberkeitsindex wird wie folgt vorgegangen:</p><p>Auf den Kehrrichtfahrzeugen sind Kameras installiert, die w\u{e4}hrend der Eins\u{e4}tze Videoaufnahmen der Strassen machen. Ein Computer durchsucht anschliessend diese Videoaufnahmen nach Abf\u{e4}llen. Dieser sortiert die Abf\u{e4}lle in verschiedene Abfallkategorien (Zigarettenstummel, Papier, PET-Flaschen etc.) und z\u{e4}hlt die Anzahl der gefundenen Abf\u{e4}lle jeder Kategorie. Zus\u{e4}tzlich wird f\u{fc}r jede Abfallkategorie der Verschmutzungsgrad und der St\u{f6}rfaktor bestimmt. Daraus wird der Sauberkeitsindex berechnet. Danach werden die Videoaufnahmen aus Datenschutzgr\u{fc}nden umgehend gel\u{f6}scht.</p><p></p><p>Der Sauberkeitsindex wird auf einer Skala von 0 bis 5 angegeben, wobei die Werte folgendermassen beurteilt werden:<br><span style=\"font-family: inherit; font-size: 0.875rem;\">Kleiner als 3: schlecht<br></span><span style=\"font-family: inherit; font-size: 0.875rem;\">Zwischen 3 und 4: mittel<br></span><span style=\"font-family: inherit; font-size: 0.875rem;\">Gr\u{f6}sser als 4: gut</span></p><p>\nDer Grosse Rat beauftragt das Tiefbauamt mit dem Erreichen eines Indexes f\u{fc}r die gesamte Stadt von mindestens 4.5.\n</p><p></p><p></p><p></p><p class=\"\">Der Datensatz wird monatlich mit den Daten des Vormonats aktualisiert.</p>"]
 pub mod sauberkeitsindex_pro_monat_und_strassenabschnitt {
     use super::*;
 
@@ -59338,6 +60607,10 @@ pub mod sauberkeitsindex_pro_monat_und_strassenabschnitt {
         /// Datenstand
         ///
         /// Stand der Daten zu einem bestimmten Zeitpunkt
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datenstand: Option<Date>,
         /// ID Strassenabschnitt
         ///
@@ -59371,7 +60644,7 @@ pub mod sauberkeitsindex_pro_monat_und_strassenabschnitt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datenstand,
         Id,
@@ -59394,7 +60667,7 @@ pub mod sauberkeitsindex_pro_monat_und_strassenabschnitt {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -59419,7 +60692,7 @@ pub mod sauberkeitsindex_pro_monat_und_strassenabschnitt {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -59505,7 +60778,9 @@ pub mod sauberkeitsindex_pro_monat_und_strassenabschnitt {
     }
 }
 
-/// Nutzungsplan - Zonenplan Stadt Basel:  Überlagernde Festlegungen
+#[doc = "Nutzungsplan - Zonenplan Stadt Basel:  \u{dc}berlagernde Festlegungen"]
+#[doc = ""]
+#[doc = "Dieser Datensatz beinhaltet Informationen \u{fc}ber die Grundnutzung \u{fc}berlagernder Fl\u{e4}chen und ist ein Teil des Geodatenmodelles des Kantons Basel-Stadt zum Thema ?Nutzungsplanung?.<br>Weitere Daten zum Thema ?Nutzungsplanung?: <a href=\"https://data.bs.ch/explore/?refine.tags=Nutzungsplanung\">https://data.bs.ch/explore/?refine.tags=Nutzungsplanung</a>"]
 pub mod nutzungsplan_zonenplan_stadt_basel_ueberlagernde_festlegungen {
     use super::*;
 
@@ -59560,7 +60835,7 @@ pub mod nutzungsplan_zonenplan_stadt_basel_ueberlagernde_festlegungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Idueberfes,
         Festueber,
@@ -59595,7 +60870,7 @@ pub mod nutzungsplan_zonenplan_stadt_basel_ueberlagernde_festlegungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -59620,7 +60895,7 @@ pub mod nutzungsplan_zonenplan_stadt_basel_ueberlagernde_festlegungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -59706,7 +60981,9 @@ pub mod nutzungsplan_zonenplan_stadt_basel_ueberlagernde_festlegungen {
     }
 }
 
-/// Bohrkataster
+#[doc = "Bohrkataster"]
+#[doc = ""]
+#[doc = "Diese Karte zeigt alle \u{f6}ffentlich einsehbaren Bohrungen, Erdw\u{e4}rmesonden und Sondierbohrungen, die i. d. R. ins Grundwasser reichen. Sie gibt Auskunft \u{fc}ber die Art, den Zustand und die Dimensionen der Bohrungen und enth\u{e4}lt Informationen zum Untergrund."]
 pub mod bohrkataster {
     use super::*;
 
@@ -59828,7 +61105,7 @@ pub mod bohrkataster {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Art,
         Grundwasserdaten,
@@ -59899,7 +61176,7 @@ pub mod bohrkataster {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -59924,7 +61201,7 @@ pub mod bohrkataster {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -60010,7 +61287,9 @@ pub mod bohrkataster {
     }
 }
 
-/// Wohnbevölkerung nach Staatsangehörigkeit und Gemeinde
+#[doc = "Wohnbev\u{f6}lkerung nach Staatsangeh\u{f6}rigkeit und Gemeinde"]
+#[doc = ""]
+#[doc = "Dieser Datensatz beinhaltet Angaben zur Wohnbev\u{f6}lkerung des Kantons Basel-Stadt am Jahresende nach Staatsangeh\u{f6}rigkeit (Schweiz/Ausland) und Kantonsb\u{fc}rgerschaft auf Ebene Gemeinde. Personen an administrativen Meldeadressen sind nicht ber\u{fc}cksichtigt. An administrativen Meldeadressen sind Personen aus administrativen Gr\u{fc}nden gemeldet, welche dort aber keinen physischen Wohnsitz haben (z.B. KESB)."]
 pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_gemeinde {
     use super::*;
 
@@ -60065,7 +61344,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_gemeinde {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Gemeindename,
         Gemeinde,
@@ -60098,7 +61377,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_gemeinde {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -60123,7 +61402,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_gemeinde {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -60209,7 +61488,9 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_gemeinde {
     }
 }
 
-/// Unfallschwerpunkte
+#[doc = "Unfallschwerpunkte"]
+#[doc = ""]
+#[doc = "Seit 2013 ist der Artikel 6a des Strassenverkehrsgesetz (SVG) in Kraft. Alle Strasseneigent\u{fc}mer werden darin unter anderem zur geb\u{fc}hrenden Ber\u{fc}cksichtigung der Verkehrssicherheitsaspekte bei Planung, Bau, Unterhalt und Betrieb von Strassen sowie zur Analyse des Strassennetzes auf Unfallschwerpunkte (USP) verpflichtet. Die Analyse der USP erfolgt gem\u{e4}ss der Schweizer Norm SN 641 724 des Schweizerischen Verbandes der Strassen- und Verkehrsfachleute (VSS). F\u{fc}r das gew\u{e4}hlte Jahr werden USP f\u{fc}r jeweils das angegebene und die zwei vorherigen Jahre dargestellt."]
 pub mod unfallschwerpunkte {
     use super::*;
 
@@ -60226,6 +61507,10 @@ pub mod unfallschwerpunkte {
         /// Beschreibung der Kategorie des Unfallschwerpunktes
         pub kategoriebeschreibung: Option<String>,
         /// Jahr
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub jahr: Option<Date>,
         /// Strasse
         ///
@@ -60251,7 +61536,7 @@ pub mod unfallschwerpunkte {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdUfsp,
         Kategorie,
@@ -60278,7 +61563,7 @@ pub mod unfallschwerpunkte {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -60303,7 +61588,7 @@ pub mod unfallschwerpunkte {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -60389,7 +61674,9 @@ pub mod unfallschwerpunkte {
     }
 }
 
-/// Allmendbewilligungen
+#[doc = "Allmendbewilligungen"]
+#[doc = ""]
+#[doc = "Allmendbewilligungen beinhaltet s\u{e4}mtliche Nutzungen, welche im \u{f6}ffentlichen Raum (Allmend) stattfinden. Die dargestellten genutzten Fl\u{e4}chen sind nicht verbindlich."]
 pub mod allmendbewilligungen {
     use super::*;
 
@@ -60426,8 +61713,16 @@ pub mod allmendbewilligungen {
         /// Bezeichnung der Art des Begehrens
         pub artbeg_bez: Option<String>,
         /// Eingangsdatum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub eingangsdatum: Option<Date>,
         /// Entscheid-Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub entscheid_datum: Option<Date>,
         /// EntscheidID
         ///
@@ -60492,8 +61787,16 @@ pub mod allmendbewilligungen {
         /// DatumEnts
         pub datuments: Option<String>,
         /// Datum_von
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_von: Option<Date>,
         /// Datum_bis
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum_bis: Option<Date>,
     }
 
@@ -60503,7 +61806,7 @@ pub mod allmendbewilligungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Begehrenid,
         Lokalitaid,
@@ -60568,7 +61871,7 @@ pub mod allmendbewilligungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -60593,7 +61896,7 @@ pub mod allmendbewilligungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -60679,7 +61982,9 @@ pub mod allmendbewilligungen {
     }
 }
 
-/// Coronavirus (Covid-19): Fallzahlen und Inzidenzen Basel-Stadt
+#[doc = "Coronavirus (Covid-19): Fallzahlen und Inzidenzen Basel-Stadt"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Anzahl positiv auf SARS-CoV-2 getesteter Personen mit Wohnsitz im Kanton Basel-Stadt sowie die kumulierten Werte \u{fc}ber die letzten 7 resp. 14 Tage, die jeweiligen Mittelwerte und die Inzidenzen pro 100 000 EinwohnerInnen gem\u{e4}ss <a href=\"https://www.bfs.admin.ch/bfs/de/home/statistiken/bevoelkerung/erhebungen/statpop.html\" target=\"_blank\">STATPOP</a>.\u{a0}</p><p>Die Zahlen werden gem\u{e4}ss dem Datum des Test-Resultats ausgewiesen, also gem\u{e4}ss jenem Datum, an dem ein Testresultat vorliegt. Dies geschieht in aller Regel innerhalb von 24 Stunden nach einem erfolgten Test. Bei nachtr\u{e4}glich eintreffenden Meldungen werden die Zahlen der Vortage entsprechend korrigiert.</p><p></p><ul style=\"box-sizing: border-box; color: rgb(0, 0, 0); font-family: sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;\"></ul><p></p><p><b style=\"box-sizing: border-box; font-weight: bolder;\">\u{c4}nderungsprotokoll:</b></p><ul><li>Die Erhebung der Werte wurde per 5. Juli 2023 sistiert. Der Datensatz wird nicht mehr aktualisiert.\u{a0}Aktualisierungsintervall von \"WEEKLY\" auf \"NEVER\" ge\u{e4}ndert.</li></ul><p><br/></p>"]
 pub mod coronavirus_covid_19_fallzahlen_und_inzidenzen_basel_stadt {
     use super::*;
 
@@ -60688,6 +61993,10 @@ pub mod coronavirus_covid_19_fallzahlen_und_inzidenzen_basel_stadt {
         /// Datum Testresultat
         ///
         /// Datum, an welchem das Testresultat vorliegt. In der Regel liegt ein Testresultat innerhalb von 24 Stunden nach dem erfolgten Test vor.
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub test_datum: Option<Date>,
         /// Tägliche Fälle Basel-Stadt
         ///
@@ -60789,7 +62098,7 @@ pub mod coronavirus_covid_19_fallzahlen_und_inzidenzen_basel_stadt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         TestDatum,
         FaelleBs,
@@ -60848,7 +62157,7 @@ pub mod coronavirus_covid_19_fallzahlen_und_inzidenzen_basel_stadt {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -60873,7 +62182,7 @@ pub mod coronavirus_covid_19_fallzahlen_und_inzidenzen_basel_stadt {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -60959,7 +62268,9 @@ pub mod coronavirus_covid_19_fallzahlen_und_inzidenzen_basel_stadt {
     }
 }
 
-/// Smarte Strasse: Verkehrslärm
+#[doc = "Smarte Strasse: Verkehrsl\u{e4}rm"]
+#[doc = ""]
+#[doc = "<p>Das Amt f\u{fc}r Umwelt und Energie (AUE) testet im Rahmen des Projekts \u{ab}Smarte Strasse\u{bb} einen akustischen Sensor bez\u{fc}glich Funktionalit\u{e4}t, Genauigkeit und Zuverl\u{e4}ssigkeit. Der L\u{e4}rmsensor erfasst Umgebungsger\u{e4}usche und erkennt mittels k\u{fc}nstlicher Intelligenz die individuellen L\u{e4}rmprofile verschiedener Fahrzeuge. Dadurch kann der Sensor dazu verwendet werden, in Echtzeit richtungsgetrennte Verkehrsz\u{e4}hlungen durchzuf\u{fc}hren, und die L\u{e4}rmeinwirkung sowie die Geschwindigkeit einzelner Verkehrsteilnehmer zu erfassen.</p><p><b>Wichtig:</b> Die Werte in der Spalte \u{ab}Mittelungspegel\u{bb} beschreiben ab dem 16.02.2022 um 06:55 Uhr den A-bewerteten \u{e4}quivalenten Dauerschallpegel (Leq). Zuvor wurde der energetisch gemittelte Terzpegel abgebildet.<br/></p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Weitere Informationen und Daten rund um das Projekt \u{ab}Smarte Strasse\u{bb} finden Sie unter den folgenden Links:</span></p><ul><li>Weitere Informationen zum Projekt \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html\" target=\"_blank\">https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html</a>\u{a0}</li><li>Genaue Standorte aller Sensoren:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100114/table/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100114/table/</a>\u{a0}</li><li>Weitere Datens\u{e4}tze rund um das Thema \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://data.bs.ch/explore/?refine.tags=smarte+strasse\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=smarte+strasse</a>\u{a0}</li></ul><p><b>Hinweis: Die Sensoren an der Gundeldingerstrasse wurden am 29.6.23 abmontiert. Es werden keine Daten mehr erhoben.</b></p><p>\u{c4}nderungsprotokoll: <br/>29.06.2023 - Aktualisierungsintervall von \"CONT\" auf \"NEVER\" ge\u{e4}ndert.<br/></p>"]
 pub mod smarte_strasse_verkehrslaerm {
     use super::*;
 
@@ -61099,7 +62410,7 @@ pub mod smarte_strasse_verkehrslaerm {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         GeneralLevel,
@@ -61174,7 +62485,7 @@ pub mod smarte_strasse_verkehrslaerm {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -61199,7 +62510,7 @@ pub mod smarte_strasse_verkehrslaerm {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -61285,7 +62596,9 @@ pub mod smarte_strasse_verkehrslaerm {
     }
 }
 
-/// Smarte Strasse: Geschwindigkeitsmessungen
+#[doc = "Smarte Strasse: Geschwindigkeitsmessungen"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt Geschwindigkeit und Lautst\u{e4}rke von Fahrzeugen mit der dazugeh\u{f6}rigen Zeitangabe. Aus Datenschutzgr\u{fc}nden werden jeweils Gruppen von 20 Fahrzeugen gebildet, die Reihenfolge randomisiert, und nur nur jeweils Start- und Endzeitpunkt des jeweiligen Zeitintervalls angegeben.\u{a0}</p><p><b>Wichtig:</b> Die Geschwindigkeits-Werte vor dem 25.03.2022 um 11:35 Uhr sind nicht kalibriert. Je nach Fahrspur werden diese Werte daher um bis zu 40% zu tief angegeben.\u{a0}</p><p class=\"\" style=\"font-family: sans-serif;\"><b>Weitere Informationen und Daten rund um das Projekt \u{ab}Smarte Strasse\u{bb} finden Sie unter den folgenden Links:</b></p><ul><li>Weitere Informationen zum Projekt \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html\" target=\"_blank\">https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html</a>\u{a0}</li><li>Genaue Standorte aller Sensoren:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100114/table/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100114/table/</a>\u{a0}</li><li>Weitere Datens\u{e4}tze rund um das Thema \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://data.bs.ch/explore/?refine.tags=smarte+strasse\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=smarte+strasse</a>\u{a0}</li></ul><p style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Hinweis: Die Sensoren an der Gundeldingerstrasse wurden am 29.6.23 abmontiert. Es werden keine Daten mehr erhoben.</span></p><p style=\"font-family: sans-serif; margin-bottom: 1em;\">\u{c4}nderungsprotokoll:<br/>29.06.2023 - Aktualisierungsintervall von \"CONT\" auf \"NEVER\" ge\u{e4}ndert.</p>"]
 pub mod smarte_strasse_geschwindigkeitsmessungen {
     use super::*;
 
@@ -61333,7 +62646,7 @@ pub mod smarte_strasse_geschwindigkeitsmessungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         LocaldatetimeIntervalStart,
         LocaldatetimeIntervalEnd,
@@ -61362,7 +62675,7 @@ pub mod smarte_strasse_geschwindigkeitsmessungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -61387,7 +62700,7 @@ pub mod smarte_strasse_geschwindigkeitsmessungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -61473,7 +62786,9 @@ pub mod smarte_strasse_geschwindigkeitsmessungen {
     }
 }
 
-/// Verkehrszähldaten motorisierter Individualverkehr
+#[doc = "Verkehrsz\u{e4}hldaten motorisierter Individualverkehr"]
+#[doc = ""]
+#[doc = "<p>Resultate der Messungen der\u{a0}Dauerz\u{e4}hlstellen und Kurzzeitz\u{e4}hlstellen f\u{fc}r den Motorisierten Individualverkehr.\u{a0}</p><p>Aus Kostengr\u{fc}nden sind nur die Werte des aktuellen Jahres und der letzten zwei Jahre als Tabelle / Visualisierung sichtbar bzw. via API abgreifbar. Die vollst\u{e4}ndigen Daten ab dem Jahr 2014 k\u{f6}nnen hier heruntergeladen werden: </p><ul><li><a href=\"https://data-bs.ch/mobilitaet/converted_MIV_Class_10_1.csv\">Leicht aufbereiteter Datensatz: https://data-bs.ch/mobilitaet/converted_MIV_Class_10_1.csv</a> </li><li><a href=\"https://data-bs.ch/mobilitaet/MIV_Class_10_1.csv\">Rohdaten: https://data-bs.ch/mobilitaet/MIV_Class_10_1.csv</a></li></ul><p>Die Daten einzelner Jahre ab dem Jahr 2014 k\u{f6}nnen heruntergeladen werden unter der URL mit dem Muster\u{a0}https://data-bs.ch/mobilitaet/[JAHR]_MIV_Class_10_1.csv, also zum Beispiel f\u{fc}r das Jahr 2020 hier: <a href=\"https://data-bs.ch/mobilitaet/2020_MIV_Class_10_1.csv\" target=\"_blank\">https://data-bs.ch/mobilitaet/2020_MIV_Class_10_1.csv</a>.</p><p>Die Z\u{e4}hlstellen sind auf MET eingestellt (Spalten TimeFrom und TimeTo), d.h. die Zeitumstellung wird wie in Mitteleuropa ausgef\u{fc}hrt. Bei der Umstellung von Winter- auf Sommerzeit fehlt die Stunde der Umstellung, dieser Tag hat dann 23 Stunden. Bei der Umstellung von Sommer- auf Winterzeit ist eine Stunde zu viel enthalten (der Tag hat dann 25 Stunden), die Stunde der Umstellung ist dann doppelt, aber mit unterschiedlichen Verkehrsdaten (da die gleiche Stunde zweimal durchlaufen wird).<br/></p>"]
 pub mod verkehrszaehldaten_motorisierter_individualverkehr {
     use super::*;
 
@@ -61617,7 +62932,7 @@ pub mod verkehrszaehldaten_motorisierter_individualverkehr {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         ZstNr,
         Sitecode,
@@ -61694,7 +63009,7 @@ pub mod verkehrszaehldaten_motorisierter_individualverkehr {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -61719,7 +63034,7 @@ pub mod verkehrszaehldaten_motorisierter_individualverkehr {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -61805,7 +63120,9 @@ pub mod verkehrszaehldaten_motorisierter_individualverkehr {
     }
 }
 
-/// Strassen und Wege: Durchgangsstrassen
+#[doc = "Strassen und Wege: Durchgangsstrassen"]
+#[doc = ""]
+#[doc = "Dieser Datensatz ist Teil des kantonalen Geodatenmodells des Kantons Basel-Stadt \"Strassen und Wege\" und stellt die Durchgangsstrassen dar. <br>Weitere Daten zu \"Strassen und Wege\": <a href=\"https://data.bs.ch/explore/?refine.tags=Strassen+und+Wege\">https://data.bs.ch/explore/?refine.tags=Strassen+und+Wege</a><br>\nDie Durchgangsstrassen zeigen die Durchgangsstrassen gem\u{e4}ss Durchgangsverordnung unterteilt nach Hauptstrassen, Nationalstrassen (A) und Europastrassen (E)."]
 pub mod strassen_und_wege_durchgangsstrassen {
     use super::*;
 
@@ -61837,7 +63154,7 @@ pub mod strassen_und_wege_durchgangsstrassen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdDgstr,
         Strassennr,
@@ -61858,7 +63175,7 @@ pub mod strassen_und_wege_durchgangsstrassen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -61883,7 +63200,7 @@ pub mod strassen_und_wege_durchgangsstrassen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -61969,13 +63286,19 @@ pub mod strassen_und_wege_durchgangsstrassen {
     }
 }
 
-/// Coronavirus (COVID-19): SARS-CoV-2 im Abwasser und positiv auf SARS-CoV-2 getestete Personen
+#[doc = "Coronavirus (COVID-19): SARS-CoV-2 im Abwasser und positiv auf SARS-CoV-2 getestete Personen"]
+#[doc = ""]
+#[doc = "<p><span style=\"font-weight: bolder;\">Figur<br/></span><span>Der Datensatz zeigt den 7-Tage-Median der RNA-Kopien des angegebenen Virus jeweils pro Tag und 100\u{2018}000 Personen im Abwasser der Abwasserreinigungs-Anlage (ARA) Basel sowie den 7-Tage-Median der entsprechenden Fallzahlen. Der Datensatz wird i.d.R. jeweils dienstags mit den Daten bis vorangegangenem Sonntag aktualisiert. In einzelnen Wochen kann es zu Verschiebungen kommen.</span></p><p style=\"\"><span style=\"font-family: sans-serif; font-weight: bolder;\">Messung<br/></span>Die ProRheno AG (Betreiber der ARA Basel) entnimmt jeweils eine 24h-Probe des Rohabwassers, welche durch das Kantonale Laboratorium Basel-Stadt (KL BS) auf RNA der angegebenen Viren untersucht wird. Die Messmethodik wurde dabei seit Beginn des Monitorings nicht ver\u{e4}ndert: siehe Publikation\u{a0}<a href=\"https://smw.ch/index.php/smw/article/view/3226\" style=\"font-family: sans-serif;\" target=\"_blank\">https://smw.ch/index.php/smw/article/view/3226</a>. Die Plausibilit\u{e4}t der Werte wird laufend anhand interner Qualit\u{e4}tsparameter \u{fc}berpr\u{fc}ft. Das Untersuchungsgebiet umfasst das Einzugsgebiet der ARA Basel, welches sich haupts\u{e4}chlich aus dem Kanton Basel-Stadt sowie den Gemeinden Allschwil, Binningen, Birsfelden, Bottmingen, Oberwil und Sch\u{f6}nenbuch (alle Kanton Baselland) zusammensetzt. Bis Ende Juni 2023 wurden die Messwerte des KL BS auch auf dem Abwasser-Dashboard des BAG\u{a0}<a href=\"https://www.covid19.admin.ch/de/epidemiologic/waste-water?wasteWaterFacility=270101\" style=\"font-family: sans-serif;\" target=\"_blank\">Covid-\u{2060}19 Schweiz | Coronavirus | Dashboard (https://www.covid19.admin.ch/de/epidemiologic/waste-water?wasteWaterFacility=270101)</a>\u{a0}dargestellt. Ab Juli 2023 werden auf dieser Seite die Messwerte der EAWAG\u{a0}<a href=\"https://www.eawag.ch/de/abteilung/sww/projekte/sars-cov2-im-abwasser/\" style=\"font-family: sans-serif;\" target=\"_blank\">SARS-CoV2 im Abwasser - Eawag</a>\u{a0}(<a href=\"https://www.eawag.ch/de/abteilung/sww/projekte/sars-cov2-im-abwasser/\" style=\"font-family: sans-serif;\" target=\"_blank\">https://www.eawag.ch/de/abteilung/sww/projekte/sars-cov2-im-abwasser/</a>) publiziert, welche ebenfalls das Rohabwasser der ARA Basel untersucht. Die vom KL BS und der EAWAG verwendeten Untersuchungsmethoden sind sehr \u{e4}hnlich aber nicht identisch.\u{a0}Aus diesem Grund kann es zu Abweichungen kommen. Die Messungen werden unabh\u{e4}ngig von der EAWAG durch das KL BS weitergef\u{fc}hrt, um zeitn\u{e4}here Messwerte, mit zus\u{e4}tzlichen Normierungsfaktoren und die Flexibilit\u{e4}t zur Integration weiterer Analyte zu erhalten.</p><p style=\"\">Hinweis: Die urspr\u{fc}nglich dargestellten Werte vom 22.03. bis 01.10.2023 mussten aufgrund einer falschen Einstellung in der Messger\u{e4}tesoftware, die Einfluss auf die RNA-Quantifizierung hat, nach unten korrigiert werden und sind nun korrekt dargestellt.</p><div><br/></div><p style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Fallzahlen<br/></span>Die Fallzahlen entsprechen der Anzahl der best\u{e4}tigten und dem Kanton gemeldeten F\u{e4}lle der dargestellten Infektionen im Einzugsgebiet der ARA Basel.<br/></p><p style=\"font-family: sans-serif; margin-bottom: 0px;\"><span style=\"font-weight: bolder;\">Interpretation der Kurven<br/></span><span>Beim Monitoring von Viren im Abwasser geht es in erster Linie darum, Trends zu erkennen (insbesondere nat\u{fc}rlich die Zunahme eines zirkulierenden Virus). Es ist nicht m\u{f6}glich, daraus eine bestimmte Fallzahl oder den Schweregrad einer Infektion abzuleiten. Ein Vergleich des Kurvenausschlags (H\u{f6}he der Peaks) zu verschiedenen Zeitpunkten ist kaum m\u{f6}glich, da z.B. unterschiedliche Virusvarianten zu unterschiedlichen Virusmengen pro Fall f\u{fc}hren. Unterschiedliche Virusvarianten k\u{f6}nnen auch die Symptomatik beeinflussen, so dass z.B. Infektionen bei Menschen spurlos verlaufen, aber dennoch Viren ins Abwasser abgegeben werden.</span></p><p class=\"MsoNormal\"><span style=\'font-family:\"Arial\",\"sans-serif\"\'><o:p></o:p></span></p>"]
 pub mod coronavirus_covid_19_sars_cov_2_im_abwasser_und_positiv_auf_sars_cov_2_getestete_personen {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// 7d-Median SARS-CoV-2 Abwasser
         ///
@@ -61993,7 +63316,7 @@ pub mod coronavirus_covid_19_sars_cov_2_im_abwasser_und_positiv_auf_sars_cov_2_g
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         X7TagemedianOfEN1N2ProTag100000Pers,
@@ -62012,7 +63335,7 @@ pub mod coronavirus_covid_19_sars_cov_2_im_abwasser_und_positiv_auf_sars_cov_2_g
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -62037,7 +63360,7 @@ pub mod coronavirus_covid_19_sars_cov_2_im_abwasser_und_positiv_auf_sars_cov_2_g
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -62123,7 +63446,9 @@ pub mod coronavirus_covid_19_sars_cov_2_im_abwasser_und_positiv_auf_sars_cov_2_g
     }
 }
 
-/// Verkehrsberuhigte Zonen: Tempo 30 - Zone
+#[doc = "Verkehrsberuhigte Zonen: Tempo 30 - Zone"]
+#[doc = ""]
+#[doc = "Dieser Datensatz beinhaltet die signalisierten Tempo 30-Zonen und -Strecken.<br>Die verkehrsberuhigten Zonen setzen sich aus Fussg\u{e4}ngerzonen, Begegnungszonen und Tempo 30-Zonen zusammen. Ebenso ist der Perimeter des Verkehrskonzepts Innenstadt mit der Kernzone mit eingeschr\u{e4}nktem Motorfahrzeugverkehr dargestellt.<br>Weitere Daten zu \"Verkehrsberuhigte Zonen\": <a href=\"https://data.bs.ch/explore/?refine.tags=Verkehrsberuhigte+Zonen\">https://data.bs.ch/explore/?refine.tags=Verkehrsberuhigte+Zonen</a>"]
 pub mod verkehrsberuhigte_zonen_tempo_30_zone {
     use super::*;
 
@@ -62165,7 +63490,7 @@ pub mod verkehrsberuhigte_zonen_tempo_30_zone {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdTempo30,
         Regime,
@@ -62188,7 +63513,7 @@ pub mod verkehrsberuhigte_zonen_tempo_30_zone {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -62213,7 +63538,7 @@ pub mod verkehrsberuhigte_zonen_tempo_30_zone {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -62299,7 +63624,9 @@ pub mod verkehrsberuhigte_zonen_tempo_30_zone {
     }
 }
 
-/// Verkehrsberuhigte Zonen: Begegnungszone
+#[doc = "Verkehrsberuhigte Zonen: Begegnungszone"]
+#[doc = ""]
+#[doc = "Dieser Datensatz beinhaltet die signalisierten Begegnungszonen.<br>Die verkehrsberuhigten Zonen setzen sich aus Fussg\u{e4}ngerzonen, Begegnungszonen und Tempo 30-Zonen zusammen. Ebenso ist der Perimeter des Verkehrskonzepts Innenstadt mit der Kernzone mit eingeschr\u{e4}nktem Motorfahrzeugverkehr dargestellt.<br>Weitere Daten zu \"Verkehrsberuhigte Zonen\": <a href=\"https://data.bs.ch/explore/?refine.tags=Verkehrsberuhigte+Zonen\">https://data.bs.ch/explore/?refine.tags=Verkehrsberuhigte+Zonen</a>"]
 pub mod verkehrsberuhigte_zonen_begegnungszone {
     use super::*;
 
@@ -62343,7 +63670,7 @@ pub mod verkehrsberuhigte_zonen_begegnungszone {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IdBegegnu,
         Regime,
@@ -62368,7 +63695,7 @@ pub mod verkehrsberuhigte_zonen_begegnungszone {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -62393,7 +63720,7 @@ pub mod verkehrsberuhigte_zonen_begegnungszone {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -62479,7 +63806,9 @@ pub mod verkehrsberuhigte_zonen_begegnungszone {
     }
 }
 
-/// BachApp: Am Fluss
+#[doc = "BachApp: Am Fluss"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz enth\u{e4}lt Informationstexte und FAQs, inkl. Details zur Kampagne #RHYLAX (<a href=\"https://www.entwicklung.bs.ch/stadtteile/rhylax.html\" target=\"_blank\">https://www.entwicklung.bs.ch/stadtteile/rhylax.html</a>) des Kantons, welche in der BachApp ver\u{f6}ffentlicht werden.\u{a0}</p>"]
 pub mod bachapp_am_fluss {
     use super::*;
 
@@ -62492,10 +63821,18 @@ pub mod bachapp_am_fluss {
         /// Sichtbar_von
         ///
         /// Sichtbar ab
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_von: Option<Date>,
         /// Sichtbar_bis
         ///
         /// Sichtbar bis
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub sichtbar_bis: Option<Date>,
         /// Kategorie
         ///
@@ -62523,7 +63860,7 @@ pub mod bachapp_am_fluss {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Id,
         Status,
@@ -62556,7 +63893,7 @@ pub mod bachapp_am_fluss {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -62581,7 +63918,7 @@ pub mod bachapp_am_fluss {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -62667,7 +64004,9 @@ pub mod bachapp_am_fluss {
     }
 }
 
-/// Lohntabelle des Kantons Basel-Stadt
+#[doc = "Lohntabelle des Kantons Basel-Stadt"]
+#[doc = ""]
+#[doc = "Jahreslohn (inkl. 13. Monatslohn), Monatslohn, Stundenlohn nach Lohnklassen, Lohnstufe und Jahr. Da es seit dem 01.07.2022 einen kantonalen Mindestlohn gibt, wurden im Jahr 2022 zwei Lohntabellen publiziert. Bei der Lohntabelle ab dem G\u{fc}ltigkeitsdatum 01.07.2022 wurden die L\u{f6}hne nach dem Mindestlohngesetz angepasst."]
 pub mod lohntabelle_des_kantons_basel_stadt {
     use super::*;
 
@@ -62678,6 +64017,10 @@ pub mod lohntabelle_des_kantons_basel_stadt {
         /// Gueltigkeit
         ///
         /// Gültigkeit der Lohntabelle
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub gueltigkeit: Option<Date>,
         /// Lohnklassen
         pub lohnklassen: Option<i64>,
@@ -62711,7 +64054,7 @@ pub mod lohntabelle_des_kantons_basel_stadt {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Gueltigkeit,
@@ -62740,7 +64083,7 @@ pub mod lohntabelle_des_kantons_basel_stadt {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -62765,7 +64108,7 @@ pub mod lohntabelle_des_kantons_basel_stadt {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -62851,7 +64194,9 @@ pub mod lohntabelle_des_kantons_basel_stadt {
     }
 }
 
-/// Basel Info: Interessante Orte (POI)
+#[doc = "Basel Info: Interessante Orte (POI)"]
+#[doc = ""]
+#[doc = "Basel Info ist das Fussg\u{e4}ngerorientierungssystem f\u{fc}r Basel-Stadt. Die detailreich gestalteten Karten erm\u{f6}glichen den Nutzern, die Stadt selbstst\u{e4}ndig zu Fuss oder mit dem \u{f6}V zu entdecken. Zus\u{e4}tzlich bieten 38 Gruppen von Points of Interest, unterteilt in 8 Klassen, n\u{fc}tzliche Informationen f\u{fc}r Touristen und Anwohner gleichermassen."]
 pub mod basel_info_interessante_orte_poi {
     use super::*;
 
@@ -62891,7 +64236,7 @@ pub mod basel_info_interessante_orte_poi {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Tid,
         Name,
@@ -62924,7 +64269,7 @@ pub mod basel_info_interessante_orte_poi {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -62949,7 +64294,7 @@ pub mod basel_info_interessante_orte_poi {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -63035,7 +64380,9 @@ pub mod basel_info_interessante_orte_poi {
     }
 }
 
-/// Smarte Strasse: Luftqualität Vergleichsmessungen
+#[doc = "Smarte Strasse: Luftqualit\u{e4}t Vergleichsmessungen"]
+#[doc = ""]
+#[doc = "<p>Das <a href=\"https://www.baselland.ch/politik-und-behorden/direktionen/bau-und-umweltschutzdirektion/lufthygiene\" target=\"_blank\">Lufthygieneamt beider Basel</a> (LHA) testet im Projekt \u{ab}Smarte Strasse\u{bb} kosteneffiziente Mikrosensoren auf ihre Genauigkeit und Zuverl\u{e4}ssigkeit. Der installierte Sensor vom Typ \u{ab}Nubo\u{bb} der Firma Sensirion AG ist in der Lage, die Konzentration verschiedener Schadstoffe in der Luft in Echtzeit zu ermitteln. Gemessen werden die Gehalte der Gase Stickstoffdioxid (NO2) und Ozon (O3), sowie die feinere Fraktion des Feinstaubs \u{ab}PM2.5\u{bb}. Dieser Datensatz enth\u{e4}lt die Daten von drei \u{ab}Nubo\u{bb}- Sensoren, welche an den permanenten Messstationen des LHA am St. Johanns-Platz, an der Feldbergstrasse und auf der Autobahn A2 in der Hard installiert und gegen die Referenzmessger\u{e4}te des LHA verglichen werden.</p><p>Genaue Standorte dieser Sensoren:\u{a0}</p><ul><li>Feldbergstrasse: 2611747 / 1268491, <a href=\"https://map.geo.admin.ch/?X=268491&amp;Y=611747&amp;zoom=9&amp;lang=de&amp;topic=ech&amp;bgLayer=ch.swisstopo.pixelkarte-farbe&amp;crosshair=bowl&amp;layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege,ch.astra.wanderland-sperrungen_umleitungen&amp;layers_opacity=1,1,1,0.8,0.8&amp;layers_visibility=false,false,false,false,false&amp;layers_timestamp=18641231,,,,\" target=\"_blank\">Kartenansicht</a></li><li>St. Johanns-Platz: 2610790 / 1268370, <a href=\"https://map.geo.admin.ch/?X=268370&amp;Y=610790&amp;zoom=9&amp;lang=de&amp;topic=ech&amp;bgLayer=ch.swisstopo.pixelkarte-farbe&amp;crosshair=bowl&amp;layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege,ch.astra.wanderland-sperrungen_umleitungen&amp;layers_opacity=1,1,1,0.8,0.8&amp;layers_visibility=false,false,false,false,false&amp;layers_timestamp=18641231,,,,\" target=\"_blank\">Kartenansicht</a></li><li>A2 Hard: 2615839 / 1265282, <a href=\"https://map.geo.admin.ch/?X=265282&amp;Y=615839&amp;zoom=9&amp;lang=de&amp;topic=ech&amp;bgLayer=ch.swisstopo.pixelkarte-farbe&amp;crosshair=bowl&amp;layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege,ch.astra.wanderland-sperrungen_umleitungen&amp;layers_opacity=1,1,1,0.8,0.8&amp;layers_visibility=false,false,false,false,false&amp;layers_timestamp=18641231,,,,\" target=\"_blank\">Kartenansicht</a></li></ul><p>Weitere Informationen zur Luftqualit\u{e4}t in der Region Basel sind auf <a href=\"https://www.luftqualitaet.ch\" target=\"_blank\">www.luftqualitaet.ch</a>\n verf\u{fc}gbar. Hintergrundinformationen zu Ozon und Feinstaub auf den Webseiten <a href=\"https://www.ozon-info.ch\" target=\"_blank\">www.ozon-info.ch</a> und <a href=\"https://www.feinstaub.ch\" target=\"_blank\">www.feinstaub.ch</a>. Angaben zu den gesundheitlichen Auswirkungen der Luftverschmutzung auf der Webseite <a href=\"https://www.swisstph.ch/de/projects/ludok/healtheffects/\" target=\"_blank\">https://www.swisstph.ch/de/projects/ludok/healtheffects/</a>.</p><p class=\"\">Weitere Informationen und Daten rund um das Projekt \u{ab}Smarte Strasse\u{bb} finden Sie unter den folgenden Links:</p><ul><li>Die Luftqualit\u{e4}ts-Daten der Sensoren an der smarten Strasse finden Sie hier:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100093\" target=\"_blank\">https://data.bs.ch/explore/dataset/100093</a>\u{a0}</li><li>Die Maximalwerte (O3) und Mittelwerte (NO2, PM 2.5) des Vortages sind zudem unter folgendem Datensatz zu finden: <a href=\"https://data.bs.ch/explore/dataset/100174\" target=\"_blank\">https://data.bs.ch/explore/dataset/100174</a></li><li>Weitere Informationen zum Projekt\u{a0}\u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html\" target=\"_blank\">https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html</a>\u{a0}</li><li>Genaue Standorte aller Sensoren:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100114/table/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100114/table/</a>\u{a0}</li><li>Weitere Datens\u{e4}tze rund um das Thema \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://data.bs.ch/explore/?refine.tags=smarte+strasse\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=smarte+strasse</a>\u{a0}</li></ul><p><b>Hinweis: <br/>Die Luft-Sensoren an der Gundeldingerstrasse wurden am 29.6.23 abmontiert. Seit Anfang/Mitte Juni wurden keine Daten mehr erhoben.</b><br/></p>"]
 pub mod smarte_strasse_luftqualitaet_vergleichsmessungen {
     use super::*;
 
@@ -63093,7 +64440,7 @@ pub mod smarte_strasse_luftqualitaet_vergleichsmessungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         A2hardNo2,
@@ -63128,7 +64475,7 @@ pub mod smarte_strasse_luftqualitaet_vergleichsmessungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -63153,7 +64500,7 @@ pub mod smarte_strasse_luftqualitaet_vergleichsmessungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -63239,7 +64586,9 @@ pub mod smarte_strasse_luftqualitaet_vergleichsmessungen {
     }
 }
 
-/// Flächen der Schulstandorte (Gemeinde Basel)
+#[doc = "Fl\u{e4}chen der Schulstandorte (Gemeinde Basel)"]
+#[doc = ""]
+#[doc = "Die Karte zeigt die Fl\u{e4}chen der Schulstandorte (Kinderg\u{e4}rten, Primar-, Sekundarschule, Gymnasium, Zentrum f\u{fc}r Br\u{fc}ckenangebote, Allgemeine Gewerbeschule, Fachmaturit\u{e4}tsschule, Spezialangebote sowie Tagesstrukturen, Sportpl\u{e4}tze, Turnhallen ausserhalb von Schulstandorten und Schwimmhallen) der Gemeinde Basel. Mehr Informationen zu den Schulstandorten sind in diesem Datensatz zu finden: <a href=\"https://data.bs.ch/explore/dataset/100029/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100029/</a>"]
 pub mod flaechen_der_schulstandorte_gemeinde_basel {
     use super::*;
 
@@ -63285,7 +64634,7 @@ pub mod flaechen_der_schulstandorte_gemeinde_basel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Schulstand,
         Schultyp,
@@ -63310,7 +64659,7 @@ pub mod flaechen_der_schulstandorte_gemeinde_basel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -63335,7 +64684,7 @@ pub mod flaechen_der_schulstandorte_gemeinde_basel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -63421,7 +64770,9 @@ pub mod flaechen_der_schulstandorte_gemeinde_basel {
     }
 }
 
-/// Rheintrübung kontinuierlich
+#[doc = "Rheintr\u{fc}bung kontinuierlich"]
+#[doc = ""]
+#[doc = "<p class=\"\"></p><div style=\"text-align: left;\"><p class=\"MsoNormal\" style=\"margin-bottom: 0.0001pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\">Kontinuierlich gemessene Tr\u{fc}bungsmesswerte der\u{a0}<a href=\"https://www.aue.bs.ch/umweltanalytik/rheinueberwachungsstation-weil-am-rhein.html\" target=\"_blank\"><span style=\"background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\">Rhein\u{fc}berwachungsstation\nWeil am Rhein</span></a>\u{a0}(RUES, siehe\nhttps://www.aue.bs.ch/umweltanalytik/rheinueberwachungsstation-weil-am-rhein.html),\njeweils gemittelt \u{fc}ber eine Stunde.\u{a0}<br/>\n\u{a0}<o:p></o:p></span></p>\n\n<p class=\"MsoNormal\" style=\"margin-bottom:0cm;margin-bottom:.0001pt;line-height:\nnormal\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\">Erkl\u{e4}rung zur Einheit:\u{a0}Die Tr\u{fc}bung einer\nFl\u{fc}ssigkeit wird optisch ermittelt, jedoch mittels elektronischer Auswertung\ngemessen. Die Wellenl\u{e4}nge der Mess-Strahlung liegt \u{fc}blicherweise im\nInfrarotbereich bei 860 nm (nach ISO 7027).\u{a0}<br/>\n<br/>\nFNU: Formazine Nephelometric Unit \u{2013} Streulichtmessung (Winkel 90\u{b0}) gem\u{e4}\u{df} den\nVorschriften der Norm ISO 7027\u{a0}<br/>\n<br/>\n<o:p></o:p></span></p>\n\n<p class=\"MsoNormal\" style=\"margin-bottom:0cm;margin-bottom:.0001pt;line-height:\nnormal\"><span style=\"font-size: 10.5pt; font-family: Arial, sans-serif; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\">Messbetrieb / Unterhalt:\u{a0}<a href=\"https://www.aue.bs.ch/\" target=\"_blank\">Amt\nf\u{fc}r Umwelt und Energie Basel-Stadt (AUE-BS)</a>\u{a0}<br/>\n(siehe https://www.aue.bs.ch/)<o:p></o:p></span></p></div><p></p><p></p>"]
 pub mod rheintruebung_kontinuierlich {
     use super::*;
 
@@ -63449,7 +64800,7 @@ pub mod rheintruebung_kontinuierlich {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Startzeitpunkt,
         Endezeitpunkt,
@@ -63466,7 +64817,7 @@ pub mod rheintruebung_kontinuierlich {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -63491,7 +64842,7 @@ pub mod rheintruebung_kontinuierlich {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -63577,7 +64928,9 @@ pub mod rheintruebung_kontinuierlich {
     }
 }
 
-/// Luftqualität Station Chrischona
+#[doc = "Luftqualit\u{e4}t Station Chrischona"]
+#[doc = ""]
+#[doc = "<p>Standortbeschreibung: Die Messstation befindet sich auf halber H\u{f6}he des Chrischonaturms. Dieser liegt auf einer Anh\u{f6}he \u{f6}stlich der Stadt Basel. In der N\u{e4}he der Station Chrischona befinden sich keine Abgasquellen. Sie gibt die Luftsituation wieder im l\u{e4}ndlichen Umland der Stadt Basel, auf einer H\u{f6}henlage von 640m \u{fc}ber Meer. In diesem H\u{f6}henbereich liegt oft auch die Inversion in der Nordwestschweiz.</p><p>Lage: L\u{e4}ndlich unterhalb 1000 m \u{fc}.M., keine Bebauung</p><p>Koordinaten: 2618695 / 1269030 bzw. N 47\u{b0} 34.302 E 7\u{b0} 41.225; 636 m \u{fc}. M.</p><p>Geografische Lage: Schwarzwaldrand</p><p>Siedlungsgr\u{f6}sse: ausserhalb</p>"]
 pub mod luftqualitaet_station_chrischona {
     use super::*;
 
@@ -63598,7 +64951,7 @@ pub mod luftqualitaet_station_chrischona {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         DatumZeit,
         TimestampText,
@@ -63615,7 +64968,7 @@ pub mod luftqualitaet_station_chrischona {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -63640,7 +64993,7 @@ pub mod luftqualitaet_station_chrischona {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -63726,7 +65079,9 @@ pub mod luftqualitaet_station_chrischona {
     }
 }
 
-/// Grosser Rat: Ratsmitgliedschaften
+#[doc = "Grosser Rat: Ratsmitgliedschaften"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Ratsmitglieder des Grossen Rates des Kantons Basel-Stadt.</p><p>Pro Datenpunkt wird eine Mitgliedschaft im Grossen Rat gezeigt. Dies kann also zu mehreren Eintr\u{e4}gen der gleichen Person f\u{fc}hren, falls diese Person nach einem Unterbruch wieder in den Grossen Rat gew\u{e4}hlt wurde.</p><p>Die Daten k\u{f6}nnen auch auf der Webseite des Grossen Rates eingesehen werden:<br/><a href=\"https://grosserrat.bs.ch/mitglieder\" target=\"_blank\">https://grosserrat.bs.ch/mitglieder</a></p>"]
 pub mod grosser_rat_ratsmitgliedschaften {
     use super::*;
 
@@ -63759,6 +65114,10 @@ pub mod grosser_rat_ratsmitgliedschaften {
         /// Geburtsdatum
         ///
         /// Geburtsdatum des (ehemaligen) Grossratsmitglieds
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub gebdatum: Option<Date>,
         /// Sitz Nr.
         ///
@@ -63779,10 +65138,18 @@ pub mod grosser_rat_ratsmitgliedschaften {
         /// Beginn Grossratsmitgliedschaft
         ///
         /// Startdatum der Mitgliedschaft im Grossen Rat
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub gr_beginn: Option<Date>,
         /// Ende Grossratsmitgliedschaft
         ///
         /// Enddatum der Mitgliedschaft im Grossen Rat
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub gr_ende: Option<Date>,
         /// Ratsmitglied grosserrat.bs.ch
         ///
@@ -63836,7 +65203,7 @@ pub mod grosser_rat_ratsmitgliedschaften {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         IstAktuellGrossrat,
         Anrede,
@@ -63895,7 +65262,7 @@ pub mod grosser_rat_ratsmitgliedschaften {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -63920,7 +65287,7 @@ pub mod grosser_rat_ratsmitgliedschaften {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -64006,7 +65373,9 @@ pub mod grosser_rat_ratsmitgliedschaften {
     }
 }
 
-/// Wohnbevölkerung nach Staatsangehörigkeit und Wohnviertel
+#[doc = "Wohnbev\u{f6}lkerung nach Staatsangeh\u{f6}rigkeit und Wohnviertel"]
+#[doc = ""]
+#[doc = "Dieser Datensatz beinhaltet Angaben zur Wohnbev\u{f6}lkerung des Kantons Basel-Stadt am Jahresende nach Staatsangeh\u{f6}rigkeit (Schweiz/Ausland) und Kantonsb\u{fc}rgerschaft auf Ebene Wohnviertel. Personen an administrativen Meldeadressen sind nicht ber\u{fc}cksichtigt. An administrativen Meldeadressen sind Personen aus administrativen Gr\u{fc}nden gemeldet, welche dort aber keinen physischen Wohnsitz haben (z.B. KESB)."]
 pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_wohnviertel {
     use super::*;
 
@@ -64065,7 +65434,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_wohnviertel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WovName,
         Wohnviertel,
@@ -64102,7 +65471,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_wohnviertel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -64127,7 +65496,7 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_wohnviertel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -64213,7 +65582,9 @@ pub mod wohnbevoelkerung_nach_staatsangehoerigkeit_und_wohnviertel {
     }
 }
 
-/// Einzugsgebiet der ARA Basel
+#[doc = "Einzugsgebiet der ARA Basel"]
+#[doc = ""]
+#[doc = "<p>Das Untersuchungsgebiet des Abwassermonitoring umfasst das Einzugsgebiet der ARA Basel, welches sich haupts\u{e4}chlich aus dem Kanton Basel-Stadt sowie den Gemeinden Allschwil, Binningen, Birsfelden, Bottmingen, Oberwil und Sch\u{f6}nenbuch (alle Kanton Baselland) zusammensetzt.<br/></p>"]
 pub mod einzugsgebiet_der_ara_basel {
     use super::*;
 
@@ -64233,7 +65604,7 @@ pub mod einzugsgebiet_der_ara_basel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Name,
     }
@@ -64246,7 +65617,7 @@ pub mod einzugsgebiet_der_ara_basel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -64271,7 +65642,7 @@ pub mod einzugsgebiet_der_ara_basel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -64357,7 +65728,9 @@ pub mod einzugsgebiet_der_ara_basel {
     }
 }
 
-/// Fischereiverbotszonen Rhein
+#[doc = "Fischereiverbotszonen Rhein"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz beinhaltet die Zonen innerhalb des Kantons Basel-Stadt, in welchen das Fischen nicht erlaubt ist.\u{a0}</p>"]
 pub mod fischereiverbotszonen_rhein {
     use super::*;
 
@@ -64381,7 +65754,7 @@ pub mod fischereiverbotszonen_rhein {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Id,
         Beschreibung,
@@ -64396,7 +65769,7 @@ pub mod fischereiverbotszonen_rhein {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -64421,7 +65794,7 @@ pub mod fischereiverbotszonen_rhein {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -64507,7 +65880,9 @@ pub mod fischereiverbotszonen_rhein {
     }
 }
 
-/// Rhein Wasserstand, Pegel und Abfluss
+#[doc = "Rhein Wasserstand, Pegel und Abfluss"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt den Wasserstand und die Abflussmenge des Rheins in Basel auf der Kleinbasler Seite auf H\u{f6}he des Birs-Zuflusses. Es liegen aktuelle Werte alle 5 Minuten vor. Die Messungen werden im Auftrag des Bundesamts f\u{fc}r Umwelt durchgef\u{fc}hrt (siehe <a href=\"https://www.hydrodaten.admin.ch/de/2289.html\" target=\"_blank\">https://www.hydrodaten.admin.ch/de/2289.html</a>).</p>\n<p>Der Pegel wird berechnet als [Wasserstand] - 240 m \u{fc}. M., siehe <a href=\"https://port-of-switzerland.ch/hafenservice/pegel/\" target=\"_blank\">https://port-of-switzerland.ch/hafenservice/pegel</a>.\u{a0}</p>"]
 pub mod rhein_wasserstand_pegel_und_abfluss {
     use super::*;
 
@@ -64538,7 +65913,7 @@ pub mod rhein_wasserstand_pegel_und_abfluss {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         Abfluss,
@@ -64557,7 +65932,7 @@ pub mod rhein_wasserstand_pegel_und_abfluss {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -64582,7 +65957,7 @@ pub mod rhein_wasserstand_pegel_und_abfluss {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -64668,7 +66043,9 @@ pub mod rhein_wasserstand_pegel_und_abfluss {
     }
 }
 
-/// Rohdaten-Zeitreihe der Belegung der Elektroauto-Ladestationen der IWB
+#[doc = "Rohdaten-Zeitreihe der Belegung der Elektroauto-Ladestationen der IWB"]
+#[doc = ""]
+#[doc = "<p>IWB baut im Kanton Basel-Stadt ein Netz leistungsf\u{e4}higer \u{f6}ffentlich zug\u{e4}nglicher Ladestationen auf, um der umweltfreundlichen und gerade f\u{fc}r Ballungsgebiete idealen Elektromobilit\u{e4}t entscheidende Impulse zu geben. </p>\n\n<p>In der Pilotphase wurden die Parkpl\u{e4}tze mit LoRa-angebunden Sensoren ausgestattet. Ziel war es festzustellen, ob Parkpl\u{e4}tze durch Fahrzeuge besetzt werden, ohne dass diese einen aktiven Ladevorgang vornehmen. Nach internen Abstimmungen wird die IWB die \u{dc}bermittlung der Daten ab ca. Mitte September 2022 nicht weiterf\u{fc}hren. Gr\u{fc}nde daf\u{fc}r sind Schwierigkeiten bei der \u{dc}bertragung der Werte sowie eine fehlende Relevanz f\u{fc}r die Praxis. Beim Roll-Out der weiteren \u{f6}ffentlichen Ladestationen auf Allmend werden voraussichtlich keine LoRa-Sensoren mehr verbaut.</p>\n\n<p>Echtzeitdaten zur Belegung der Elektroauto-Ladestationen der gesamten Schweiz basierend auf dem Status des Ladevorgangs sind hier zu finden:\u{a0}<a href=\"https://opendata.swiss/de/dataset/ladestationen\" target=\"_blank\">https://opendata.swiss/de/dataset/ladestationen</a></p>\n\n<p>Hier finden Sie die Zeitreihe der Rohdaten zur Belegung der Ladestationen. </p><p><b>Die vorliegenden Rohdaten enthalten insbesondere ab Mai 2021 viele doppelte Eintr\u{e4}ge, da die Sensoren ihre Belegung jeweils mehrfach und in verschiedenen Abst\u{e4}nden melden, auch ohne dass eine Status\u{e4}nderung (belegt/frei) erfolgt ist.\u{a0}</b></p><p>Die deduplizierte Zeitreihe ist hier zu finden:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100196\" target=\"_blank\">https://data.bs.ch/explore/dataset/100196</a>. Diese zeigt alle Status\u{e4}nderungen.\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100196\" target=\"_blank\"></a></p><p>Der Datensatz mit nur den aktuellsten Statusmeldungen ist hier zu finden:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100004\" target=\"_blank\">https://data.bs.ch/explore/dataset/100004</a><a href=\"https://data.bs.ch/explore/dataset/100004\" target=\"_blank\"></a></p><p>\u{c4}nderungsprotokoll:<br/>20.09.2022 - Aktualisierungsintervall von \"CONT\" auf \"NEVER\" ge\u{e4}ndert.</p>\n"]
 pub mod rohdaten_zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
     use super::*;
 
@@ -64703,7 +66080,7 @@ pub mod rohdaten_zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Addresse,
         Power,
@@ -64728,7 +66105,7 @@ pub mod rohdaten_zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -64753,7 +66130,7 @@ pub mod rohdaten_zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -64839,7 +66216,9 @@ pub mod rohdaten_zeitreihe_der_belegung_der_elektroauto_ladestationen_der_iwb {
     }
 }
 
-/// Kandidierende der Grossratswahlen 2024 nach Häufigkeit der Kandidatur seit 2008
+#[doc = "Kandidierende der Grossratswahlen 2024 nach H\u{e4}ufigkeit der Kandidatur seit 2008"]
+#[doc = ""]
+#[doc = "<p style=\"\">Dieser Datensatz zeigt die Kandidierenden der Grossratswahlen 2024 nach H\u{e4}ufigkeit ihrer Kandidatur seit 2008<br></p>"]
 pub mod kandidierende_der_grossratswahlen_2024_nach_haeufigkeit_der_kandidatur_seit_2008 {
     use super::*;
 
@@ -64869,7 +66248,7 @@ pub mod kandidierende_der_grossratswahlen_2024_nach_haeufigkeit_der_kandidatur_s
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Haufigkeit,
         Kandidaturen,
@@ -64888,7 +66267,7 @@ pub mod kandidierende_der_grossratswahlen_2024_nach_haeufigkeit_der_kandidatur_s
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -64913,7 +66292,7 @@ pub mod kandidierende_der_grossratswahlen_2024_nach_haeufigkeit_der_kandidatur_s
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -64999,7 +66378,9 @@ pub mod kandidierende_der_grossratswahlen_2024_nach_haeufigkeit_der_kandidatur_s
     }
 }
 
-/// Kennzahlen der Abstimmungen
+#[doc = "Kennzahlen der Abstimmungen"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">Dieser Datensatz zeigt die Resultate aller Volksabstimmungen seit dem 27. September 2020 f\u{fc}r den Kanton Basel-Stadt. Es werden verschiedene Kennzahlen nach Gemeinde differenziert.</p><p style=\"font-family: sans-serif;\">Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im\u{a0}<a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">Kantonsblatt</a>\u{a0}(<a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">https://www.kantonsblatt.ch/#!/search/publications</a>) des Kantons Basel-Stadt publiziert werden.</p><p style=\"font-family: sans-serif;\">Detaillierte Resultate auf Wahllokal-Ebene findet man im Datensatz\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100345\" target=\"_blank\">\"Abstimmungen Details\"</a>\u{a0}(<a href=\"https://data.bs.ch/explore/dataset/100345\" target=\"_blank\">https://data.bs.ch/explore/dataset/100345</a>)</p><p style=\"font-family: sans-serif;\">Eine Liste der Wahllokale findet man im Datensatz \"<a href=\"https://data.bs.ch/explore/dataset/100098\" target=\"_blank\">Wahllokale Kanton Basel-Stadt</a>\" (<a href=\"https://data.bs.ch/explore/dataset/100098\" target=\"_blank\">https://data.bs.ch/explore/dataset/100098</a>)</p>"]
 pub mod kennzahlen_der_abstimmungen {
     use super::*;
 
@@ -65008,6 +66389,10 @@ pub mod kennzahlen_der_abstimmungen {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Vorlage-ID
         ///
@@ -65137,7 +66522,7 @@ pub mod kennzahlen_der_abstimmungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         AbstDatum,
         AbstId,
@@ -65216,7 +66601,7 @@ pub mod kennzahlen_der_abstimmungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -65241,7 +66626,7 @@ pub mod kennzahlen_der_abstimmungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -65327,7 +66712,9 @@ pub mod kennzahlen_der_abstimmungen {
     }
 }
 
-/// Durchschnittlicher Tagesverkehr (basierend auf dem Geschwindigkeitsmonitoring der Kantonspolizei)
+#[doc = "Durchschnittlicher Tagesverkehr (basierend auf dem Geschwindigkeitsmonitoring der Kantonspolizei)"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz resultiert aus dem Daten des Geschwindigkeitsmonitorings der Kantonspolizei Basel-Stadt (siehe <a href=\"https://data.bs.ch/explore/?sort=modified&amp;q=%22geschwindigkeitsmonitoring+Einzelmessungen%22\" target=\"_blank\">https://data.bs.ch/explore/?sort=modified&amp;q=%22geschwindigkeitsmonitoring+Einzelmessungen%22</a>). Es wird zu jeder Messung und Richtung (ein Messger\u{e4}t an einem Standort misst in zwei Richtungen) der durchschnittliche Tagesverkehr berechnet. </p><p>\n\nHinweis: Die Messungen sind nicht zwingend repr\u{e4}sentativ f\u{fc}r das ganze Jahr und m\u{fc}ssen im Kontext des Erhebungsdatums betrachtet werden. Dar\u{fc}ber hinaus wurden gewisse Messungen w\u{e4}hrend einer ausserordentlichen Verkehrsf\u{fc}hrung (z.B. Umleitungsverkehr infolge von Baustellent\u{e4}tigkeiten etc.) erhoben. Diese Messungen sind ab dem Jahr 2022 in der Spalte \u{ab}Ausserordentliche Verkehrsf\u{fc}hrung\u{bb} mit \u{ab}True\u{bb} gekennzeichnet. Manipulationen an Ger\u{e4}ten k\u{f6}nnen zu fehlerhaften Messungen f\u{fc}hren.\n</p>"]
 pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonitoring_der_kantonspolizei {
     use super::*;
 
@@ -65435,7 +66822,7 @@ pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonito
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         MessungId,
         Strasse,
@@ -65490,7 +66877,7 @@ pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonito
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -65515,7 +66902,7 @@ pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonito
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -65601,7 +66988,9 @@ pub mod durchschnittlicher_tagesverkehr_basierend_auf_dem_geschwindigkeitsmonito
     }
 }
 
-/// Wiese Wasserstand und Abfluss
+#[doc = "Wiese Wasserstand und Abfluss"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt den Wasserstand und die Abflussmenge der Wiese in Basel etwa auf H\u{f6}he der Br\u{fc}cke bei der Wiesenstrasse \u{fc}ber die Wiese. Es liegen aktuelle Werte alle 5 Minuten vor. Die Messungen werden im Auftrag des Bundesamts f\u{fc}r Umwelt durchgef\u{fc}hrt (siehe <a href=\"https://www.hydrodaten.admin.ch/de/2199.html\" target=\"_blank\">https://www.hydrodaten.admin.ch/de/2199.html</a>).</p>"]
 pub mod wiese_wasserstand_und_abfluss {
     use super::*;
 
@@ -65628,7 +67017,7 @@ pub mod wiese_wasserstand_und_abfluss {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         Abfluss,
@@ -65645,7 +67034,7 @@ pub mod wiese_wasserstand_und_abfluss {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -65670,7 +67059,7 @@ pub mod wiese_wasserstand_und_abfluss {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -65756,7 +67145,9 @@ pub mod wiese_wasserstand_und_abfluss {
     }
 }
 
-/// Smarte Strasse: Parkplatzbelegung
+#[doc = "Smarte Strasse: Parkplatzbelegung"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">Der Datensatz zeigt die Anzahl besetzter und freier Parkpl\u{e4}tze in den beiden Zonen \u{ab}blau\u{bb} und \u{ab}gelb\u{bb}.</p><p style=\"font-family: sans-serif;\"><b>Die Detektion freier Parkpl\u{e4}tze mittels Kamera befindet sich noch in der Testphase. Aus diesem Grund sind die Werte mit Vorsicht zu geniessen und k\u{f6}nnen von den tats\u{e4}chlichen Zust\u{e4}nden abweichen.</b><br/></p><p style=\"font-family: sans-serif;\">Zus\u{e4}tzlich relevante Datens\u{e4}tze f\u{fc}r die Parkplatzbelegung:</p><ul><li><a href=\"https://data.bs.ch/explore/dataset/100171/\" target=\"_blank\">Zu- und Wegfahrten, Parkplatzauslastung</a></li><li><a href=\"https://data.bs.ch/explore/dataset/100176/\" target=\"_blank\">Parkplatz-Zonen</a></li></ul><p class=\"\" style=\"font-family: sans-serif;\">Weitere Informationen und Daten rund um das Projekt \u{ab}Smarte Strasse\u{bb} finden Sie unter den folgenden Links:</p><ul><li>Weitere Informationen zum Projekt\u{a0}\u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html\" target=\"_blank\">https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html</a>\u{a0}</li><li>Genaue Standorte aller Sensoren:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100114/table/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100114/table/</a>\u{a0}</li><li>Weitere Datens\u{e4}tze rund um das Thema \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://data.bs.ch/explore/?refine.tags=smarte+strasse\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=smarte+strasse</a>\u{a0}</li></ul><p><b>Die Parkplatz-Kamera an der Gundeldingerstrasse wurde am Dienstag 4.10.2022 abmontiert. Es werden keine Daten mehr erhoben.</b><br/></p>"]
 pub mod smarte_strasse_parkplatzbelegung {
     use super::*;
 
@@ -65798,7 +67189,7 @@ pub mod smarte_strasse_parkplatzbelegung {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         BlueTotal,
@@ -65825,7 +67216,7 @@ pub mod smarte_strasse_parkplatzbelegung {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -65850,7 +67241,7 @@ pub mod smarte_strasse_parkplatzbelegung {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -65936,7 +67327,9 @@ pub mod smarte_strasse_parkplatzbelegung {
     }
 }
 
-/// Temperatur Grundwasser
+#[doc = "Temperatur Grundwasser"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz enth\u{e4}lt die Grundwassertemparturen in \u{b0}C des kantonalen Grundwassermessnetzes. Es weist zur Zeit um die 80 Messstationen auf. Bei den Stationen, die mit einer Datenfern\u{fc}bertragung ausger\u{fc}stet sind, liegen tagesaktuelle Stundenwerte vor.</p><p>Jede Messstation ist mit der Katasternummer gem\u{e4}ss Bohrkataster des Kantons Basel-Stadt versehen (<a href=\"https://data.bs.ch/explore/dataset/100182\" target=\"_blank\">https://data.bs.ch/explore/dataset/100182</a>). Die Bohrungen sind auch auf MapBS unter dem Thema Geologie abrufbar (<a href=\"http://www.geo.bs.ch/bohrkataster\" target=\"_blank\">www.geo.bs.ch/bohrkataster</a>).</p><p>Weitere Informationen: <a href=\"https://www.aue.bs.ch/wasser/grundwasser/grundwasserpegel-grundwasserqualitaet.html\" target=\"_blank\">https://www.aue.bs.ch/wasser/grundwasser/grundwasserpegel-grundwasserqualitaet.html</a></p>"]
 pub mod temperatur_grundwasser {
     use super::*;
 
@@ -66018,7 +67411,7 @@ pub mod temperatur_grundwasser {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         Stationnr,
@@ -66067,7 +67460,7 @@ pub mod temperatur_grundwasser {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -66092,7 +67485,7 @@ pub mod temperatur_grundwasser {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -66178,7 +67571,9 @@ pub mod temperatur_grundwasser {
     }
 }
 
-/// Belegung der Elektroauto-Ladestationen der IWB
+#[doc = "Belegung der Elektroauto-Ladestationen der IWB"]
+#[doc = ""]
+#[doc = "<p>IWB baut im Kanton Basel-Stadt ein Netz leistungsf\u{e4}higer \u{f6}ffentlich zug\u{e4}nglicher Ladestationen auf, um der umweltfreundlichen und gerade f\u{fc}r Ballungsgebiete idealen Elektromobilit\u{e4}t entscheidende Impulse zu geben.\u{a0}</p><p>In der Pilotphase wurden die Parkpl\u{e4}tze mit LoRa-angebunden Sensoren ausgestattet. Ziel war es festzustellen, ob Parkpl\u{e4}tze durch Fahrzeuge besetzt werden, ohne dass diese einen aktiven Ladevorgang vornehmen. Nach internen Abstimmungen wird die IWB die \u{dc}bermittlung der Daten ab ca. Mitte September 2022 nicht weiterf\u{fc}hren. Gr\u{fc}nde daf\u{fc}r sind Schwierigkeiten bei der \u{dc}bertragung der Werte sowie eine fehlende Relevanz f\u{fc}r die Praxis. Beim Roll-Out der weiteren \u{f6}ffentlichen Ladestationen auf Allmend werden voraussichtlich keine LoRa-Sensoren mehr verbaut.\u{a0}</p><p>Echtzeitdaten zur Belegung der Elektroauto-Ladestationen der gesamten Schweiz basierend auf dem Status des Ladevorgangs sind hier zu finden:\u{a0}<a href=\"https://opendata.swiss/de/dataset/ladestationen\" target=\"_blank\">https://opendata.swiss/de/dataset/ladestationen</a></p>"]
 pub mod belegung_der_elektroauto_ladestationen_der_iwb {
     use super::*;
 
@@ -66201,7 +67596,7 @@ pub mod belegung_der_elektroauto_ladestationen_der_iwb {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Addresse,
         Power,
@@ -66226,7 +67621,7 @@ pub mod belegung_der_elektroauto_ladestationen_der_iwb {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -66251,7 +67646,7 @@ pub mod belegung_der_elektroauto_ladestationen_der_iwb {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -66337,7 +67732,9 @@ pub mod belegung_der_elektroauto_ladestationen_der_iwb {
     }
 }
 
-/// Abstimmungen Details
+#[doc = "Abstimmungen Details"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Resultate aller Volksabstimmungen seit dem 27. September 2020 f\u{fc}r den Kanton Basel-Stadt auf Ebene Wahllokal.</p><p>Bitte beachten Sie, dass die offiziell g\u{fc}ltigen Schlussresultate im <a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">Kantonsblatt</a>\u{a0}(<a href=\"https://www.kantonsblatt.ch/#!/search/publications\" target=\"_blank\">https://www.kantonsblatt.ch/#!/search/publications</a>) des Kantons Basel-Stadt publiziert werden.</p><p>Die Gesamtresultate der Abstimmungen und die Resultate auf Gemeindeebene findet man im Datensatz <a href=\"https://data.bs.ch/explore/dataset/100346\" target=\"_blank\">\"Abstimmungen Kennzahlen\"</a> (<a href=\"https://data.bs.ch/explore/dataset/100346\" target=\"_blank\">https://data.bs.ch/explore/dataset/100346</a>)</p><p>Eine Liste der Wahllokale findet man im Datensatz \"<a href=\"https://data.bs.ch/explore/dataset/100098\" target=\"_blank\">Wahllokale Kanton Basel-Stadt</a>\" (<a href=\"https://data.bs.ch/explore/dataset/100098\" target=\"_blank\">https://data.bs.ch/explore/dataset/100098</a>)</p>"]
 pub mod abstimmungen_details {
     use super::*;
 
@@ -66346,6 +67743,10 @@ pub mod abstimmungen_details {
         /// Datum
         ///
         /// Datum der Abstimmung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub abst_datum: Option<Date>,
         /// Vorlage-ID
         ///
@@ -66463,7 +67864,7 @@ pub mod abstimmungen_details {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         AbstDatum,
         AbstId,
@@ -66534,7 +67935,7 @@ pub mod abstimmungen_details {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -66559,7 +67960,7 @@ pub mod abstimmungen_details {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -66645,7 +68046,9 @@ pub mod abstimmungen_details {
     }
 }
 
-/// Temperatur Wiese
+#[doc = "Temperatur Wiese"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt die st\u{fc}ndlichen Temperaturwerte der Wiese an.</p><p>Koordinaten:\u{a0}<a href=\"https://map.geo.bs.ch/s/7z0Q\" target=\"_blank\">47.581638577259945, 7.59193858146811</a></p>"]
 pub mod temperatur_wiese {
     use super::*;
 
@@ -66668,7 +68071,7 @@ pub mod temperatur_wiese {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         TimestampText,
         Temperatur,
@@ -66683,7 +68086,7 @@ pub mod temperatur_wiese {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -66708,7 +68111,7 @@ pub mod temperatur_wiese {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -66794,7 +68197,9 @@ pub mod temperatur_wiese {
     }
 }
 
-/// Wetterstation Rosental Mitte
+#[doc = "Wetterstation Rosental Mitte"]
+#[doc = ""]
+#[doc = "<p>Die Wetterstation wurde im Rahmen der \u{ab}Transformation\u{a0}<a href=\"https://rosentalmitte.ch/\" target=\"_blank\">Rosental Mitte</a>\u{bb} installiert. Das Areal soll dabei etappenweise f\u{fc}r die \u{d6}ffentlichkeit zug\u{e4}nglich gemacht und zu einem vollwertigen Stadtteil entwickelt werden. </p><p>Bedingt durch die fr\u{fc}here Nutzung des Rosental Areals \u{2013} auch bekannt als die Wiege der Basler Chemie - ist der Untergrund mit Schadstoffen belastet. W\u{e4}hrend der Tiefbauarbeiten \u{fc}berwacht das <a href=\"http://www.basler-luft.ch/\" target=\"_blank\">Lufthygieneamt beider Basel (LHA)</a> die Immissionen mittels Messungen der Luft. Die Wetterstation zeichnet w\u{e4}hrend der \u{dc}berwachung u.a. Windrichtungen und Windgeschwindigkeiten auf, die bei der Interpretation der Immissionsmessungen hilfreich sind.</p>"]
 pub mod wetterstation_rosental_mitte {
     use super::*;
 
@@ -66835,7 +68240,7 @@ pub mod wetterstation_rosental_mitte {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Timestamp,
         Precipitation,
@@ -66860,7 +68265,7 @@ pub mod wetterstation_rosental_mitte {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -66885,7 +68290,7 @@ pub mod wetterstation_rosental_mitte {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -66971,7 +68376,9 @@ pub mod wetterstation_rosental_mitte {
     }
 }
 
-/// Überwachung Luftqualität Transformation Areal Rosental: Standorte
+#[doc = "\u{dc}berwachung Luftqualit\u{e4}t Transformation Areal Rosental: Standorte"]
+#[doc = ""]
+#[doc = "<p>Bedingt durch die fr\u{fc}here Nutzung des Rosental Areals \u{2013} auch bekannt als die Wiege der Basler Chemie - ist der Untergrund mit Schadstoffen belastet. W\u{e4}hrend der Tiefbauarbeiten im Rahmen der \u{ab}Transformation <a href=\"https://rosentalmitte.ch/\" target=\"_blank\">Rosental Mitte</a>\u{bb} \u{fc}berwacht das <a href=\"http://www.basler-luft.ch/\" target=\"_blank\">Lufthygieneamt beider Basel (LHA)</a> die Immissionen mittels Messungen der Luft <a href=\"https://data.bs.ch/pages/rosental-dashboard/\" target=\"_blank\">(Dashboard)</a>.\u{a0}</p><p>\u{c4}nderungsprotokoll:<br>23.4.2024: Die Messstation ROSEN 3 wurde verschoben. Alte geografische Breiten- und L\u{e4}ngengrade 47.567827676637364, 7.603804744961502. Neue Breiten- und L\u{e4}gengrade\u{a0}47.567997530870265, 7.60479830196066.</p><div><br></div>"]
 pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_standorte {
     use super::*;
 
@@ -66992,7 +68399,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_standorte {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Name,
         XCoord,
@@ -67009,7 +68416,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_standorte {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -67034,7 +68441,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_standorte {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -67120,13 +68527,19 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_standorte {
     }
 }
 
-/// Abwassermonitoring: Influenza und RSV
+#[doc = "Abwassermonitoring: Influenza und RSV"]
+#[doc = ""]
+#[doc = "<p><b>Figur<br></b><span>Der Datensatz zeigt den 7-Tage-Median der RNA-Kopien des angegebenen Virus jeweils pro Tag und 100\u{2018}000 Personen im Abwasser der Abwasserreinigungs-Anlage (ARA) Basel sowie den 7-Tage-Median der entsprechenden Fallzahlen. Der Datensatz wird i.d.R. jeweils dienstags mit den Daten bis vorangegangenem Sonntag aktualisiert. In einzelnen Wochen kann es zu Verschiebungen kommen.</span></p><p><span style=\"font-weight: bolder;\">Messung<br></span>Die ProRheno AG (Betreiber der ARA Basel) entnimmt jeweils eine 24h-Probe des Rohabwassers, welche durch das Kantonale Laboratorium Basel-Stadt (KL BS) auf RNA der angegebenen Viren untersucht wird. Die Messmethodik wurde dabei seit Beginn des Monitorings nicht ver\u{e4}ndert: siehe Publikation\u{a0}<a href=\"https://smw.ch/index.php/smw/article/view/3226\" target=\"_blank\">https://smw.ch/index.php/smw/article/view/3226</a>. Die Plausibilit\u{e4}t der Werte wird laufend anhand interner Qualit\u{e4}tsparameter \u{fc}berpr\u{fc}ft. Das Untersuchungsgebiet umfasst das Einzugsgebiet der ARA Basel, welches sich haupts\u{e4}chlich aus dem Kanton Basel-Stadt sowie den Gemeinden Allschwil, Binningen, Birsfelden, Bottmingen, Oberwil und Sch\u{f6}nenbuch (alle Kanton Baselland) zusammensetzt. Bis Ende Juni 2023 wurden die Messwerte des KL BS auch auf dem Abwasser-Dashboard des BAG\u{a0}<a href=\"https://www.covid19.admin.ch/de/epidemiologic/waste-water?wasteWaterFacility=270101\" target=\"_blank\">Covid-\u{2060}19 Schweiz | Coronavirus | Dashboard (https://www.covid19.admin.ch/de/epidemiologic/waste-water?wasteWaterFacility=270101)</a>\u{a0}dargestellt. Ab Juli 2023 werden auf dieser Seite die Messwerte der EAWAG\u{a0}<a href=\"https://www.eawag.ch/de/abteilung/sww/projekte/sars-cov2-im-abwasser/\" target=\"_blank\">SARS-CoV2 im Abwasser - Eawag</a>\u{a0}(<a href=\"https://www.eawag.ch/de/abteilung/sww/projekte/sars-cov2-im-abwasser/\" target=\"_blank\">https://www.eawag.ch/de/abteilung/sww/projekte/sars-cov2-im-abwasser/</a>) publiziert, welche ebenfalls das Rohabwasser der ARA Basel untersucht. Die vom KL BS und der EAWAG verwendeten Untersuchungsmethoden sind sehr \u{e4}hnlich aber nicht identisch.</p><p><span style=\'font-size:11.0pt;font-family:\"Arial\",sans-serif;\nmso-fareast-font-family:Calibri;mso-fareast-theme-font:minor-latin;mso-ansi-language:\nDE-CH;mso-fareast-language:EN-US;mso-bidi-language:AR-SA\'>In den Zeitr\u{e4}umen\n29.4. bis 1.8.2022 (ausser 1.6.2022 und 5.6.2022) und 30.5.2023 bis 3.9.2023\nwurden keine Abwasserproben auf Influenza und RSV untersucht.</span><br></p><p><b>Fallzahlen <br></b>Die Fallzahlen entsprechen der Anzahl der best\u{e4}tigten und dem Kanton gemeldeten F\u{e4}lle der dargestellten Infektionen im Einzugsgebiet der ARA Basel.<br></p><p><b>Interpretation der Kurven<br></b><span\">Beim Monitoring von Viren im Abwasser geht es in erster Linie darum, Trends zu erkennen (insbesondere nat\u{fc}rlich die Zunahme eines zirkulierenden Virus). Es ist nicht m\u{f6}glich, daraus eine bestimmte Fallzahl oder den Schweregrad einer Infektion abzuleiten. Ein Vergleich des Kurvenausschlags (H\u{f6}he der Peaks) zu verschiedenen Zeitpunkten ist kaum m\u{f6}glich, da z.B. unterschiedliche Virusvarianten zu unterschiedlichen Virusmengen pro Fall f\u{fc}hren. Unterschiedliche Virusvarianten k\u{f6}nnen auch die Symptomatik beeinflussen, so dass z.B. Infektionen bei Menschen spurlos verlaufen, aber dennoch Viren ins Abwasser abgegeben werden.</span\"></p>\n\n<div class=\"html_button btn-left\">\n    <a class=\"btn customButton large\" href=\"https://data.bs.ch/pages/abwassermonitoring-dashboard/\">Hier gehts zum Dashboard</a>\n</div>"]
 pub mod abwassermonitoring_influenza_und_rsv {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// KW
         pub kw: Option<i64>,
@@ -67204,7 +68617,7 @@ pub mod abwassermonitoring_influenza_und_rsv {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Kw,
@@ -67285,7 +68698,7 @@ pub mod abwassermonitoring_influenza_und_rsv {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -67310,7 +68723,7 @@ pub mod abwassermonitoring_influenza_und_rsv {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -67396,7 +68809,9 @@ pub mod abwassermonitoring_influenza_und_rsv {
     }
 }
 
-/// Wilde Abfall-Deponien
+#[doc = "Wilde Abfall-Deponien"]
+#[doc = ""]
+#[doc = "<p>Dieser Datensatz zeigt die Abf\u{e4}lle, welche an unerlaubten Orten, in nicht geb\u{fc}hrenpflichtigen S\u{e4}cken oder/und zur Unzeit deponiert wurden und durch die Stadtreinigung der Abfallkontrolle des Amts f\u{fc}r Umwelt und Energie gemeldet wurden.\u{a0}<br><br>Die genauen geographischen Koordinaten werden einem 50x50 Meter Raster zugeteilt. Der s\u{fc}d-westliche Eckpunkt dieses Rasters wird jeweils als Geopunkt ausgewiesen, um die Anonymit\u{e4}t zu garantieren.\u{a0} \u{a0}</p>"]
 pub mod wilde_abfall_deponien {
     use super::*;
 
@@ -67447,7 +68862,7 @@ pub mod wilde_abfall_deponien {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Id,
         BearbeitungszeitMeldung,
@@ -67476,7 +68891,7 @@ pub mod wilde_abfall_deponien {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -67501,7 +68916,7 @@ pub mod wilde_abfall_deponien {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -67587,7 +69002,9 @@ pub mod wilde_abfall_deponien {
     }
 }
 
-/// Smarte Strasse: Elektroauto-Ladestationen
+#[doc = "Smarte Strasse: Elektroauto-Ladestationen"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt die Inhalte, die beim Laden eines E-Fahrzeugs erhoben werden. Diese Daten werden von der E-Ladestation erhoben, die im Rahmen des Projekts \u{ab}Smarte Strasse\u{bb} in Basel installiert wurde. Diese E-Ladestation wurde mit minimalem Ressourcenaufwand montiert, indem man ein Kabelverteilkasten (KVK) um genutzt hat.</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Weitere Informationen und Daten rund um das Projekt \u{ab}Smarte Strasse\u{bb} finden Sie unter den folgenden Links:</span></p><ul><li>Weitere Informationen zum Projekt \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html\" target=\"_blank\">https://www.entwicklung.bs.ch/grundlagen/smart-city/smarte-strasse.html</a>\u{a0}</li><li>Genaue Standorte aller Sensoren:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100114/table/\" target=\"_blank\">https://data.bs.ch/explore/dataset/100114/table/</a>\u{a0}</li><li>Weitere Datens\u{e4}tze rund um das Thema \u{ab}Smarte Strasse\u{bb}:\u{a0}<a href=\"https://data.bs.ch/explore/?refine.tags=smarte+strasse\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=smarte+strasse</a>\u{a0}</li></ul><p><br/></p>"]
 pub mod smarte_strasse_elektroauto_ladestationen {
     use super::*;
 
@@ -67650,7 +69067,7 @@ pub mod smarte_strasse_elektroauto_ladestationen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Starttime,
         Stoptime,
@@ -67687,7 +69104,7 @@ pub mod smarte_strasse_elektroauto_ladestationen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -67712,7 +69129,7 @@ pub mod smarte_strasse_elektroauto_ladestationen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -67798,7 +69215,9 @@ pub mod smarte_strasse_elektroauto_ladestationen {
     }
 }
 
-/// Zeitreihe der Belegung öffentlicher Parkhäuser Basel
+#[doc = "Zeitreihe der Belegung \u{f6}ffentlicher Parkh\u{e4}user Basel"]
+#[doc = ""]
+#[doc = "<p>St\u{fc}ndlich aktualisierte Belegungsdaten der \u{f6}ffentlichen Parkh\u{e4}user der Stadt Basel, bezogen \u{fc}ber den<a href=\"http://www.parkleitsystem-basel.ch/rss_feed.php\" target=\"_blank\"> RSS Feed</a> des <a href=\"http://www.parkleitsystem-basel.ch\" target=\"_blank\">Parkleitsystems Basel</a>.\u{a0}</p><p>Historische Daten mit kleinerer zeitlicher Aufl\u{f6}sung k\u{f6}nnen auch \u{fc}ber das API von ParkenDD bezogen werden, wie hier am Beispiel der Parkh\u{e4}user der Stadt Z\u{fc}rich beschrieben:\u{a0}<a href=\"https://opendatazurich.github.io/parkendd-api\" target=\"_blank\">https://opendatazurich.github.io/parkendd-api</a>\u{a0}(die Parkh\u{e4}user von Basel sind \u{fc}ber diese URL abrufbar: <a href=\"https://api.parkendd.de/Basel\" target=\"_blank\">https://api.parkendd.de/Basel</a>).\u{a0}</p><p>Die Standorte der Parkh\u{e4}user sind in diesem Datensatz ersichtlich:\u{a0}<a href=\"https://data.bs.ch/explore/dataset/100044\" target=\"_blank\">https://data.bs.ch/explore/dataset/100044</a>\u{a0}</p><p><span style=\"font-family: inherit; font-size: 0.875rem;\">\u{c4}nderungsprotokoll:<br></span><span style=\"font-family: inherit; font-size: 0.875rem;\">14.08.2023 - Neue Spalte \"auslastungen\" wurde hinzugef\u{fc}gt.</span></p>"]
 pub mod zeitreihe_der_belegung_oeffentlicher_parkhaeuser_basel {
     use super::*;
 
@@ -67849,7 +69268,7 @@ pub mod zeitreihe_der_belegung_oeffentlicher_parkhaeuser_basel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Published,
         Free,
@@ -67882,7 +69301,7 @@ pub mod zeitreihe_der_belegung_oeffentlicher_parkhaeuser_basel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -67907,7 +69326,7 @@ pub mod zeitreihe_der_belegung_oeffentlicher_parkhaeuser_basel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -67993,7 +69412,9 @@ pub mod zeitreihe_der_belegung_oeffentlicher_parkhaeuser_basel {
     }
 }
 
-/// Solarkataster: Solarpotenzial
+#[doc = "Solarkataster: Solarpotenzial"]
+#[doc = ""]
+#[doc = "\u{dc}ber den Solarkataster kann abgesch\u{e4}tzt werden, wie gut sich die Dach- und Fassadenfl\u{e4}chen im Kantonsgebiet f\u{fc}r die solare Nutzung eignen. Die ausgewiesenen Potenziale beruhen auf Modellrechnungen und stellen keine exakten Messwerte dar.\n<br> S\u{e4}mtliche Datens\u{e4}tze zu dem Produkt \"Solarkataster\": <a href=\"https://data.bs.ch/explore/?refine.tags=solarkataster\" target=\"_blank\">https://data.bs.ch/explore/?refine.tags=solarkataster</a> \n<br><strong>Zus\u{e4}tzliche Informationen</strong>\n<br>Die ausgewiesenen Potenziale beruhen auf Strahlungsmodellierungen der Firma Laserdata GmbH aus Innsbruck und stellen keine exakten Messwerte dar. Sie k\u{f6}nnen lediglich eine grobe Absch\u{e4}tzung zur Eignung einer Dachfl\u{e4}che f\u{fc}r eine solare Nutzung erm\u{f6}glichen.\nDie Berechnung der solaren Globalstrahlung basiert auf dem 0.5m-Oberfl\u{e4}chenmodell der Laserscan-Befliegung vom Fr\u{fc}hjahr 2021 sowie der Fassaden des 3D Stadtmodells des Kantons Basel-Stadt. Die Geb\u{e4}udeumrisse stammen aus der Ebene Bodenbedeckung der Amtlichen Vermessung vom 20.07.2021 und die Dachkanten vom 3D-Stadmodell Stand: 26.05.2021.\n\n<br>Die Berechnungsschritte umfassen im Einzelnen:\n<br>- \u{dc}bernahme des digitalen Oberfl\u{e4}chenmodells (DSM) sowie des 3D Stadtmodells vom Auftraggeber (z.B: des Kantons Basel-Stadt) in Softwaremodule der Firma Laserdata GmbH aus Innsbruck, Datenbankaufbau DSM, umliegendes Digitales Gel\u{e4}ndemodell (DGM), Indexierung, Tile-Generierung\n<br>\n- Strahlungsmodellierung der Dachfl\u{e4}chen auf Rasterbasis DGM (Topographie) und DSM (Nahverschattung) \u{fc}ber ein astronomisches Jahr hinweg,\n<br>\n- Strahlungsmodellierung der Geb\u{e4}udefassaden \u{fc}ber synthetisch erzeugte Fassadenpunkte mit Neigung und Ausrichtung auf Basis des 3D Stadtmodells, DGM (Topographie) und DSM (Nahverschattung) \u{fc}ber ein astronomisches Jahr hinweg\n<br>\n- Berechnung von f\u{fc}r verschiedene Zeitr\u{e4}ume berechnete Globalstrahlungs-Rasterdatens\u{e4}tzen (insbesondere Sommer-, Winterhalbjahr, Jahressummenwert) des Solarpotenzials der Hausd\u{e4}cher. Einheit: Kilowattstunden pro m\u{b2} und Bezugszeitraum\n<br>\n- Korrektur der unter clear sky Bedingungen modellierten Globalstrahlung anhand von meteorologischen Messwerten\n<br>\n- Einteilung der Eignung der Dachfl\u{e4}chen zur solaren Nutzung in vom Auftraggeber bestimmte Klassen f\u{fc}r Photovoltaik sowie Solarthermie unter Ber\u{fc}cksichtigung von definierten Mindestfl\u{e4}chen\n<br>\n- Zonalstatistik der Rasterinformationen des Solarpotenzials sowie der Fassadeneinstrahlung als Attributdaten zu einem Vektorlayer der Geb\u{e4}udeumrisse des Auftraggebers des Kantons Basel-Stadt"]
 pub mod solarkataster_solarpotenzial {
     use super::*;
 
@@ -68075,7 +69496,7 @@ pub mod solarkataster_solarpotenzial {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Idgebaeude,
         Gebaeudenr,
@@ -68118,7 +69539,7 @@ pub mod solarkataster_solarpotenzial {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -68143,7 +69564,7 @@ pub mod solarkataster_solarpotenzial {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -68229,7 +69650,9 @@ pub mod solarkataster_solarpotenzial {
     }
 }
 
-/// Standorte Mess-Stationen Smart Climate Luftklima
+#[doc = "Standorte Mess-Stationen Smart Climate Luftklima"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt die Standorte der Mess-Stationen f\u{fc}r den Datensatz <a href=\"https://data.bs.ch/explore/dataset/100009\" target=\"_blank\">\u{ab}Luftklima Smart Regio Basel\u{bb}</a>.</p><p><b>\u{c4}nderungsprotokoll:</b></p><p><b>18.04.2024:</b> Die Koordinaten werden automatisch plausibilisiert. Es werde nur Koordinaten angezeigt, die in einem bestimmten Umkreis von Basel sind. Der Code dazu ist hier verf\u{fc}gbar:\u{a0}<a href=\"https://github.com/opendatabs/data-processing/blob/master/meteoblue_wolf/etl.py\" target=\"_blank\">https://github.com/opendatabs/data-processing/blob/master/meteoblue_wolf/etl.py</a>\u{a0}</p>"]
 pub mod standorte_mess_stationen_smart_climate_luftklima {
     use super::*;
 
@@ -68273,7 +69696,7 @@ pub mod standorte_mess_stationen_smart_climate_luftklima {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         NameOriginal,
         NameCustom,
@@ -68298,7 +69721,7 @@ pub mod standorte_mess_stationen_smart_climate_luftklima {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -68323,7 +69746,7 @@ pub mod standorte_mess_stationen_smart_climate_luftklima {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -68409,7 +69832,9 @@ pub mod standorte_mess_stationen_smart_climate_luftklima {
     }
 }
 
-/// Smart Climate Luftklima
+#[doc = "Smart Climate Luftklima"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz zeigt st\u{fc}ndlich aktualisierte Angaben zu Lufttemperatur und Niederschlag, welche \u{fc}ber Sensoren von meteoblue gemessen werden.\u{a0}</p><p>Es handelt sich um Rohdaten, welche nicht plausibilisiert oder korrigiert sind.</p><p>Die geografischen Koordinaten der Sensoren sind im Datensatz <a href=\"https://data.bs.ch/explore/dataset/100082\" target=\"_blank\">\u{ab}Standorte der Mess-Stationen Luftklima Smart Regio Basel\u{bb}</a> verf\u{fc}gbar.</p>"]
 pub mod smart_climate_luftklima {
     use super::*;
 
@@ -68460,7 +69885,7 @@ pub mod smart_climate_luftklima {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         NameOriginal,
         NameCustom,
@@ -68489,7 +69914,7 @@ pub mod smart_climate_luftklima {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -68514,7 +69939,7 @@ pub mod smart_climate_luftklima {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -68600,7 +70025,9 @@ pub mod smart_climate_luftklima {
     }
 }
 
-/// Überwachung Luftqualität Transformation Areal Rosental: Staubgebundene Schadstoffe
+#[doc = "\u{dc}berwachung Luftqualit\u{e4}t Transformation Areal Rosental: Staubgebundene Schadstoffe"]
+#[doc = ""]
+#[doc = "<p>Bedingt durch die fr\u{fc}here Nutzung des Rosental Areals \u{2013} auch bekannt als die Wiege der Basler Chemie - ist der Untergrund mit Schadstoffen belastet. W\u{e4}hrend der Tiefbauarbeiten im Rahmen der \u{ab}Transformation <a href=\"https://rosentalmitte.ch/\" target=\"_blank\">Rosental Mitte</a>\u{bb} \u{fc}berwacht das <a href=\"http://www.basler-luft.ch/\" target=\"_blank\">Lufthygieneamt beider Basel (LHA)</a> die Immissionen mittels Messungen der Luft <a href=\"https://data.bs.ch/pages/rosental-dashboard/\" target=\"_blank\">(Dashboard)</a>.\u{a0}</p><p>\u{c4}nderungsprotokoll:<br>23.4.2024: Die Messstation ROSEN 3 wurde verschoben. Alte geografische Breiten- und L\u{e4}ngengrade 47.567827676637364, 7.603804744961502. Neue Breiten- und L\u{e4}gengrade\u{a0}47.567997530870265, 7.60479830196066.<br></p><div><br></div>"]
 pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_staubgebundene_schadstoffe {
     use super::*;
 
@@ -68609,10 +70036,18 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_staubgebundene_
         /// Messbeginn
         ///
         /// Beginn der Messung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messbeginn: Option<Date>,
         /// Messende
         ///
         /// Ende der Messung
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub messende: Option<Date>,
         /// Standort
         ///
@@ -68664,7 +70099,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_staubgebundene_
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Messbeginn,
         Messende,
@@ -68705,7 +70140,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_staubgebundene_
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -68730,7 +70165,7 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_staubgebundene_
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -68816,7 +70251,9 @@ pub mod ueberwachung_luftqualitaet_transformation_areal_rosental_staubgebundene_
     }
 }
 
-/// Aktuelle Belegung der öffentlichen Parkhäuser Basel
+#[doc = "Aktuelle Belegung der \u{f6}ffentlichen Parkh\u{e4}user Basel"]
+#[doc = ""]
+#[doc = "<p>Min\u{fc}tlich aktualisierte Belegungsdaten der \u{f6}ffentlich zug\u{e4}nglichen Parkh\u{e4}user der Stadt Basel, bezogen \u{fc}ber den<a href=\"http://www.parkleitsystem-basel.ch/rss_feed.php\" target=\"_blank\"> RSS Feed</a> des <a href=\"http://www.parkleitsystem-basel.ch\" target=\"_blank\">Parkleitsystems Basel</a>.</p>\n\n<p>Historische Daten sind in diesem Datensatz vorhanden: <a href=\"https://data.bs.ch/explore/dataset/100014\" target=\"_blank\">https://data.bs.ch/explore/dataset/100014</a>.\u{a0}</p>"]
 pub mod aktuelle_belegung_der_oeffentlichen_parkhaeuser_basel {
     use super::*;
 
@@ -68872,7 +70309,7 @@ pub mod aktuelle_belegung_der_oeffentlichen_parkhaeuser_basel {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Title,
         Published,
@@ -68905,7 +70342,7 @@ pub mod aktuelle_belegung_der_oeffentlichen_parkhaeuser_basel {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -68930,7 +70367,7 @@ pub mod aktuelle_belegung_der_oeffentlichen_parkhaeuser_basel {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {

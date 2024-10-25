@@ -1,6 +1,7 @@
 use geojson::GeoJson;
-use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use time::macros::format_description;
+use time::{Date, OffsetDateTime};
 
 #[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 pub struct GeoPoint2d {
@@ -15,13 +16,35 @@ pub struct File {
     pub height: u16,
 }
 
-pub type Date = String;
+fn deserialize_date<'de, D>(deserializer: D) -> Result<Option<Date>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    let format = format_description!("[year]-[month]-[day]");
+    let date = time::Date::parse(&s, format).unwrap();
+    Ok(Some(date))
+}
 
+fn serialize_date<S: Serializer>(date: &Option<Date>, serializer: S) -> Result<S::Ok, S::Error> {
+    if let Some(date) = date {
+        serializer.serialize_some(&format!(
+            "{:04}-{:02}-{:02}",
+            date.year(),
+            date.month(),
+            date.day()
+        ))
+    } else {
+        serializer.serialize_none()
+    }
+}
 fn escape(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
-/// Covid-19 (Breites Testen BL): Wöchentliche Anzahl Pools bzw. positive Pools (März 2021 - Dezember 2022)
+#[doc = "Covid-19 (Breites Testen BL): W\u{f6}chentliche Anzahl Pools bzw. positive Pools (M\u{e4}rz 2021 - Dezember 2022)"]
+#[doc = ""]
+#[doc = "<p>Anzahl\u{a0}getesteter Pools und Anzahl bzw. Anteil positiver Pools pro Kalenderwoche. Das Programm lief zum 31. Dezember 2022 aus.</p><p>Das breite Testen Baselland war ein repetitives Testprogramm zur Identifizierung von asymptomatischen SARS-CoV-2 infizierten Personen mittels gepoolter PCR-Tests aus Speichelproben. Das Programm lief von 1. M\u{e4}rz 2021 bis 31. Dezember 2022. Grunds\u{e4}tzlich konnten Betriebe, Schulen, Alters- und Pflegeheime (APH) und Spit\u{e4}ler aus dem Kanton Basel-Landschaft daran teilnehmen.<br></p>"]
 pub mod covid_19_breites_testen_bl_woechentliche_anzahl_pools_bzw_positive_pools_maerz_2021_dezember_2022 {
     use super::*;
 
@@ -30,6 +53,10 @@ pub mod covid_19_breites_testen_bl_woechentliche_anzahl_pools_bzw_positive_pools
         /// Datum
         ///
         /// Erster Tag der Kalenderwoche
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Kalenderwoche
         ///
@@ -55,7 +82,7 @@ pub mod covid_19_breites_testen_bl_woechentliche_anzahl_pools_bzw_positive_pools
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Kalenderwoche,
@@ -76,7 +103,7 @@ pub mod covid_19_breites_testen_bl_woechentliche_anzahl_pools_bzw_positive_pools
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -101,7 +128,7 @@ pub mod covid_19_breites_testen_bl_woechentliche_anzahl_pools_bzw_positive_pools
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -187,7 +214,9 @@ pub mod covid_19_breites_testen_bl_woechentliche_anzahl_pools_bzw_positive_pools
     }
 }
 
-/// Covid-19: Wöchentliche Fallzahlen, Hospitalisierungen und Tests (seit Februar 2020)
+#[doc = "Covid-19: W\u{f6}chentliche Fallzahlen, Hospitalisierungen und Tests (seit Februar 2020)"]
+#[doc = ""]
+#[doc = "<p>F\u{e4}lle (aktuell), Hospitalisierungen (bis Ende 2023) und Tests (aktuell) aus dem obligatorischen Meldesystem.\u{a0}Personen mit Wohnsitz BL.<br></p>"]
 pub mod covid_19_woechentliche_fallzahlen_hospitalisierungen_und_tests_seit_februar_2020 {
     use super::*;
 
@@ -219,7 +248,7 @@ pub mod covid_19_woechentliche_fallzahlen_hospitalisierungen_und_tests_seit_febr
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Valuecategory,
         Temporal,
@@ -256,7 +285,7 @@ pub mod covid_19_woechentliche_fallzahlen_hospitalisierungen_und_tests_seit_febr
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -281,7 +310,7 @@ pub mod covid_19_woechentliche_fallzahlen_hospitalisierungen_und_tests_seit_febr
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -367,7 +396,9 @@ pub mod covid_19_woechentliche_fallzahlen_hospitalisierungen_und_tests_seit_febr
     }
 }
 
-/// Unternehmensneugründungen und Unternehmensschliessungen nach Wirtschaftssektor, Gemeinde und Jahr (seit 2013)
+#[doc = "Unternehmensneugr\u{fc}ndungen und Unternehmensschliessungen nach Wirtschaftssektor, Gemeinde und Jahr (seit 2013)"]
+#[doc = ""]
+#[doc = "Statistik der Unternehmensdemografie (UDEMO). Klammern = Datenschutz bei weniger als 4 Beobachtungen. Die Werte der Unternehmensschliessungen folgen jeweils mit 2 Jahren Verz\u{f6}gerung im Vergleich zu den Unternehmensneugr\u{fc}ndungen."]
 pub mod unternehmensneugruendungen_und_unternehmensschliessungen_nach_wirtschaftssektor_gemeinde_und_jahr_seit_2013 {
     use super::*;
 
@@ -395,7 +426,7 @@ pub mod unternehmensneugruendungen_und_unternehmensschliessungen_nach_wirtschaft
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -420,7 +451,7 @@ pub mod unternehmensneugruendungen_und_unternehmensschliessungen_nach_wirtschaft
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -445,7 +476,7 @@ pub mod unternehmensneugruendungen_und_unternehmensschliessungen_nach_wirtschaft
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -531,7 +562,9 @@ pub mod unternehmensneugruendungen_und_unternehmensschliessungen_nach_wirtschaft
     }
 }
 
-/// Regierungsratswahlen 2023: Kandidierendenresultate
+#[doc = "Regierungsratswahlen 2023: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 12. Februar 2023</p>"]
 pub mod regierungsratswahlen_2023_kandidierendenresultate {
     use super::*;
 
@@ -570,7 +603,7 @@ pub mod regierungsratswahlen_2023_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -629,7 +662,7 @@ pub mod regierungsratswahlen_2023_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -654,7 +687,7 @@ pub mod regierungsratswahlen_2023_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -740,7 +773,9 @@ pub mod regierungsratswahlen_2023_kandidierendenresultate {
     }
 }
 
-/// Ständeratswahlen 2007: Kandidierendenresultate
+#[doc = "St\u{e4}nderatswahlen 2007: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 21. Oktober 2007<br></p>"]
 pub mod staenderatswahlen_2007_kandidierendenresultate {
     use super::*;
 
@@ -779,7 +814,7 @@ pub mod staenderatswahlen_2007_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -838,7 +873,7 @@ pub mod staenderatswahlen_2007_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -863,7 +898,7 @@ pub mod staenderatswahlen_2007_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -949,7 +984,9 @@ pub mod staenderatswahlen_2007_kandidierendenresultate {
     }
 }
 
-/// Volksinitiative vom 16. Dezember 2021 «Für Freiheit und körperliche Unversehrtheit»
+#[doc = "Volksinitiative vom 16. Dezember 2021 \u{ab}F\u{fc}r Freiheit und k\u{f6}rperliche Unversehrtheit\u{bb}"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Abstimmung vom 9. Juni 2024<br></p>"]
 pub mod volksinitiative_vom_16_dezember_2021_fuer_freiheit_und_koerperliche_unversehrtheit {
     use super::*;
 
@@ -977,7 +1014,7 @@ pub mod volksinitiative_vom_16_dezember_2021_fuer_freiheit_und_koerperliche_unve
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -1014,7 +1051,7 @@ pub mod volksinitiative_vom_16_dezember_2021_fuer_freiheit_und_koerperliche_unve
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -1039,7 +1076,7 @@ pub mod volksinitiative_vom_16_dezember_2021_fuer_freiheit_und_koerperliche_unve
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -1125,7 +1162,9 @@ pub mod volksinitiative_vom_16_dezember_2021_fuer_freiheit_und_koerperliche_unve
     }
 }
 
-/// Landratswahlen 2015: Kandidierendenresultate, Wahlberechtigte und Parteistimmen
+#[doc = "Landratswahlen 2015: Kandidierendenresultate, Wahlberechtigte und Parteistimmen"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 8. Februar 2015</p>"]
 pub mod landratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_parteistimmen {
     use super::*;
 
@@ -1170,7 +1209,7 @@ pub mod landratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_parteist
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -1241,7 +1280,7 @@ pub mod landratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -1266,7 +1305,7 @@ pub mod landratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -1352,13 +1391,19 @@ pub mod landratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_parteist
     }
 }
 
-/// Covid-19: Tägliche Todesfälle (Februar 2020 - Januar 2023)
+#[doc = "Covid-19: T\u{e4}gliche Todesf\u{e4}lle (Februar 2020 - Januar 2023)"]
+#[doc = ""]
+#[doc = "<p>Covid-19-Monitoring.\u{a0}T\u{e4}gliche Todesf\u{e4}lle von Personen mit Wohnsitz BL. Die Daten werden nach dem 17.01.23 nicht mehr aktualisiert.</p><p><br></p>"]
 pub mod covid_19_taegliche_todesfaelle_februar_2020_januar_2023 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// geoRegion
         ///
@@ -1380,7 +1425,7 @@ pub mod covid_19_taegliche_todesfaelle_februar_2020_januar_2023 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Georegion,
@@ -1401,7 +1446,7 @@ pub mod covid_19_taegliche_todesfaelle_februar_2020_januar_2023 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -1426,7 +1471,7 @@ pub mod covid_19_taegliche_todesfaelle_februar_2020_januar_2023 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -1512,7 +1557,9 @@ pub mod covid_19_taegliche_todesfaelle_februar_2020_januar_2023 {
     }
 }
 
-/// Regierungsratswahlen 2007: Kandidierendenresultate
+#[doc = "Regierungsratswahlen 2007: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 11. Februar 2007</p>"]
 pub mod regierungsratswahlen_2007_kandidierendenresultate {
     use super::*;
 
@@ -1551,7 +1598,7 @@ pub mod regierungsratswahlen_2007_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -1610,7 +1657,7 @@ pub mod regierungsratswahlen_2007_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -1635,7 +1682,7 @@ pub mod regierungsratswahlen_2007_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -1721,7 +1768,9 @@ pub mod regierungsratswahlen_2007_kandidierendenresultate {
     }
 }
 
-/// Regierungsratswahlen 2003: Kandidierendenresultate
+#[doc = "Regierungsratswahlen 2003: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 30. M\u{e4}rz 2003</p>"]
 pub mod regierungsratswahlen_2003_kandidierendenresultate {
     use super::*;
 
@@ -1760,7 +1809,7 @@ pub mod regierungsratswahlen_2003_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -1819,7 +1868,7 @@ pub mod regierungsratswahlen_2003_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -1844,7 +1893,7 @@ pub mod regierungsratswahlen_2003_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -1930,7 +1979,9 @@ pub mod regierungsratswahlen_2003_kandidierendenresultate {
     }
 }
 
-/// Regierungsratsersatzwahl 2013: Kandidierendenresultate
+#[doc = "Regierungsratsersatzwahl 2013: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 9. Juni 2013</p>"]
 pub mod regierungsratsersatzwahl_2013_kandidierendenresultate {
     use super::*;
 
@@ -1969,7 +2020,7 @@ pub mod regierungsratsersatzwahl_2013_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -2028,7 +2079,7 @@ pub mod regierungsratsersatzwahl_2013_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -2053,7 +2104,7 @@ pub mod regierungsratsersatzwahl_2013_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -2139,7 +2190,9 @@ pub mod regierungsratsersatzwahl_2013_kandidierendenresultate {
     }
 }
 
-/// Arealstatistik: Bodennutzung und -bedeckung nach Hauptbereich, Klasse und Gemeinde (seit 1982)
+#[doc = "Arealstatistik: Bodennutzung und -bedeckung nach Hauptbereich, Klasse und Gemeinde (seit 1982)"]
+#[doc = ""]
+#[doc = "<p>Bundesamt f\u{fc}r Statistik, Arealstatistiken 1979/85 - 2013/18; swisstopo,\u{a0}swissBOUNDARIES3D</p>"]
 pub mod arealstatistik_bodennutzung_und_bedeckung_nach_hauptbereich_klasse_und_gemeinde_seit_1982 {
     use super::*;
 
@@ -2181,7 +2234,7 @@ pub mod arealstatistik_bodennutzung_und_bedeckung_nach_hauptbereich_klasse_und_g
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Erhebungsperiode,
         ErhebungsjahrE,
@@ -2206,7 +2259,7 @@ pub mod arealstatistik_bodennutzung_und_bedeckung_nach_hauptbereich_klasse_und_g
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -2231,7 +2284,7 @@ pub mod arealstatistik_bodennutzung_und_bedeckung_nach_hauptbereich_klasse_und_g
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -2317,13 +2370,19 @@ pub mod arealstatistik_bodennutzung_und_bedeckung_nach_hauptbereich_klasse_und_g
     }
 }
 
-/// Wetterstation Basel / Binningen: Monatswerte Klimamessnetz (seit 1901)
+#[doc = "Wetterstation Basel / Binningen: Monatswerte Klimamessnetz (seit 1901)"]
+#[doc = ""]
+#[doc = "<p>Monatsdaten der NBCN-Station (Swiss National Basic Climate Network) Basel-Binningen</p>"]
 pub mod wetterstation_basel_binningen_monatswerte_klimamessnetz_seit_1901 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Erster Tag des Monats
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// station/location
         ///
@@ -2359,7 +2418,7 @@ pub mod wetterstation_basel_binningen_monatswerte_klimamessnetz_seit_1901 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         StationLocation,
@@ -2396,7 +2455,7 @@ pub mod wetterstation_basel_binningen_monatswerte_klimamessnetz_seit_1901 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -2421,7 +2480,7 @@ pub mod wetterstation_basel_binningen_monatswerte_klimamessnetz_seit_1901 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -2507,7 +2566,9 @@ pub mod wetterstation_basel_binningen_monatswerte_klimamessnetz_seit_1901 {
     }
 }
 
-/// Nationalratswahlen 2007: Kandidierendenresultate, Wahlberechtigte und Listenstimmen
+#[doc = "Nationalratswahlen 2007: Kandidierendenresultate, Wahlberechtigte und Listenstimmen"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Wahlen vom 21. Oktober 2007<br></p>"]
 pub mod nationalratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_listenstimmen {
     use super::*;
 
@@ -2581,7 +2642,7 @@ pub mod nationalratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_list
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -2738,7 +2799,7 @@ pub mod nationalratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -2763,7 +2824,7 @@ pub mod nationalratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -2849,7 +2910,9 @@ pub mod nationalratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_list
     }
 }
 
-/// Landratswahlen 2019: Kandidierendenresultate, Wahlberechtigte und Parteistimmen
+#[doc = "Landratswahlen 2019: Kandidierendenresultate, Wahlberechtigte und Parteistimmen"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 31. M\u{e4}rz 2019</p>"]
 pub mod landratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_parteistimmen {
     use super::*;
 
@@ -2894,7 +2957,7 @@ pub mod landratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_parteist
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -2965,7 +3028,7 @@ pub mod landratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -2990,7 +3053,7 @@ pub mod landratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -3076,7 +3139,9 @@ pub mod landratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_parteist
     }
 }
 
-/// Landratswahlen 2011: Kandidierendenresultate, Wahlberechtigte und Parteistimmen
+#[doc = "Landratswahlen 2011: Kandidierendenresultate, Wahlberechtigte und Parteistimmen"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 27. M\u{e4}rz 2011</p>"]
 pub mod landratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_parteistimmen {
     use super::*;
 
@@ -3121,7 +3186,7 @@ pub mod landratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_parteist
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -3192,7 +3257,7 @@ pub mod landratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -3217,7 +3282,7 @@ pub mod landratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -3303,7 +3368,9 @@ pub mod landratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_parteist
     }
 }
 
-/// Ständeratswahlen 2003: Kandidierendenresultate
+#[doc = "St\u{e4}nderatswahlen 2003: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 19. Oktober 2003<br></p>"]
 pub mod staenderatswahlen_2003_kandidierendenresultate {
     use super::*;
 
@@ -3342,7 +3409,7 @@ pub mod staenderatswahlen_2003_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -3401,7 +3468,7 @@ pub mod staenderatswahlen_2003_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -3426,7 +3493,7 @@ pub mod staenderatswahlen_2003_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -3512,7 +3579,9 @@ pub mod staenderatswahlen_2003_kandidierendenresultate {
     }
 }
 
-/// Hotels und Kurbetriebe: Angebot und Nachfrage nach Gemeinde und Jahr (seit 2005)
+#[doc = "Hotels und Kurbetriebe: Angebot und Nachfrage nach Gemeinde und Jahr (seit 2005)"]
+#[doc = ""]
+#[doc = "<p>Beherbergungsstatistik (HESTA). Klammern = Datenschutz bei weniger als 3 Betrieben. Die Daten des laufenden Jahres beinhalten die aktuell verf\u{fc}gbaren Monate.<br></p>"]
 pub mod hotels_und_kurbetriebe_angebot_und_nachfrage_nach_gemeinde_und_jahr_seit_2005 {
     use super::*;
 
@@ -3544,7 +3613,7 @@ pub mod hotels_und_kurbetriebe_angebot_und_nachfrage_nach_gemeinde_und_jahr_seit
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -3573,7 +3642,7 @@ pub mod hotels_und_kurbetriebe_angebot_und_nachfrage_nach_gemeinde_und_jahr_seit
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -3598,7 +3667,7 @@ pub mod hotels_und_kurbetriebe_angebot_und_nachfrage_nach_gemeinde_und_jahr_seit
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -3684,7 +3753,9 @@ pub mod hotels_und_kurbetriebe_angebot_und_nachfrage_nach_gemeinde_und_jahr_seit
     }
 }
 
-/// Vornamen der Neugeborenen nach Geschlecht und Jahr (seit 2021)
+#[doc = "Vornamen der Neugeborenen nach Geschlecht und Jahr (seit 2021)"]
+#[doc = ""]
+#[doc = "<p>Statistik der nat\u{fc}rlichen Bev\u{f6}lkerungsbewegung (BEVNAT)</p><p>Nur die ersten 200 Vornamen (Rang) mit mindestens zwei Beobachtungen pro Vorname wurden ber\u{fc}cksichtigt.<br></p>"]
 pub mod vornamen_der_neugeborenen_nach_geschlecht_und_jahr_seit_2021 {
     use super::*;
 
@@ -3708,7 +3779,7 @@ pub mod vornamen_der_neugeborenen_nach_geschlecht_und_jahr_seit_2021 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Vorname,
@@ -3729,7 +3800,7 @@ pub mod vornamen_der_neugeborenen_nach_geschlecht_und_jahr_seit_2021 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -3754,7 +3825,7 @@ pub mod vornamen_der_neugeborenen_nach_geschlecht_und_jahr_seit_2021 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -3840,7 +3911,9 @@ pub mod vornamen_der_neugeborenen_nach_geschlecht_und_jahr_seit_2021 {
     }
 }
 
-/// Gemeinnützige Wohnungen nach Zimmerzahl, Gemeinde und Jahr (seit 2016)
+#[doc = "Gemeinn\u{fc}tzige Wohnungen nach Zimmerzahl, Gemeinde und Jahr (seit 2016)"]
+#[doc = ""]
+#[doc = "<p>Geb\u{e4}ude- und Wohnungsstatistik GWS (Bundesamt f\u{fc}r Statistik), Bundesamt f\u{fc}r Wohnungswesen</p><p>Die Datenbank mit den Geb\u{e4}udeadressen der gemeinn\u{fc}tzigen Bautr\u{e4}ger basiert auf einer Befragung der Mitglieder der beiden Dachorganisationen (Wohnbaugenossenschaften Schweiz und WOHNEN Schweiz), den Kunden der Emissionszentrale der gemeinn\u{fc}tzigen Wohnbautr\u{e4}ger EGW sowie den Adressen der vom Bundesamt f\u{fc}r Wohnungswesen unterst\u{fc}tzten gemeinn\u{fc}tzigen Bautr\u{e4}ger. Gest\u{fc}tzt auf die Antwortquoten und der vorgenannten Auswahl wird gesch\u{e4}tzt, dass rund 90 Prozent aller sich im Besitz des gemeinn\u{fc}tzigen Sektors befindlichen Wohnungen in die Auswertungen einfliessen.<br></p>"]
 pub mod gemeinnuetzige_wohnungen_nach_zimmerzahl_gemeinde_und_jahr_seit_2016 {
     use super::*;
 
@@ -3866,7 +3939,7 @@ pub mod gemeinnuetzige_wohnungen_nach_zimmerzahl_gemeinde_und_jahr_seit_2016 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsGemeindenummer,
@@ -3887,7 +3960,7 @@ pub mod gemeinnuetzige_wohnungen_nach_zimmerzahl_gemeinde_und_jahr_seit_2016 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -3912,7 +3985,7 @@ pub mod gemeinnuetzige_wohnungen_nach_zimmerzahl_gemeinde_und_jahr_seit_2016 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -3998,7 +4071,9 @@ pub mod gemeinnuetzige_wohnungen_nach_zimmerzahl_gemeinde_und_jahr_seit_2016 {
     }
 }
 
-/// Überbauungsstand nach Zone, Erschliessung, Gemeinde und Jahr (seit 2016)
+#[doc = "\u{dc}berbauungsstand nach Zone, Erschliessung, Gemeinde und Jahr (seit 2016)"]
+#[doc = ""]
+#[doc = "<p>Raumbeobachtung</p><p>\u{dc}berbaut: 1 = \u{fc}berbaut, 0 = nicht \u{fc}berbaut</p><p>Erschlossen: 1 = erschlossen, 0 = nicht erschlossen</p>"]
 pub mod ueberbauungsstand_nach_zone_erschliessung_gemeinde_und_jahr_seit_2016 {
     use super::*;
 
@@ -4028,7 +4103,7 @@ pub mod ueberbauungsstand_nach_zone_erschliessung_gemeinde_und_jahr_seit_2016 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -4055,7 +4130,7 @@ pub mod ueberbauungsstand_nach_zone_erschliessung_gemeinde_und_jahr_seit_2016 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -4080,7 +4155,7 @@ pub mod ueberbauungsstand_nach_zone_erschliessung_gemeinde_und_jahr_seit_2016 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -4166,7 +4241,9 @@ pub mod ueberbauungsstand_nach_zone_erschliessung_gemeinde_und_jahr_seit_2016 {
     }
 }
 
-/// Nationalratswahlen 2003: Kandidierendenresultate, Wahlberechtigte und Listenstimmen
+#[doc = "Nationalratswahlen 2003: Kandidierendenresultate, Wahlberechtigte und Listenstimmen"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Wahlen vom 19. Oktober 2003</p>"]
 pub mod nationalratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_listenstimmen {
     use super::*;
 
@@ -4238,7 +4315,7 @@ pub mod nationalratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_list
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -4389,7 +4466,7 @@ pub mod nationalratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -4414,7 +4491,7 @@ pub mod nationalratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -4500,7 +4577,9 @@ pub mod nationalratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_list
     }
 }
 
-/// Nationalratswahlen 2023: Wahlberechtigte nach Geschlecht, briefliche Stimmabgaben, unveränderte und veränderte Wahlzettel nach Gemeinde
+#[doc = "Nationalratswahlen 2023: Wahlberechtigte nach Geschlecht, briefliche Stimmabgaben, unver\u{e4}nderte und ver\u{e4}nderte Wahlzettel nach Gemeinde"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Wahlen vom 22. Oktober 2023<br></p>"]
 pub mod nationalratswahlen_2023_wahlberechtigte_nach_geschlecht_briefliche_stimmabgaben_unveraenderte_und_veraenderte_wahlzettel_nach_gemeinde {
     use super::*;
 
@@ -4542,7 +4621,7 @@ pub mod nationalratswahlen_2023_wahlberechtigte_nach_geschlecht_briefliche_stimm
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BfsGemeindenummer,
         Gemeinde,
@@ -4585,7 +4664,7 @@ pub mod nationalratswahlen_2023_wahlberechtigte_nach_geschlecht_briefliche_stimm
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -4610,7 +4689,7 @@ pub mod nationalratswahlen_2023_wahlberechtigte_nach_geschlecht_briefliche_stimm
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -4696,7 +4775,9 @@ pub mod nationalratswahlen_2023_wahlberechtigte_nach_geschlecht_briefliche_stimm
     }
 }
 
-/// Landratswahlen 2023: Unveränderte und veränderte Wahlzettel nach Partei und Gemeinde
+#[doc = "Landratswahlen 2023: Unver\u{e4}nderte und ver\u{e4}nderte Wahlzettel nach Partei und Gemeinde"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 12. Februar 2023<br></p>"]
 pub mod landratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_partei_und_gemeinde {
     use super::*;
 
@@ -4730,7 +4811,7 @@ pub mod landratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_partei
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         EntityDistrictId,
         EntityDistrictName,
@@ -4761,7 +4842,7 @@ pub mod landratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_partei
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -4786,7 +4867,7 @@ pub mod landratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_partei
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -4872,7 +4953,9 @@ pub mod landratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_partei
     }
 }
 
-/// Änderung des Energiegesetzes vom 19. Oktober 2023
+#[doc = "\u{c4}nderung des Energiegesetzes vom 19. Oktober 2023"]
+#[doc = ""]
+#[doc = "<p>Kantonale Abstimmung vom 9. Juni 2024<br></p>"]
 pub mod aenderung_des_energiegesetzes_vom_19_oktober_2023 {
     use super::*;
 
@@ -4900,7 +4983,7 @@ pub mod aenderung_des_energiegesetzes_vom_19_oktober_2023 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -4937,7 +5020,7 @@ pub mod aenderung_des_energiegesetzes_vom_19_oktober_2023 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -4962,7 +5045,7 @@ pub mod aenderung_des_energiegesetzes_vom_19_oktober_2023 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -5048,7 +5131,9 @@ pub mod aenderung_des_energiegesetzes_vom_19_oktober_2023 {
     }
 }
 
-/// Klimanormwerte nach ausgewählten Messstationen
+#[doc = "Klimanormwerte nach ausgew\u{e4}hlten Messstationen"]
+#[doc = ""]
+#[doc = "<p>Messgr\u{f6}ssen der Normperiode 1991-2020</p>"]
 pub mod klimanormwerte_nach_ausgewaehlten_messstationen {
     use super::*;
 
@@ -5096,7 +5181,7 @@ pub mod klimanormwerte_nach_ausgewaehlten_messstationen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Referenzperiode,
         Station,
@@ -5141,7 +5226,7 @@ pub mod klimanormwerte_nach_ausgewaehlten_messstationen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -5166,7 +5251,7 @@ pub mod klimanormwerte_nach_ausgewaehlten_messstationen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -5252,7 +5337,9 @@ pub mod klimanormwerte_nach_ausgewaehlten_messstationen {
     }
 }
 
-/// Parteistimmen und Parteistärken bei den Nationalratswahlen nach Gemeinde und Jahr (seit 1971)
+#[doc = "Parteistimmen und Parteist\u{e4}rken bei den Nationalratswahlen nach Gemeinde und Jahr (seit 1971)"]
+#[doc = ""]
+#[doc = "<p>Statistik der Wahlen und Abstimmungen</p>"]
 pub mod parteistimmen_und_parteistaerken_bei_den_nationalratswahlen_nach_gemeinde_und_jahr_seit_1971 {
     use super::*;
 
@@ -5278,7 +5365,7 @@ pub mod parteistimmen_und_parteistaerken_bei_den_nationalratswahlen_nach_gemeind
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -5301,7 +5388,7 @@ pub mod parteistimmen_und_parteistaerken_bei_den_nationalratswahlen_nach_gemeind
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -5326,7 +5413,7 @@ pub mod parteistimmen_und_parteistaerken_bei_den_nationalratswahlen_nach_gemeind
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -5412,7 +5499,9 @@ pub mod parteistimmen_und_parteistaerken_bei_den_nationalratswahlen_nach_gemeind
     }
 }
 
-/// Volksinitiative vom 16. Juli 2021 «Für eine sichere und nachhaltige Altersvorsorge (Renteninitiative)»
+#[doc = "Volksinitiative vom 16. Juli 2021 \u{ab}F\u{fc}r eine sichere und nachhaltige Altersvorsorge (Renteninitiative)\u{bb}"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Abstimmung vom 3. M\u{e4}rz 2024<br></p>"]
 pub mod volksinitiative_vom_16_juli_2021_fuer_eine_sichere_und_nachhaltige_altersvorsorge_renteninitiative {
     use super::*;
 
@@ -5448,7 +5537,7 @@ pub mod volksinitiative_vom_16_juli_2021_fuer_eine_sichere_und_nachhaltige_alter
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Answer,
         Counted,
@@ -5497,7 +5586,7 @@ pub mod volksinitiative_vom_16_juli_2021_fuer_eine_sichere_und_nachhaltige_alter
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -5522,7 +5611,7 @@ pub mod volksinitiative_vom_16_juli_2021_fuer_eine_sichere_und_nachhaltige_alter
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -5608,7 +5697,9 @@ pub mod volksinitiative_vom_16_juli_2021_fuer_eine_sichere_und_nachhaltige_alter
     }
 }
 
-/// Wahlen Gemeindepräsidien
+#[doc = "Wahlen Gemeindepr\u{e4}sidien"]
+#[doc = ""]
+#[doc = "<p>Kommunale Wahlen vom 9. Juni 2024\u{a0}(offiziell kandidierende Personen)</p><p>Quellen: Landeskanzlei BL / Wahlb\u{fc}ros der Gemeinden / Websites der Gemeinden<br></p><p>Keine Angaben (...) zur Stimmenzahl bei stillen Wahlen</p><p>Teilweise fehlende Angaben (...) zu Kandidierenden, Jahrgang und Parteizugeh\u{f6}rigkeit</p>"]
 pub mod wahlen_gemeindepraesidien {
     use super::*;
 
@@ -5646,7 +5737,7 @@ pub mod wahlen_gemeindepraesidien {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         BfsGemeindenummer,
@@ -5681,7 +5772,7 @@ pub mod wahlen_gemeindepraesidien {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -5706,7 +5797,7 @@ pub mod wahlen_gemeindepraesidien {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -5792,7 +5883,9 @@ pub mod wahlen_gemeindepraesidien {
     }
 }
 
-/// Bevölkerungsbestand nach Geschlecht, Nationalität, Zivilstand und Konfession (seit 1980)
+#[doc = "Bev\u{f6}lkerungsbestand nach Geschlecht, Nationalit\u{e4}t, Zivilstand und Konfession (seit 1980)"]
+#[doc = ""]
+#[doc = "<p>Kantonale Bev\u{f6}lkerungsstatistik</p>"]
 pub mod bevoelkerungsbestand_nach_geschlecht_nationalitaet_zivilstand_und_konfession_seit_1980 {
     use super::*;
 
@@ -5816,7 +5909,7 @@ pub mod bevoelkerungsbestand_nach_geschlecht_nationalitaet_zivilstand_und_konfes
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         GeschlechtCode,
@@ -5847,7 +5940,7 @@ pub mod bevoelkerungsbestand_nach_geschlecht_nationalitaet_zivilstand_und_konfes
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -5872,7 +5965,7 @@ pub mod bevoelkerungsbestand_nach_geschlecht_nationalitaet_zivilstand_und_konfes
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -5958,7 +6051,9 @@ pub mod bevoelkerungsbestand_nach_geschlecht_nationalitaet_zivilstand_und_konfes
     }
 }
 
-/// Wohnungsbestand nach Zimmerzahl, Gemeinde und Jahr (seit 1994)
+#[doc = "Wohnungsbestand nach Zimmerzahl, Gemeinde und Jahr (seit 1994)"]
+#[doc = ""]
+#[doc = "<p>Fortschreibung des Wohnungsbestands (bis 2014), Geb\u{e4}ude- und Wohnungsstatistik (ab 2015)<br></p>"]
 pub mod wohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_1994 {
     use super::*;
 
@@ -5982,7 +6077,7 @@ pub mod wohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_1994 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -6003,7 +6098,7 @@ pub mod wohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_1994 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -6028,7 +6123,7 @@ pub mod wohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_1994 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -6114,7 +6209,9 @@ pub mod wohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_1994 {
     }
 }
 
-/// Luftqualität Station Sissach West (halbstündliche Messdaten Januar 2007 - April 2017)
+#[doc = "Luftqualit\u{e4}t Station Sissach West (halbst\u{fc}ndliche Messdaten Januar 2007 - April 2017)"]
+#[doc = ""]
+#[doc = "<p></p><p>Historische Daten der Luftmessstation Sissach West. Die Messwerte sind halbst\u{fc}ndlich ausgewiesen und bereinigt. Seit Fr\u{fc}hjahr 2017 ist die Station stillgelegt. Seit November 2017 wird die Station <a href=\"https://data.bl.ch/explore/dataset/12450/information/?sort=anfangszeit\" target=\"_blank\">Sissach B\u{fc}tzenen</a> betrieben.</p><p class=\"\">Das Auftreten allf\u{e4}lliger Negativwerte stammt von messtechnischen Ungenauigkeiten. Diese Messunsicherheit ist bei der Interpretation der Zahlen entsprechend mit einzubeziehen.</p><p class=\"\">Die Zeitstempel entsprechen der Zeitzone Europe/Zurich obwohl sie im Zeitformat UTC angegeben sind. Allf\u{e4}llige Fragen zum Zeitformat beantwortet das Amt f\u{fc}r Lufthygiene beider Basel auf Anfrage.</p><p></p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Ausgewiesene Werte</span></p><ul><li>Anfangszeit: Zeitstempel des Beginns der halbst\u{fc}ndlichen Messung im Format %Y-%m-%dT%H:%M:%S</li><li>Lungeng\u{e4}ngiger Feinstaub PM10 (\u{b5}g/m3): Lungeng\u{e4}ngiger Feinstaub PM10 in Mikrogramm pro Kubikmeter.</li><li>Stickstoffdioxid NO2 (\u{b5}g/m3): Gemessene Stickstoffdioxid-Konzentration in Mikrogramm pro Kubikmeter.</li><li>Ozon O3 (\u{b5}g/m3): Gemessene Ozon-Konzentration in Mikrogramm pro Kubikmeter.</li></ul><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Standortbeschreibung</span></p><p class=\"\" style=\"font-family: sans-serif;\">Die Messstation befand sich westlich vom Chienbergtunnel. Aufgrund der Strassenn\u{e4}he war die Hauptbelastungsquelle der Verkehr.\u{a0}</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Lage</span></p><p class=\"\" style=\"font-family: sans-serif;\">Kleinst\u{e4}dtisch/Vorst\u{e4}dtisch, verkehrsbelastet</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Koordinaten</span></p><p class=\"\" style=\"font-family: sans-serif;\">2627260 / 1257595; 362 m \u{fc}. M.</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Bebauung</span></p><p class=\"\" style=\"font-family: sans-serif;\">Offene Bebauung</p><p></p>"]
 pub mod luftqualitaet_station_sissach_west_halbstuendliche_messdaten_januar_2007_april_2017 {
     use super::*;
 
@@ -6143,7 +6240,7 @@ pub mod luftqualitaet_station_sissach_west_halbstuendliche_messdaten_januar_2007
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Anfangszeit,
         Pm10,
@@ -6162,7 +6259,7 @@ pub mod luftqualitaet_station_sissach_west_halbstuendliche_messdaten_januar_2007
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -6187,7 +6284,7 @@ pub mod luftqualitaet_station_sissach_west_halbstuendliche_messdaten_januar_2007
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -6273,7 +6370,9 @@ pub mod luftqualitaet_station_sissach_west_halbstuendliche_messdaten_januar_2007
     }
 }
 
-/// Landratswahlen 2023: Panaschierstimmen der Kandidierenden
+#[doc = "Landratswahlen 2023: Panaschierstimmen der Kandidierenden"]
+#[doc = ""]
+#[doc = "Kantonale Wahlen vom 12. Februar 2023. Die jeweilige Spalte mit den Panaschierstimmen der eigenen Partei enth\u{e4}lt auch die unver\u{e4}nderten Stimmen der kandidierenden Person."]
 pub mod landratswahlen_2023_panaschierstimmen_der_kandidierenden {
     use super::*;
 
@@ -6324,7 +6423,7 @@ pub mod landratswahlen_2023_panaschierstimmen_der_kandidierenden {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         EntityDistrictId,
         EntityDistrictName,
@@ -6389,7 +6488,7 @@ pub mod landratswahlen_2023_panaschierstimmen_der_kandidierenden {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -6414,7 +6513,7 @@ pub mod landratswahlen_2023_panaschierstimmen_der_kandidierenden {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -6500,7 +6599,9 @@ pub mod landratswahlen_2023_panaschierstimmen_der_kandidierenden {
     }
 }
 
-/// Historische Gebäude: Firstständerbauten nach Haustyp und Gemeinde
+#[doc = "Historische Geb\u{e4}ude: Firstst\u{e4}nderbauten nach Haustyp und Gemeinde"]
+#[doc = ""]
+#[doc = "<p>Der Datensatz beinhaltet die untersuchten und aufgearbeiteten Firstst\u{e4}nderbauten des Kantons BL. Die Angaben zu den Adressen und Koordinaten sowie die Kommentar-Spalte werden aus Datenschutzgr\u{fc}nden nicht ausgewiesen.</p>"]
 pub mod historische_gebaeude_firststaenderbauten_nach_haustyp_und_gemeinde {
     use super::*;
 
@@ -6658,7 +6759,7 @@ pub mod historische_gebaeude_firststaenderbauten_nach_haustyp_und_gemeinde {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BfsNummer,
         Gemeinde,
@@ -6741,7 +6842,7 @@ pub mod historische_gebaeude_firststaenderbauten_nach_haustyp_und_gemeinde {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -6766,7 +6867,7 @@ pub mod historische_gebaeude_firststaenderbauten_nach_haustyp_und_gemeinde {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -6852,7 +6953,9 @@ pub mod historische_gebaeude_firststaenderbauten_nach_haustyp_und_gemeinde {
     }
 }
 
-/// Luftqualität Station Liestal (halbstündliche Messdaten Januar 2000 - November 2016)
+#[doc = "Luftqualit\u{e4}t Station Liestal (halbst\u{fc}ndliche Messdaten Januar 2000 - November 2016)"]
+#[doc = ""]
+#[doc = "<p class=\"\">Historische Daten der Luftmessstation Liestal von Anfang 2000 bis Ende 2016. \u{c4}ltere Daten k\u{f6}nnen beim Lufthygieneamt beider Basel direkt bezogen werden. Die Messwerte sind halbst\u{fc}ndlich ausgewiesen und bereinigt. Seit Ende November 2016 ist die Station stillgelegt.</p><p class=\"\">Das Auftreten allf\u{e4}lliger Negativwerte stammt von messtechnischen Ungenauigkeiten. Diese Messunsicherheit ist bei der Interpretation der Zahlen entsprechend mit einzubeziehen.</p><p class=\"\">Die Zeitstempel entsprechen der Zeitzone Europe/Zurich obwohl sie im Zeitformat UTC angegeben sind. Allf\u{e4}llige Fragen zum Zeitformat beantwortet das Amt f\u{fc}r Lufthygiene beider Basel auf Anfrage.</p><p style=\"\"><span style=\"font-weight: 700;\">Ausgewiesene Werte</span><br></p><ul><li>Anfangszeit: Zeitstempel des Beginns der halbst\u{fc}ndlichen Messung im Format %Y-%m-%dT%H:%M:%S</li><li>Stickstoffdioxid NO2 (\u{b5}g/m3): Gemessene Stickstoffdioxid-Konzentration in Mikrogramm pro Kubikmeter.</li><li>Ozon O3 (\u{b5}g/m3): Gemessene Ozon-Konzentration in Mikrogramm pro Kubikmeter.</li></ul><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Standortbeschreibung</span></p><p class=\"\" style=\"font-family: sans-serif;\">Die Messstation befand sich an der Rheinstrasse 44 im ehemaligen Sitz des Lufthygieneamts beider Basel. Aufgrund der Strassenn\u{e4}he war die Hauptbelastungsquelle der Verkehr.\u{a0}</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Lage</span></p><p class=\"\" style=\"font-family: sans-serif;\">Kleinst\u{e4}dtisch/Vorst\u{e4}dtisch, verkehrsbelastet</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Koordinaten</span></p><p class=\"\" style=\"font-family: sans-serif;\">2621790 / 1259900; 308 m \u{fc}. M.</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Bebauung</span></p><p class=\"\" style=\"font-family: sans-serif;\">Offene Bebauung</p>"]
 pub mod luftqualitaet_station_liestal_halbstuendliche_messdaten_januar_2000_november_2016 {
     use super::*;
 
@@ -6877,7 +6980,7 @@ pub mod luftqualitaet_station_liestal_halbstuendliche_messdaten_januar_2000_nove
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Anfangszeit,
         No2,
@@ -6894,7 +6997,7 @@ pub mod luftqualitaet_station_liestal_halbstuendliche_messdaten_januar_2000_nove
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -6919,7 +7022,7 @@ pub mod luftqualitaet_station_liestal_halbstuendliche_messdaten_januar_2000_nove
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -7005,7 +7108,9 @@ pub mod luftqualitaet_station_liestal_halbstuendliche_messdaten_januar_2000_nove
     }
 }
 
-/// Landratswahlen: Wahlkreise
+#[doc = "Landratswahlen: Wahlkreise"]
+#[doc = ""]
+#[doc = "<p>Polygondaten als Shapefile oder GeoJSON</p>"]
 pub mod landratswahlen_wahlkreise {
     use super::*;
 
@@ -7026,7 +7131,7 @@ pub mod landratswahlen_wahlkreise {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlkreisn,
         Wahlkreis,
@@ -7041,7 +7146,7 @@ pub mod landratswahlen_wahlkreise {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -7066,7 +7171,7 @@ pub mod landratswahlen_wahlkreise {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -7152,7 +7257,9 @@ pub mod landratswahlen_wahlkreise {
     }
 }
 
-/// Wohngebäude nach Energieträger der Heizung, Bauperiode, Gemeinde und Jahr (2022)
+#[doc = "Wohngeb\u{e4}ude nach Energietr\u{e4}ger der Heizung, Bauperiode, Gemeinde und Jahr (2022)"]
+#[doc = ""]
+#[doc = "<p>Energiestatistik</p><p>Die Codes im Datensatz entsprechen den Codelisten gem\u{e4}ss GWR-Merkmalskatalog 4.2</p><p>Bauperiode: <a href=\"https://www.housing-stat.ch/de/help/42.html#GBAUP\" target=\"_blank\">https://www.housing-stat.ch/de/help/42.html#GBAUP</a></p><p>Energie-/W\u{e4}rmequelle Heizung: <a href=\"https://www.housing-stat.ch/de/help/42.html#GENH\" target=\"_blank\">https://www.housing-stat.ch/de/help/42.html#GENH</a></p>"]
 pub mod wohngebaeude_nach_energietraeger_der_heizung_bauperiode_gemeinde_und_jahr_2022 {
     use super::*;
 
@@ -7180,7 +7287,7 @@ pub mod wohngebaeude_nach_energietraeger_der_heizung_bauperiode_gemeinde_und_jah
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsGemeindenummer,
@@ -7205,7 +7312,7 @@ pub mod wohngebaeude_nach_energietraeger_der_heizung_bauperiode_gemeinde_und_jah
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -7230,7 +7337,7 @@ pub mod wohngebaeude_nach_energietraeger_der_heizung_bauperiode_gemeinde_und_jah
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -7316,7 +7423,9 @@ pub mod wohngebaeude_nach_energietraeger_der_heizung_bauperiode_gemeinde_und_jah
     }
 }
 
-/// Landratswahlen 2007: Kandidierendenresultate, Wahlberechtigte und Parteistimmen
+#[doc = "Landratswahlen 2007: Kandidierendenresultate, Wahlberechtigte und Parteistimmen"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 11. Februar 2007</p>"]
 pub mod landratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_parteistimmen {
     use super::*;
 
@@ -7361,7 +7470,7 @@ pub mod landratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_parteist
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -7432,7 +7541,7 @@ pub mod landratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -7457,7 +7566,7 @@ pub mod landratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -7543,7 +7652,9 @@ pub mod landratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_parteist
     }
 }
 
-/// Durchschnittlicher Quadratmeterpreis von Wohnbauland nach Gemeinde und Jahr (seit 1979)
+#[doc = "Durchschnittlicher Quadratmeterpreis von Wohnbauland nach Gemeinde und Jahr (seit 1979)"]
+#[doc = ""]
+#[doc = "<p>Bodenpreisstatistik. (Klammern = Datenschutz bei weniger als 3 Transaktionen; leer =\u{a0} im entsprechenden Jahr wurden keine Transaktionen vorgenommen<font face=\"inherit\"><span style=\"font-size: 0.875rem;\">)</span></font></p><p>Vor 1994 ohne Daten f\u{fc}r den Bezirk Laufen<br></p>"]
 pub mod durchschnittlicher_quadratmeterpreis_von_wohnbauland_nach_gemeinde_und_jahr_seit_1979 {
     use super::*;
 
@@ -7569,7 +7680,7 @@ pub mod durchschnittlicher_quadratmeterpreis_von_wohnbauland_nach_gemeinde_und_j
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -7592,7 +7703,7 @@ pub mod durchschnittlicher_quadratmeterpreis_von_wohnbauland_nach_gemeinde_und_j
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -7617,7 +7728,7 @@ pub mod durchschnittlicher_quadratmeterpreis_von_wohnbauland_nach_gemeinde_und_j
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -7703,7 +7814,9 @@ pub mod durchschnittlicher_quadratmeterpreis_von_wohnbauland_nach_gemeinde_und_j
     }
 }
 
-/// Luftqualität Station Schönenbuch (halbstündliche Messdaten Januar 2000 - April 2016)
+#[doc = "Luftqualit\u{e4}t Station Sch\u{f6}nenbuch (halbst\u{fc}ndliche Messdaten Januar 2000 - April 2016)"]
+#[doc = ""]
+#[doc = "<p></p><p></p><p class=\"\">Historische Daten der Luftmessstation Sch\u{f6}nenbuch von Anfang 2002 bis April 2016. \u{c4}ltere Daten k\u{f6}nnen beim Lufthygieneamt beider Basel direkt bezogen werden. Die Messwerte sind halbst\u{fc}ndlich ausgewiesen und bereinigt. Seit 2016 ist die Station stillgelegt.</p><p class=\"\">Das Auftreten allf\u{e4}lliger Negativwerte stammt von messtechnischen Ungenauigkeiten. Diese Messunsicherheit ist bei der Interpretation der Zahlen entsprechend mit einzubeziehen.</p><p class=\"\"></p><p class=\"\">Die Zeitstempel entsprechen der Zeitzone Europe/Zurich obwohl sie im Zeitformat UTC angegeben sind. Allf\u{e4}llige Fragen zum Zeitformat beantwortet das Amt f\u{fc}r Lufthygiene beider Basel auf Anfrage.</p><p style=\"\"><span style=\"font-weight: 700;\">Ausgewiesene Werte</span><br></p><ul><li>Anfangszeit: Zeitstempel des Beginns der halbst\u{fc}ndlichen Messung im Format %Y-%m-%dT%H:%M:%S</li><li>Lungeng\u{e4}ngiger Feinstaub PM10 (\u{b5}g/m3): Lungeng\u{e4}ngiger Feinstaub PM10 in Mikrogramm pro Kubikmeter.</li><li>Stickstoffdioxid NO2 (\u{b5}g/m3): Gemessene Stickstoffdioxid-Konzentration in Mikrogramm pro Kubikmeter.</li><li>Ozon O3 (\u{b5}g/m3): Gemessene Ozon-Konzentration in Mikrogramm pro Kubikmeter.</li></ul><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Standortbeschreibung</span></p><p class=\"\" style=\"font-family: sans-serif;\">Die Messstation befand sich an der Sandgrubenstrasse 25, am Dorfrand von Sch\u{f6}nenbuch. An diesem Standort wurde die l\u{e4}ndliche Hintergrundbelastung gemessen.\u{a0}</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Lage</span></p><p class=\"\" style=\"font-family: sans-serif;\">L\u{e4}ndlich (unterhalb von 1000m \u{fc}. M.), Hintergrund</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Koordinaten</span></p><p class=\"\" style=\"font-family: sans-serif;\">2604746 / 1264620; 385 m \u{fc}. M.</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Bebauung</span></p><p class=\"\" style=\"font-family: sans-serif;\">Offene Bebauung</p><p></p><p></p>"]
 pub mod luftqualitaet_station_schoenenbuch_halbstuendliche_messdaten_januar_2000_april_2016 {
     use super::*;
 
@@ -7732,7 +7845,7 @@ pub mod luftqualitaet_station_schoenenbuch_halbstuendliche_messdaten_januar_2000
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Anfangzeit,
         Pm10,
@@ -7751,7 +7864,7 @@ pub mod luftqualitaet_station_schoenenbuch_halbstuendliche_messdaten_januar_2000
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -7776,7 +7889,7 @@ pub mod luftqualitaet_station_schoenenbuch_halbstuendliche_messdaten_januar_2000
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -7862,7 +7975,9 @@ pub mod luftqualitaet_station_schoenenbuch_halbstuendliche_messdaten_januar_2000
     }
 }
 
-/// Altersprognose nach Versorgungsregion, Geschlecht, Alter und Jahr (2020 mit Basis 2018)
+#[doc = "Altersprognose nach Versorgungsregion, Geschlecht, Alter und Jahr (2020 mit Basis 2018)"]
+#[doc = ""]
+#[doc = "<p>Kantonale Bev\u{f6}lkerungsstatistik, Altersprognose BL 2020<br></p>"]
 pub mod altersprognose_nach_versorgungsregion_geschlecht_alter_und_jahr_2020_mit_basis_2018 {
     use super::*;
 
@@ -7894,7 +8009,7 @@ pub mod altersprognose_nach_versorgungsregion_geschlecht_alter_und_jahr_2020_mit
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         VersorgungsregionCode,
@@ -7923,7 +8038,7 @@ pub mod altersprognose_nach_versorgungsregion_geschlecht_alter_und_jahr_2020_mit
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -7948,7 +8063,7 @@ pub mod altersprognose_nach_versorgungsregion_geschlecht_alter_und_jahr_2020_mit
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -8034,7 +8149,9 @@ pub mod altersprognose_nach_versorgungsregion_geschlecht_alter_und_jahr_2020_mit
     }
 }
 
-/// Durchschnittlicher Quadratmeterpreis von Bauland nach Gemeinde und Jahr (seit 1979)
+#[doc = "Durchschnittlicher Quadratmeterpreis von Bauland nach Gemeinde und Jahr (seit 1979)"]
+#[doc = ""]
+#[doc = "<p style=\"font-family: sans-serif;\">Bodenpreisstatistik. (Klammern = Datenschutz bei weniger als 3 Transaktionen; leer =\u{a0} im entsprechenden Jahr wurden keine Transaktionen vorgenommen<font face=\"inherit\">)</font></p><p style=\"font-family: sans-serif;\">Vor 1994 ohne Daten f\u{fc}r den Bezirk Laufen</p>"]
 pub mod durchschnittlicher_quadratmeterpreis_von_bauland_nach_gemeinde_und_jahr_seit_1979 {
     use super::*;
 
@@ -8060,7 +8177,7 @@ pub mod durchschnittlicher_quadratmeterpreis_von_bauland_nach_gemeinde_und_jahr_
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -8083,7 +8200,7 @@ pub mod durchschnittlicher_quadratmeterpreis_von_bauland_nach_gemeinde_und_jahr_
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -8108,7 +8225,7 @@ pub mod durchschnittlicher_quadratmeterpreis_von_bauland_nach_gemeinde_und_jahr_
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -8194,7 +8311,9 @@ pub mod durchschnittlicher_quadratmeterpreis_von_bauland_nach_gemeinde_und_jahr_
     }
 }
 
-/// Durchschnittlicher Verkaufspreis von Eigentumswohnungen nach Zimmerzahl, Bezirk und Jahr (seit 2011)
+#[doc = "Durchschnittlicher Verkaufspreis von Eigentumswohnungen nach Zimmerzahl, Bezirk und Jahr (seit 2011)"]
+#[doc = ""]
+#[doc = "<p>Bodenpreisstatistik. (Klammern = Datenschutz bei weniger als 3 Transaktionen; fehlende Zeilen =\u{a0} im entsprechenden Jahr wurden keine Transaktionen f\u{fc}r die betreffende Wohnungsgr\u{f6}sse vorgenommen)</p>"]
 pub mod durchschnittlicher_verkaufspreis_von_eigentumswohnungen_nach_zimmerzahl_bezirk_und_jahr_seit_2011 {
     use super::*;
 
@@ -8218,7 +8337,7 @@ pub mod durchschnittlicher_verkaufspreis_von_eigentumswohnungen_nach_zimmerzahl_
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BezirkNummer,
@@ -8239,7 +8358,7 @@ pub mod durchschnittlicher_verkaufspreis_von_eigentumswohnungen_nach_zimmerzahl_
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -8264,7 +8383,7 @@ pub mod durchschnittlicher_verkaufspreis_von_eigentumswohnungen_nach_zimmerzahl_
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -8350,7 +8469,9 @@ pub mod durchschnittlicher_verkaufspreis_von_eigentumswohnungen_nach_zimmerzahl_
     }
 }
 
-/// Covid-19 (Breites Testen BL): Wöchentlich getestete bzw. positive Personen in Betrieben nach Kategorie (März 2021 - Dezember 2022)
+#[doc = "Covid-19 (Breites Testen BL): W\u{f6}chentlich getestete bzw. positive Personen in Betrieben nach Kategorie (M\u{e4}rz 2021 - Dezember 2022)"]
+#[doc = ""]
+#[doc = "<p><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Anzahl getesteter (Pool-Test) bzw. positiv getesteter Personen (Nachtestung resp. R\u{fc}ckstellprobe nach positiven Pool-Tests) pro Kalenderwoche nach Art der teilnehmenden Organisation. Das Programm lief zum 31. Dezember 2022 aus.</span></font></p><p><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Das breite Testen Baselland war ein repetitives Testprogramm zur Identifizierung von asymptomatischen SARS-CoV-2 infizierten Personen mittels gepoolter PCR-Tests aus Speichelproben. Das Programm lief von 1. M\u{e4}rz 2021 bis 31. Dezember 2022. Grunds\u{e4}tzlich konnten Betriebe, Schulen, Alters- und Pflegeheime (APH) und Spit\u{e4}ler aus dem Kanton Basel-Landschaft daran teilnehmen.</span><br></font></p>"]
 pub mod covid_19_breites_testen_bl_woechentlich_getestete_bzw_positive_personen_in_betrieben_nach_kategorie_maerz_2021_dezember_2022 {
     use super::*;
 
@@ -8359,6 +8480,10 @@ pub mod covid_19_breites_testen_bl_woechentlich_getestete_bzw_positive_personen_
         /// Datum
         ///
         /// Erster Tag der Kalenderwoche
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// Kalenderwoche
         ///
@@ -8380,7 +8505,7 @@ pub mod covid_19_breites_testen_bl_woechentlich_getestete_bzw_positive_personen_
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Kalenderwoche,
@@ -8401,7 +8526,7 @@ pub mod covid_19_breites_testen_bl_woechentlich_getestete_bzw_positive_personen_
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -8426,7 +8551,7 @@ pub mod covid_19_breites_testen_bl_woechentlich_getestete_bzw_positive_personen_
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -8512,7 +8637,9 @@ pub mod covid_19_breites_testen_bl_woechentlich_getestete_bzw_positive_personen_
     }
 }
 
-/// Ständeratswahlen 2011: Kandidierendenresultate
+#[doc = "St\u{e4}nderatswahlen 2011: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 23. Oktober 2011<br></p>"]
 pub mod staenderatswahlen_2011_kandidierendenresultate {
     use super::*;
 
@@ -8551,7 +8678,7 @@ pub mod staenderatswahlen_2011_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -8610,7 +8737,7 @@ pub mod staenderatswahlen_2011_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -8635,7 +8762,7 @@ pub mod staenderatswahlen_2011_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -8721,7 +8848,9 @@ pub mod staenderatswahlen_2011_kandidierendenresultate {
     }
 }
 
-/// Adressen der Primar-, Sekundar- und Musikschulen (Juni 2024)
+#[doc = "Adressen der Primar-, Sekundar- und Musikschulen (Juni 2024)"]
+#[doc = ""]
+#[doc = "<p>Liste der \u{f6}ffentlichen\u{a0}Primar-, Sekundar- und Musikschulen</p><p>Die Sekundarschulkreise sind im\u{a0}<a href=\"https://bl.clex.ch/app/de/texts_of_law/642.1\" target=\"_blank\">Dekret \u{fc}ber die Sekundarschulkreise und Sekundarschulstandorte</a> definiert.</p>"]
 pub mod adressen_der_primar_sekundar_und_musikschulen_juni_2024 {
     use super::*;
 
@@ -8764,7 +8893,7 @@ pub mod adressen_der_primar_sekundar_und_musikschulen_juni_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BfsGemeindenummer,
         Gemeinde,
@@ -8805,7 +8934,7 @@ pub mod adressen_der_primar_sekundar_und_musikschulen_juni_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -8830,7 +8959,7 @@ pub mod adressen_der_primar_sekundar_und_musikschulen_juni_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -8916,7 +9045,9 @@ pub mod adressen_der_primar_sekundar_und_musikschulen_juni_2024 {
     }
 }
 
-/// Bewilligte Spitex-Organisationen nach Standort (August 2024)
+#[doc = "Bewilligte Spitex-Organisationen nach Standort (August 2024)"]
+#[doc = ""]
+#[doc = "<p>Liste der vom Kanton BL bewilligten Spitex-Organisationen</p>"]
 pub mod bewilligte_spitex_organisationen_nach_standort_august_2024 {
     use super::*;
 
@@ -8952,7 +9083,7 @@ pub mod bewilligte_spitex_organisationen_nach_standort_august_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Id,
         Organisation,
@@ -8983,7 +9114,7 @@ pub mod bewilligte_spitex_organisationen_nach_standort_august_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -9008,7 +9139,7 @@ pub mod bewilligte_spitex_organisationen_nach_standort_august_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -9094,7 +9225,9 @@ pub mod bewilligte_spitex_organisationen_nach_standort_august_2024 {
     }
 }
 
-/// Endverbrauch von Elektrizität nach Gemeinde und Jahr (seit 1990)
+#[doc = "Endverbrauch von Elektrizit\u{e4}t nach Gemeinde und Jahr (seit 1990)"]
+#[doc = ""]
+#[doc = "<p>Energiestatistik</p>"]
 pub mod endverbrauch_von_elektrizitaet_nach_gemeinde_und_jahr_seit_1990 {
     use super::*;
 
@@ -9117,7 +9250,7 @@ pub mod endverbrauch_von_elektrizitaet_nach_gemeinde_und_jahr_seit_1990 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -9138,7 +9271,7 @@ pub mod endverbrauch_von_elektrizitaet_nach_gemeinde_und_jahr_seit_1990 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -9163,7 +9296,7 @@ pub mod endverbrauch_von_elektrizitaet_nach_gemeinde_und_jahr_seit_1990 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -9249,13 +9382,19 @@ pub mod endverbrauch_von_elektrizitaet_nach_gemeinde_und_jahr_seit_1990 {
     }
 }
 
-/// Covid-19: Tägliche Fallzahlen (Februar 2020 - Januar 2023)
+#[doc = "Covid-19: T\u{e4}gliche Fallzahlen (Februar 2020 - Januar 2023)"]
+#[doc = ""]
+#[doc = "<p>Covid-19-Monitoring.\u{a0}T\u{e4}gliche Fallzahlen von Personen mit Wohnsitz BL.\u{a0}Die Daten werden nach dem 17.01.23 nicht mehr aktualisiert.<br/></p>"]
 pub mod covid_19_taegliche_fallzahlen_februar_2020_januar_2023 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// geoRegion
         ///
@@ -9281,7 +9420,7 @@ pub mod covid_19_taegliche_fallzahlen_februar_2020_januar_2023 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Georegion,
@@ -9306,7 +9445,7 @@ pub mod covid_19_taegliche_fallzahlen_februar_2020_januar_2023 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -9331,7 +9470,7 @@ pub mod covid_19_taegliche_fallzahlen_februar_2020_januar_2023 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -9417,7 +9556,9 @@ pub mod covid_19_taegliche_fallzahlen_februar_2020_januar_2023 {
     }
 }
 
-/// Gebäude nach Eigentümertyp, Wirtschaftsabschnitt, Gemeinde und Jahr (seit 2020)
+#[doc = "Geb\u{e4}ude nach Eigent\u{fc}mertyp, Wirtschaftsabschnitt, Gemeinde und Jahr (seit 2020)"]
+#[doc = ""]
+#[doc = "<p>Geb\u{e4}ude- und Wohnungsstatistik (GWS)</p><p>Die Statistik der Eigent\u{fc}mertypen der Geb\u{e4}ude wird erstellt, indem die Informationen zu den Wohngeb\u{e4}uden aus dem eidgen\u{f6}ssischen Geb\u{e4}ude- und Wohnungsregister (GWR) mit den Grundbuchdaten zu einem oder mehreren Eigent\u{fc}mern verkn\u{fc}pft werden.</p><p>Gemeinschaft: Form des kollektiven Eigentums, wobei jedes Mitglied im Besitz des gesamten Objekts ist. Zu den Gemeinschaften geh\u{f6}ren einfache Gesellschaften, Erbengemeinschaften, G\u{fc}tergemeinschaften und Gemeinderschaften.</p><p>Gemischt: Eigent\u{fc}mertyp, dem Geb\u{e4}ude zugeordnet werden, die mindestens zwei verschiedene Eigent\u{fc}mertypen aufweisen. Da die Anteile jedes Eigent\u{fc}mertyps nicht immer bekannt sind, kann das Geb\u{e4}ude keiner der beiden Kategorien eindeutig zugeordnet werden.</p><p>Unbekannt (leer): Eigent\u{fc}mertyp, dem Geb\u{e4}ude zugeordnet werden, bei denen die Grundb\u{fc}cher keine Informationen zu den Eigent\u{fc}mern enthalten.<br></p>"]
 pub mod gebaeude_nach_eigentuemertyp_wirtschaftsabschnitt_gemeinde_und_jahr_seit_2020 {
     use super::*;
 
@@ -9445,7 +9586,7 @@ pub mod gebaeude_nach_eigentuemertyp_wirtschaftsabschnitt_gemeinde_und_jahr_seit
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsGemeindenummer,
@@ -9468,7 +9609,7 @@ pub mod gebaeude_nach_eigentuemertyp_wirtschaftsabschnitt_gemeinde_und_jahr_seit
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -9493,7 +9634,7 @@ pub mod gebaeude_nach_eigentuemertyp_wirtschaftsabschnitt_gemeinde_und_jahr_seit
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -9579,12 +9720,18 @@ pub mod gebaeude_nach_eigentuemertyp_wirtschaftsabschnitt_gemeinde_und_jahr_seit
     }
 }
 
-/// Volksinitiative vom 17. September 2019 "Keine Massentierhaltung in der Schweiz" (Massentierhaltungsinitiative)
+#[doc = "Volksinitiative vom 17. September 2019 \"Keine Massentierhaltung in der Schweiz\" (Massentierhaltungsinitiative)"]
+#[doc = ""]
+#[doc = "Eidgen\u{f6}ssische Abstimmung vom 25. September 2022"]
 pub mod volksinitiative_vom_17_september_2019_keine_massentierhaltung_in_der_schweiz_massentierhaltungsinitiative {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         pub entity_id: Option<String>,
         pub name: Option<String>,
@@ -9606,7 +9753,7 @@ pub mod volksinitiative_vom_17_september_2019_keine_massentierhaltung_in_der_sch
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -9641,7 +9788,7 @@ pub mod volksinitiative_vom_17_september_2019_keine_massentierhaltung_in_der_sch
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -9666,7 +9813,7 @@ pub mod volksinitiative_vom_17_september_2019_keine_massentierhaltung_in_der_sch
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -9752,7 +9899,9 @@ pub mod volksinitiative_vom_17_september_2019_keine_massentierhaltung_in_der_sch
     }
 }
 
-/// Änderung des Steuergesetzes, Vermögenssteuerreform I
+#[doc = "\u{c4}nderung des Steuergesetzes, Verm\u{f6}genssteuerreform I"]
+#[doc = ""]
+#[doc = "<p>Kantonale Abstimmung vom 27. November 2022</p>"]
 pub mod aenderung_des_steuergesetzes_vermoegenssteuerreform_i {
     use super::*;
 
@@ -9780,7 +9929,7 @@ pub mod aenderung_des_steuergesetzes_vermoegenssteuerreform_i {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -9817,7 +9966,7 @@ pub mod aenderung_des_steuergesetzes_vermoegenssteuerreform_i {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -9842,7 +9991,7 @@ pub mod aenderung_des_steuergesetzes_vermoegenssteuerreform_i {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -9928,13 +10077,19 @@ pub mod aenderung_des_steuergesetzes_vermoegenssteuerreform_i {
     }
 }
 
-/// Covid-19: Tägliche Tests nach Typ des Tests (Februar 2020 - Januar 2023)
+#[doc = "Covid-19: T\u{e4}gliche Tests nach Typ des Tests (Februar 2020 - Januar 2023)"]
+#[doc = ""]
+#[doc = "<p>Covid-19-Monitoring.\u{a0}T\u{e4}gliche Tests von Personen mit Wohnsitz BL.\u{a0}Die Daten werden nach dem 17.01.23 nicht mehr aktualisiert.<br/></p>"]
 pub mod covid_19_taegliche_tests_nach_typ_des_tests_februar_2020_januar_2023 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// geoRegion
         ///
@@ -9964,7 +10119,7 @@ pub mod covid_19_taegliche_tests_nach_typ_des_tests_februar_2020_januar_2023 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Georegion,
@@ -9993,7 +10148,7 @@ pub mod covid_19_taegliche_tests_nach_typ_des_tests_februar_2020_januar_2023 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -10018,7 +10173,7 @@ pub mod covid_19_taegliche_tests_nach_typ_des_tests_februar_2020_januar_2023 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -10104,12 +10259,18 @@ pub mod covid_19_taegliche_tests_nach_typ_des_tests_februar_2020_januar_2023 {
     }
 }
 
-/// Änderung der Kantonsverfassung vom 13. Januar 2022 betreffend Anpassung der Bestimmungen über die Ombudsperson
+#[doc = "\u{c4}nderung der Kantonsverfassung vom 13. Januar 2022 betreffend Anpassung der Bestimmungen \u{fc}ber die Ombudsperson"]
+#[doc = ""]
+#[doc = "<p>Kantonale Abstimmung vom 15. Mai 2022<br></p>"]
 pub mod aenderung_der_kantonsverfassung_vom_13_januar_2022_betreffend_anpassung_der_bestimmungen_ueber_die_ombudsperson {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// BFS-Gemeindenummer (0 = Auslandschweizer)
         pub entity_id: Option<String>,
@@ -10142,7 +10303,7 @@ pub mod aenderung_der_kantonsverfassung_vom_13_januar_2022_betreffend_anpassung_
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -10179,7 +10340,7 @@ pub mod aenderung_der_kantonsverfassung_vom_13_januar_2022_betreffend_anpassung_
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -10204,7 +10365,7 @@ pub mod aenderung_der_kantonsverfassung_vom_13_januar_2022_betreffend_anpassung_
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -10290,12 +10451,18 @@ pub mod aenderung_der_kantonsverfassung_vom_13_januar_2022_betreffend_anpassung_
     }
 }
 
-/// Bundesbeschluss vom 17. Dezember 2021 über die Zusatzfinanzierung der AHV durch eine Erhöhung der Mehrwertsteuer
+#[doc = "Bundesbeschluss vom 17. Dezember 2021 \u{fc}ber die Zusatzfinanzierung der AHV durch eine Erh\u{f6}hung der Mehrwertsteuer"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Abstimmung vom 25. September 2022<br></p><p><br></p><p><br></p>"]
 pub mod bundesbeschluss_vom_17_dezember_2021_ueber_die_zusatzfinanzierung_der_ahv_durch_eine_erhoehung_der_mehrwertsteuer {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         pub entity_id: Option<String>,
         pub name: Option<String>,
@@ -10317,7 +10484,7 @@ pub mod bundesbeschluss_vom_17_dezember_2021_ueber_die_zusatzfinanzierung_der_ah
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -10352,7 +10519,7 @@ pub mod bundesbeschluss_vom_17_dezember_2021_ueber_die_zusatzfinanzierung_der_ah
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -10377,7 +10544,7 @@ pub mod bundesbeschluss_vom_17_dezember_2021_ueber_die_zusatzfinanzierung_der_ah
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -10463,12 +10630,18 @@ pub mod bundesbeschluss_vom_17_dezember_2021_ueber_die_zusatzfinanzierung_der_ah
     }
 }
 
-/// Änderung vom 17. Dezember 2021 des Bundesgesetzes über die Alters- und Hinterlassenenversicherung (AHVG) (AHV 21)
+#[doc = "\u{c4}nderung vom 17. Dezember 2021 des Bundesgesetzes \u{fc}ber die Alters- und Hinterlassenenversicherung (AHVG) (AHV 21)"]
+#[doc = ""]
+#[doc = "Eidgen\u{f6}ssische Abstimmung vom 25. September 2022"]
 pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_alters_und_hinterlassenenversicherung_ahvg_ahv_21 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         pub entity_id: Option<String>,
         pub name: Option<String>,
@@ -10490,7 +10663,7 @@ pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_alters_und_h
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -10525,7 +10698,7 @@ pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_alters_und_h
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -10550,7 +10723,7 @@ pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_alters_und_h
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -10636,7 +10809,9 @@ pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_alters_und_h
     }
 }
 
-/// Übernahme der EU-Verordnung über die Europäische Grenz- und Küstenwache
+#[doc = "\u{dc}bernahme der EU-Verordnung \u{fc}ber die Europ\u{e4}ische Grenz- und K\u{fc}stenwache"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Abstimmung vom 15. Mai 2022<br></p>"]
 pub mod uebernahme_der_eu_verordnung_ueber_die_europaeische_grenz_und_kuestenwache {
     use super::*;
 
@@ -10664,7 +10839,7 @@ pub mod uebernahme_der_eu_verordnung_ueber_die_europaeische_grenz_und_kuestenwac
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -10701,7 +10876,7 @@ pub mod uebernahme_der_eu_verordnung_ueber_die_europaeische_grenz_und_kuestenwac
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -10726,7 +10901,7 @@ pub mod uebernahme_der_eu_verordnung_ueber_die_europaeische_grenz_und_kuestenwac
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -10812,12 +10987,18 @@ pub mod uebernahme_der_eu_verordnung_ueber_die_europaeische_grenz_und_kuestenwac
     }
 }
 
-/// Teilrevision des Sozialhilfegesetzes vom 4. November 2021 betreffend «Anreize stärken – Arbeitsintegration fördern»
+#[doc = "Teilrevision des Sozialhilfegesetzes vom 4. November 2021 betreffend \u{ab}Anreize st\u{e4}rken \u{2013} Arbeitsintegration f\u{f6}rdern\u{bb}"]
+#[doc = ""]
+#[doc = "<p>Kantonale Abstimmung vom 15. Mai 2022<br></p>"]
 pub mod teilrevision_des_sozialhilfegesetzes_vom_4_november_2021_betreffend_anreize_staerken_arbeitsintegration_foerdern {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         pub entity_id: Option<String>,
         pub name: Option<String>,
@@ -10840,7 +11021,7 @@ pub mod teilrevision_des_sozialhilfegesetzes_vom_4_november_2021_betreffend_anre
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -10877,7 +11058,7 @@ pub mod teilrevision_des_sozialhilfegesetzes_vom_4_november_2021_betreffend_anre
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -10902,7 +11083,7 @@ pub mod teilrevision_des_sozialhilfegesetzes_vom_4_november_2021_betreffend_anre
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -10988,12 +11169,18 @@ pub mod teilrevision_des_sozialhilfegesetzes_vom_4_november_2021_betreffend_anre
     }
 }
 
-/// Änderung vom 16. Dezember 2022 des Bundesgesetzes über die gesetzlichen Grundlagen für Verordnungen des Bundesrates zur Bewältigung der Covid-19-Epidemie (Covid-19-Gesetz)
+#[doc = "\u{c4}nderung vom 16. Dezember 2022 des Bundesgesetzes \u{fc}ber die gesetzlichen Grundlagen f\u{fc}r Verordnungen des Bundesrates zur Bew\u{e4}ltigung der Covid-19-Epidemie (Covid-19-Gesetz)"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Abstimmung vom 18. Juni 2023<br></p>"]
 pub mod aenderung_vom_16_dezember_2022_des_bundesgesetzes_ueber_die_gesetzlichen_grundlagen_fuer_verordnungen_des_bundesrates_zur_bewaeltigung_der_covid_19_epidemie_covid_19_gesetz {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         pub entity_id: Option<String>,
         pub name: Option<String>,
@@ -11016,7 +11203,7 @@ pub mod aenderung_vom_16_dezember_2022_des_bundesgesetzes_ueber_die_gesetzlichen
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -11053,7 +11240,7 @@ pub mod aenderung_vom_16_dezember_2022_des_bundesgesetzes_ueber_die_gesetzlichen
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -11078,7 +11265,7 @@ pub mod aenderung_vom_16_dezember_2022_des_bundesgesetzes_ueber_die_gesetzlichen
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -11164,12 +11351,18 @@ pub mod aenderung_vom_16_dezember_2022_des_bundesgesetzes_ueber_die_gesetzlichen
     }
 }
 
-/// Bundesgesetz vom 30. September 2022 über die Ziele im Klimaschutz, die Innovation und die Stärkung der Energiesicherheit (KIG)
+#[doc = "Bundesgesetz vom 30. September 2022 \u{fc}ber die Ziele im Klimaschutz, die Innovation und die St\u{e4}rkung der Energiesicherheit (KIG)"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Abstimmung vom 18. Juni 2023<br></p>"]
 pub mod bundesgesetz_vom_30_september_2022_ueber_die_ziele_im_klimaschutz_die_innovation_und_die_staerkung_der_energiesicherheit_kig {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         pub entity_id: Option<String>,
         pub name: Option<String>,
@@ -11192,7 +11385,7 @@ pub mod bundesgesetz_vom_30_september_2022_ueber_die_ziele_im_klimaschutz_die_in
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -11229,7 +11422,7 @@ pub mod bundesgesetz_vom_30_september_2022_ueber_die_ziele_im_klimaschutz_die_in
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -11254,7 +11447,7 @@ pub mod bundesgesetz_vom_30_september_2022_ueber_die_ziele_im_klimaschutz_die_in
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -11340,12 +11533,18 @@ pub mod bundesgesetz_vom_30_september_2022_ueber_die_ziele_im_klimaschutz_die_in
     }
 }
 
-/// Bundesbeschluss vom 16. Dezember 2022 über eine besondere Besteuerung grosser Unternehmensgruppen
+#[doc = "Bundesbeschluss vom 16. Dezember 2022 \u{fc}ber eine besondere Besteuerung grosser Unternehmensgruppen"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Abstimmung vom 18. Juni 2023<br></p>"]
 pub mod bundesbeschluss_vom_16_dezember_2022_ueber_eine_besondere_besteuerung_grosser_unternehmensgruppen {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         pub entity_id: Option<String>,
         pub name: Option<String>,
@@ -11368,7 +11567,7 @@ pub mod bundesbeschluss_vom_16_dezember_2022_ueber_eine_besondere_besteuerung_gr
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -11405,7 +11604,7 @@ pub mod bundesbeschluss_vom_16_dezember_2022_ueber_eine_besondere_besteuerung_gr
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -11430,7 +11629,7 @@ pub mod bundesbeschluss_vom_16_dezember_2022_ueber_eine_besondere_besteuerung_gr
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -11516,12 +11715,18 @@ pub mod bundesbeschluss_vom_16_dezember_2022_ueber_eine_besondere_besteuerung_gr
     }
 }
 
-/// Änderung vom 17. Dezember 2021 des Bundesgesetzes über die Verrechnungssteuer (Verrechnungssteuergesetz, VStG) (Stärkung des Fremdkapitalmarkts)
+#[doc = "\u{c4}nderung vom 17. Dezember 2021 des Bundesgesetzes \u{fc}ber die Verrechnungssteuer (Verrechnungssteuergesetz, VStG) (St\u{e4}rkung des Fremdkapitalmarkts)"]
+#[doc = ""]
+#[doc = "Eidgen\u{f6}ssische Abstimmung vom 25. September 2022"]
 pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_verrechnungssteuer_verrechnungssteuergesetz_vstg_staerkung_des_fremdkapitalmarkts {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         pub entity_id: Option<String>,
         pub name: Option<String>,
@@ -11543,7 +11748,7 @@ pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_verrechnungs
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -11578,7 +11783,7 @@ pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_verrechnungs
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -11603,7 +11808,7 @@ pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_verrechnungs
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -11689,7 +11894,9 @@ pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_verrechnungs
     }
 }
 
-/// Abfallmengen nach Kategorie, Gemeinde und Jahr (seit 2017)
+#[doc = "Abfallmengen nach Kategorie, Gemeinde und Jahr (seit 2017)"]
+#[doc = ""]
+#[doc = "<p>Abfallstatistik</p><p>Nur von den Gemeinden gesammelte Abf\u{e4}lle exkl. regionale Entsorgungszentren.\u{a0}Nur ein Teil der separat gesammelten Kunststoffe wird wiederverwertet. Ein grosser Teil der gesammelten Kunststoffe wird nach wie vor verbrannt.</p><p><br></p>"]
 pub mod abfallmengen_nach_kategorie_gemeinde_und_jahr_seit_2017 {
     use super::*;
 
@@ -11715,7 +11922,7 @@ pub mod abfallmengen_nach_kategorie_gemeinde_und_jahr_seit_2017 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsGemeindenummer,
@@ -11738,7 +11945,7 @@ pub mod abfallmengen_nach_kategorie_gemeinde_und_jahr_seit_2017 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -11763,7 +11970,7 @@ pub mod abfallmengen_nach_kategorie_gemeinde_und_jahr_seit_2017 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -11849,7 +12056,9 @@ pub mod abfallmengen_nach_kategorie_gemeinde_und_jahr_seit_2017 {
     }
 }
 
-/// Abschlüsse von Studierenden mit Wohnkanton BL an Schweizer Hochschulen nach Hochschultyp, Fachbereich, Geschlecht, Examensstufe und Jahr (seit 1980)
+#[doc = "Abschl\u{fc}sse von Studierenden mit Wohnkanton BL an Schweizer Hochschulen nach Hochschultyp, Fachbereich, Geschlecht, Examensstufe und Jahr (seit 1980)"]
+#[doc = ""]
+#[doc = "<p class=\"\">Schweizerisches Hochschulinformationssystem (SHIS)</p><p class=\"\">Die \u{fc}brigen Abschl\u{fc}sse umfassen Abschlussexamen ohne akademischen Grad, Gymnasiallehrer/innen, Nachdiplome (bis 2004), Sekundarlehrer/innen sowie universit\u{e4}re Aufbau- und Vertiefungsstudien.</p>"]
 pub mod abschluesse_von_studierenden_mit_wohnkanton_bl_an_schweizer_hochschulen_nach_hochschultyp_fachbereich_geschlecht_examensstufe_und_jahr_seit_1980 {
     use super::*;
 
@@ -11879,7 +12088,7 @@ pub mod abschluesse_von_studierenden_mit_wohnkanton_bl_an_schweizer_hochschulen_
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Hochschultyp,
@@ -11906,7 +12115,7 @@ pub mod abschluesse_von_studierenden_mit_wohnkanton_bl_an_schweizer_hochschulen_
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -11931,7 +12140,7 @@ pub mod abschluesse_von_studierenden_mit_wohnkanton_bl_an_schweizer_hochschulen_
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -12017,7 +12226,9 @@ pub mod abschluesse_von_studierenden_mit_wohnkanton_bl_an_schweizer_hochschulen_
     }
 }
 
-/// Baukosten nach Art und Kategorie der Auftraggeber, Bezirk und Jahr (seit 1994)
+#[doc = "Baukosten nach Art und Kategorie der Auftraggeber, Bezirk und Jahr (seit 1994)"]
+#[doc = ""]
+#[doc = "<p>Bau- und Wohnbaustatistik. Seit 2014 ohne die vom Bund erhobenen Tiefbauprojekte (SBB, Post, Swisscom, usw.).<br></p>"]
 pub mod baukosten_nach_art_und_kategorie_der_auftraggeber_bezirk_und_jahr_seit_1994 {
     use super::*;
 
@@ -12041,7 +12252,7 @@ pub mod baukosten_nach_art_und_kategorie_der_auftraggeber_bezirk_und_jahr_seit_1
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BezirkNummer,
@@ -12062,7 +12273,7 @@ pub mod baukosten_nach_art_und_kategorie_der_auftraggeber_bezirk_und_jahr_seit_1
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -12087,7 +12298,7 @@ pub mod baukosten_nach_art_und_kategorie_der_auftraggeber_bezirk_und_jahr_seit_1
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -12173,7 +12384,9 @@ pub mod baukosten_nach_art_und_kategorie_der_auftraggeber_bezirk_und_jahr_seit_1
     }
 }
 
-/// Wohnbevölkerung nach Geschlecht, Altersgruppe, Gemeinde und Jahr (1941 - 2000)
+#[doc = "Wohnbev\u{f6}lkerung nach Geschlecht, Altersgruppe, Gemeinde und Jahr (1941 - 2000)"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Volksz\u{e4}hlungen 1941-2000</p><p>Gemeinden: Gemeindestand Jahr 2000<br></p>"]
 pub mod wohnbevoelkerung_nach_geschlecht_altersgruppe_gemeinde_und_jahr_1941_2000 {
     use super::*;
 
@@ -12199,7 +12412,7 @@ pub mod wohnbevoelkerung_nach_geschlecht_altersgruppe_gemeinde_und_jahr_1941_200
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Gemeindenummer,
@@ -12222,7 +12435,7 @@ pub mod wohnbevoelkerung_nach_geschlecht_altersgruppe_gemeinde_und_jahr_1941_200
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -12247,7 +12460,7 @@ pub mod wohnbevoelkerung_nach_geschlecht_altersgruppe_gemeinde_und_jahr_1941_200
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -12333,7 +12546,9 @@ pub mod wohnbevoelkerung_nach_geschlecht_altersgruppe_gemeinde_und_jahr_1941_200
     }
 }
 
-/// Landratswahlen 2023: Kandidierendenresultate, Wahlberechtigte und Parteistimmen
+#[doc = "Landratswahlen 2023: Kandidierendenresultate, Wahlberechtigte und Parteistimmen"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 12. Februar 2023</p>"]
 pub mod landratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_parteistimmen {
     use super::*;
 
@@ -12380,7 +12595,7 @@ pub mod landratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_parteist
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -12453,7 +12668,7 @@ pub mod landratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -12478,7 +12693,7 @@ pub mod landratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -12564,7 +12779,9 @@ pub mod landratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_parteist
     }
 }
 
-/// Kennzahlen der Sozialhilfe nach Gemeinde und Jahr (seit 2005)
+#[doc = "Kennzahlen der Sozialhilfe nach Gemeinde und Jahr (seit 2005)"]
+#[doc = ""]
+#[doc = "<p>Sozialhilfeempf\u{e4}ngerstatistik (SHS), Bundesamt f\u{fc}r Statistik; Kantonale Bev\u{f6}lkerungsstatistik und Gemeindefinanzstatistik,\u{a0}Amt f\u{fc}r Daten und Statistik BL</p><p>Methodische Hinweise</p><p>Die Kennzahlen der Sozialhilfe BL werden nur f\u{fc}r Gemeinden mit 50 und mehr unterst\u{fc}tzten Personen im Erhebungsjahr ausgewiesen. Die Anzahl ausgewiesener Gemeinden kann daher von Jahr zu Jahr variieren.</p><p>Sozialhilfefall/unterst\u{fc}tzte Person</p><p>Gez\u{e4}hlt werden alle F\u{e4}lle/Personen, welche mindestens einmal im relevanten Jahr Sozialhilfeleistungen bezogen haben. Ein Fall kann mehrere unterst\u{fc}tzte Personen umfassen.\u{a0}</p><p>Sozialhilfequote</p><p>Die Sozialhilfequote entspricht dem Anteil der Sozialhilfebeziehenden an der Wohnbev\u{f6}lkerung. Als Referenzbev\u{f6}lkerung f\u{fc}r die Berechnung dient der Vorjahresendbestand der st\u{e4}ndigen Wohnbev\u{f6}lkerung gem\u{e4}ss STATPOP (Bundesamt f\u{fc}r Statistik; bis 2010 der Vorjahresendbestand der Wohnbev\u{f6}lkerung gem\u{e4}ss kantonaler Bev\u{f6}lkerungsstatistik).</p><p>Doppelz\u{e4}hlungen</p><p>Eine Unterst\u{fc}tzungseinheit kann pro Jahr in mehreren F\u{e4}llen unterst\u{fc}tzt werden. Zum Beispiel, wenn ein Wohnortswechsel erfolgt. Bei den Sozialhilfef\u{e4}llen und den unterst\u{fc}tzten Personen werden im Bezirks- und Kantonstotal Doppelz\u{e4}hlungen ausgeklammert, jedoch nicht bei den neuen/abgeschlossenen F\u{e4}llen und den neu eingetretenen/ausgetretenen Personen.</p><p>Abschl\u{fc}sse</p><p>Sozialhilfef\u{e4}lle werden abgeschlossen, wenn seit mehr als sechs Monaten keine Auszahlung mehr erfolgt ist. Es werden auch Abschl\u{fc}sse von F\u{e4}llen zum aktuellen Jahr gez\u{e4}hlt, welche im Vorjahr eine letzte Auszahlung erhalten haben und im laufenden Jahr abgeschlossen wurden. Falls nach einem Unterbruch von mehr als sechs Monaten erneut ein Antrag auf Sozialhilfe gestellt wird, wird ein neuer Fall er\u{f6}ffnet.</p><p>Nettoaufwand aus der Gemeindefinanzstatistik</p><p>Als Nettoaufwand gelten diejenigen Kosten (Aufwand), welche den Sozialhilfebeziehenden \u{ab}direkt\u{bb} zugutekommen abz\u{fc}glich den erhaltenen R\u{fc}ckerstattungen (Ertrag). Darin enthalten sind auch Eingliederungsmassnahmen. Hingegen ist der Verwaltungsaufwand (Sozialdienst und Sozialhilfebeh\u{f6}rde) nicht in der Auswertung enthalten. Die Kosten des vom Bund finanzierten Asylwesens sind nicht enthalten. Es werden somit die Kosten derjenigen Personen betrachtet, welche Sozialhilfeempf\u{e4}ngerstatistik (SHS) des Bundesamts f\u{fc}r Statistik gef\u{fc}hrt werden. Der Nettoaufwand steht ab dem Jahr 2014 zur Verf\u{fc}gung.</p><div><br></div>"]
 pub mod kennzahlen_der_sozialhilfe_nach_gemeinde_und_jahr_seit_2005 {
     use super::*;
 
@@ -12584,7 +12801,7 @@ pub mod kennzahlen_der_sozialhilfe_nach_gemeinde_und_jahr_seit_2005 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -12609,7 +12826,7 @@ pub mod kennzahlen_der_sozialhilfe_nach_gemeinde_und_jahr_seit_2005 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -12634,7 +12851,7 @@ pub mod kennzahlen_der_sozialhilfe_nach_gemeinde_und_jahr_seit_2005 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -12720,7 +12937,9 @@ pub mod kennzahlen_der_sozialhilfe_nach_gemeinde_und_jahr_seit_2005 {
     }
 }
 
-/// Landratswahlen 2023: Kandidierende nach Liste, Geschlecht, Jahrgang, Beruf und Wahlkreis
+#[doc = "Landratswahlen 2023: Kandidierende nach Liste, Geschlecht, Jahrgang, Beruf und Wahlkreis"]
+#[doc = ""]
+#[doc = "<p>Wahlvorschl\u{e4}ge f\u{fc}r die Landratswahlen vom 12. Februar 2023</p>"]
 pub mod landratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_beruf_und_wahlkreis {
     use super::*;
 
@@ -12733,6 +12952,10 @@ pub mod landratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_beruf_u
         /// Region
         pub region: Option<String>,
         /// Wahltermin
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wahltermin: Option<Date>,
         /// Anzahl_Sitze
         pub anzahl_sitze: Option<i64>,
@@ -12778,7 +13001,7 @@ pub mod landratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_beruf_u
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahlkreisNr,
         Wahlkreis,
@@ -12833,7 +13056,7 @@ pub mod landratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_beruf_u
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -12858,7 +13081,7 @@ pub mod landratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_beruf_u
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -12944,7 +13167,9 @@ pub mod landratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_beruf_u
     }
 }
 
-/// Alterszentren und Pflegeheime nach Standort (Januar 2024)
+#[doc = "Alterszentren und Pflegeheime nach Standort (Januar 2024)"]
+#[doc = ""]
+#[doc = "<p>Liste der Pflegeheime</p>"]
 pub mod alterszentren_und_pflegeheime_nach_standort_januar_2024 {
     use super::*;
 
@@ -13010,7 +13235,7 @@ pub mod alterszentren_und_pflegeheime_nach_standort_januar_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BfsNummer,
         Gemeinde,
@@ -13047,7 +13272,7 @@ pub mod alterszentren_und_pflegeheime_nach_standort_januar_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -13072,7 +13297,7 @@ pub mod alterszentren_und_pflegeheime_nach_standort_januar_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -13158,7 +13383,9 @@ pub mod alterszentren_und_pflegeheime_nach_standort_januar_2024 {
     }
 }
 
-/// Bundesgesetz vom 29. September 2023 über eine sichere Stromversorgung mit erneuerbaren Energien (Änderung des Energiegesetzes und des Stromversorgungsgesetzes)
+#[doc = "Bundesgesetz vom 29. September 2023 \u{fc}ber eine sichere Stromversorgung mit erneuerbaren Energien (\u{c4}nderung des Energiegesetzes und des Stromversorgungsgesetzes)"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Abstimmung vom 9. Juni 2024<br></p>"]
 pub mod bundesgesetz_vom_29_september_2023_ueber_eine_sichere_stromversorgung_mit_erneuerbaren_energien_aenderung_des_energiegesetzes_und_des_stromversorgungsgesetzes {
     use super::*;
 
@@ -13186,7 +13413,7 @@ pub mod bundesgesetz_vom_29_september_2023_ueber_eine_sichere_stromversorgung_mi
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -13223,7 +13450,7 @@ pub mod bundesgesetz_vom_29_september_2023_ueber_eine_sichere_stromversorgung_mi
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -13248,7 +13475,7 @@ pub mod bundesgesetz_vom_29_september_2023_ueber_eine_sichere_stromversorgung_mi
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -13334,7 +13561,9 @@ pub mod bundesgesetz_vom_29_september_2023_ueber_eine_sichere_stromversorgung_mi
     }
 }
 
-/// Landratswahlen 2003: Kandidierendenresultate, Wahlberechtigte und Parteistimmen
+#[doc = "Landratswahlen 2003: Kandidierendenresultate, Wahlberechtigte und Parteistimmen"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 30. M\u{e4}rz 2003</p>"]
 pub mod landratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_parteistimmen {
     use super::*;
 
@@ -13379,7 +13608,7 @@ pub mod landratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_parteist
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -13450,7 +13679,7 @@ pub mod landratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -13475,7 +13704,7 @@ pub mod landratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -13561,7 +13790,9 @@ pub mod landratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_parteist
     }
 }
 
-/// Regierungsratswahlen 2011: Kandidierendenresultate
+#[doc = "Regierungsratswahlen 2011: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 27. M\u{e4}rz 2011</p>"]
 pub mod regierungsratswahlen_2011_kandidierendenresultate {
     use super::*;
 
@@ -13600,7 +13831,7 @@ pub mod regierungsratswahlen_2011_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -13659,7 +13890,7 @@ pub mod regierungsratswahlen_2011_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -13684,7 +13915,7 @@ pub mod regierungsratswahlen_2011_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -13770,7 +14001,9 @@ pub mod regierungsratswahlen_2011_kandidierendenresultate {
     }
 }
 
-/// Jugend und Sport: Anzahl Kurse, Teilnehmende und Leitende nach Sportart und Jahr (seit 2005)
+#[doc = "Jugend und Sport: Anzahl Kurse, Teilnehmende und Leitende nach Sportart und Jahr (seit 2005)"]
+#[doc = ""]
+#[doc = "<p>J+S-Statistik</p><p>Die Sportarten wurden teilweise zusammengefasst.</p>"]
 pub mod jugend_und_sport_anzahl_kurse_teilnehmende_und_leitende_nach_sportart_und_jahr_seit_2005 {
     use super::*;
 
@@ -13794,7 +14027,7 @@ pub mod jugend_und_sport_anzahl_kurse_teilnehmende_und_leitende_nach_sportart_un
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Sportart,
@@ -13815,7 +14048,7 @@ pub mod jugend_und_sport_anzahl_kurse_teilnehmende_und_leitende_nach_sportart_un
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -13840,7 +14073,7 @@ pub mod jugend_und_sport_anzahl_kurse_teilnehmende_und_leitende_nach_sportart_un
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -13926,7 +14159,9 @@ pub mod jugend_und_sport_anzahl_kurse_teilnehmende_und_leitende_nach_sportart_un
     }
 }
 
-/// Volksinitiative vom 23. Januar 2020 «Maximal 10 % des Einkommens für die Krankenkassenprämien (Prämien-Entlastungs-Initiative)»
+#[doc = "Volksinitiative vom 23. Januar 2020 \u{ab}Maximal 10 % des Einkommens f\u{fc}r die Krankenkassenpr\u{e4}mien (Pr\u{e4}mien-Entlastungs-Initiative)\u{bb}"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Abstimmung vom 9. Juni 2024<br></p>"]
 pub mod volksinitiative_vom_23_januar_2020_maximal_10_des_einkommens_fuer_die_krankenkassenpraemien_praemien_entlastungs_initiative {
     use super::*;
 
@@ -13954,7 +14189,7 @@ pub mod volksinitiative_vom_23_januar_2020_maximal_10_des_einkommens_fuer_die_kr
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -13991,7 +14226,7 @@ pub mod volksinitiative_vom_23_januar_2020_maximal_10_des_einkommens_fuer_die_kr
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -14016,7 +14251,7 @@ pub mod volksinitiative_vom_23_januar_2020_maximal_10_des_einkommens_fuer_die_kr
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -14102,7 +14337,9 @@ pub mod volksinitiative_vom_23_januar_2020_maximal_10_des_einkommens_fuer_die_kr
     }
 }
 
-/// Regierungsratswahlen 2019: Kandidierendenresultate
+#[doc = "Regierungsratswahlen 2019: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 31. M\u{e4}rz 2019</p>"]
 pub mod regierungsratswahlen_2019_kandidierendenresultate {
     use super::*;
 
@@ -14141,7 +14378,7 @@ pub mod regierungsratswahlen_2019_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -14200,7 +14437,7 @@ pub mod regierungsratswahlen_2019_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -14225,7 +14462,7 @@ pub mod regierungsratswahlen_2019_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -14311,7 +14548,9 @@ pub mod regierungsratswahlen_2019_kandidierendenresultate {
     }
 }
 
-/// Volksinitiative vom 10. März 2020 «Für tiefere Prämien – Kostenbremse im Gesundheitswesen (Kostenbremse-Initiative)»
+#[doc = "Volksinitiative vom 10. M\u{e4}rz 2020 \u{ab}F\u{fc}r tiefere Pr\u{e4}mien \u{2013} Kostenbremse im Gesundheitswesen (Kostenbremse-Initiative)\u{bb}"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Abstimmung vom 9. Juni 2024<br></p>"]
 pub mod volksinitiative_vom_10_maerz_2020_fuer_tiefere_praemien_kostenbremse_im_gesundheitswesen_kostenbremse_initiative {
     use super::*;
 
@@ -14339,7 +14578,7 @@ pub mod volksinitiative_vom_10_maerz_2020_fuer_tiefere_praemien_kostenbremse_im_
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -14376,7 +14615,7 @@ pub mod volksinitiative_vom_10_maerz_2020_fuer_tiefere_praemien_kostenbremse_im_
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -14401,7 +14640,7 @@ pub mod volksinitiative_vom_10_maerz_2020_fuer_tiefere_praemien_kostenbremse_im_
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -14487,7 +14726,9 @@ pub mod volksinitiative_vom_10_maerz_2020_fuer_tiefere_praemien_kostenbremse_im_
     }
 }
 
-/// Swisslos-Fonds: Unterstützte Projekte nach Sparte und Betrag (seit 2011)
+#[doc = "Swisslos-Fonds: Unterst\u{fc}tzte Projekte nach Sparte und Betrag (seit 2011)"]
+#[doc = ""]
+#[doc = "<p>Durch den Kanton Basel-Landschaft geleistete Beitr\u{e4}ge aus dem kantonalen Fonds der Genossenschaft der Interkantonalen Landeslotterie SWISSLOS an wohlt\u{e4}tige, gemeinn\u{fc}tzige und kulturelle Projekte seit 2011.</p><p>Kriterien f\u{fc}r unterst\u{fc}tzte Projekte k\u{f6}nnen der Verordnung \u{fc}ber den Swisslos-Fonds (<a href=\"https://bl.clex.ch/app/de/texts_of_law/543.12\" target=\"_blank\">SGS 543.12</a>) entnommen werden.</p><p>\u{dc}ber den <a href=\"https://data.bl.ch/explore/dataset/11450/table/?disjunctive.jahr&amp;disjunctive.kategorie\" target=\"_blank\">Swisslos-Sportfonds</a> des Kantons Basel-Landschaft geleistete Beitr\u{e4}ge sind nicht Teil dieses Datensatzes.</p>"]
 pub mod swisslos_fonds_unterstuetzte_projekte_nach_sparte_und_betrag_seit_2011 {
     use super::*;
 
@@ -14511,7 +14752,7 @@ pub mod swisslos_fonds_unterstuetzte_projekte_nach_sparte_und_betrag_seit_2011 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Begunstigte,
@@ -14532,7 +14773,7 @@ pub mod swisslos_fonds_unterstuetzte_projekte_nach_sparte_und_betrag_seit_2011 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -14557,7 +14798,7 @@ pub mod swisslos_fonds_unterstuetzte_projekte_nach_sparte_und_betrag_seit_2011 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -14643,7 +14884,9 @@ pub mod swisslos_fonds_unterstuetzte_projekte_nach_sparte_und_betrag_seit_2011 {
     }
 }
 
-/// Gemeinderatsnachwahlen 2024: Kandidierendenresultate
+#[doc = "Gemeinderatsnachwahlen 2024: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kommunale Nachwahlen vom 14. April 2024, 9. Juni 2024 und\u{a0}22. September 2024 (offiziell kandidierende Personen)</p><p>Quellen: Landeskanzlei BL / Wahlb\u{fc}ros der Gemeinden</p><p>Keine Angaben (...) zur Stimmenzahl bei stillen Wahlen</p><p>Teilweise fehlende Angaben (...) zu Kandidaten-Nr., Jahrgang und Parteizugeh\u{f6}rigkeit</p>"]
 pub mod gemeinderatsnachwahlen_2024_kandidierendenresultate {
     use super::*;
 
@@ -14681,7 +14924,7 @@ pub mod gemeinderatsnachwahlen_2024_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         BfsGemeindenummer,
@@ -14716,7 +14959,7 @@ pub mod gemeinderatsnachwahlen_2024_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -14741,7 +14984,7 @@ pub mod gemeinderatsnachwahlen_2024_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -14827,7 +15070,9 @@ pub mod gemeinderatsnachwahlen_2024_kandidierendenresultate {
     }
 }
 
-/// Raumgliederungen nach Gemeinde (März 2024)
+#[doc = "Raumgliederungen nach Gemeinde (M\u{e4}rz 2024)"]
+#[doc = ""]
+#[doc = "<p>R\u{e4}umliche Gliederungen</p>"]
 pub mod raumgliederungen_nach_gemeinde_maerz_2024 {
     use super::*;
 
@@ -14909,7 +15154,7 @@ pub mod raumgliederungen_nach_gemeinde_maerz_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BfsNummer,
         Gemeinde,
@@ -14988,7 +15233,7 @@ pub mod raumgliederungen_nach_gemeinde_maerz_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -15013,7 +15258,7 @@ pub mod raumgliederungen_nach_gemeinde_maerz_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -15099,7 +15344,9 @@ pub mod raumgliederungen_nach_gemeinde_maerz_2024 {
     }
 }
 
-/// Bevölkerungsbestand nach Nationalität, Konfession, Gemeinde und Quartal (seit 2003)
+#[doc = "Bev\u{f6}lkerungsbestand nach Nationalit\u{e4}t, Konfession, Gemeinde und Quartal (seit 2003)"]
+#[doc = ""]
+#[doc = "<p>Kantonale Bev\u{f6}lkerungsstatistik (Quartalserhebung)</p>"]
 pub mod bevoelkerungsbestand_nach_nationalitaet_konfession_gemeinde_und_quartal_seit_2003 {
     use super::*;
 
@@ -15124,7 +15371,7 @@ pub mod bevoelkerungsbestand_nach_nationalitaet_konfession_gemeinde_und_quartal_
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Quartal,
@@ -15157,7 +15404,7 @@ pub mod bevoelkerungsbestand_nach_nationalitaet_konfession_gemeinde_und_quartal_
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -15182,7 +15429,7 @@ pub mod bevoelkerungsbestand_nach_nationalitaet_konfession_gemeinde_und_quartal_
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -15268,7 +15515,9 @@ pub mod bevoelkerungsbestand_nach_nationalitaet_konfession_gemeinde_und_quartal_
     }
 }
 
-/// Änderung des Umweltschutzgesetzes Basel-Landschaft betreffend Einführung kantonaler Deponieabgaben (Massnahme des Massnahmenpakets zur Förderung des Baustoffkreislaufs Regio Basel)
+#[doc = "\u{c4}nderung des Umweltschutzgesetzes Basel-Landschaft betreffend Einf\u{fc}hrung kantonaler Deponieabgaben (Massnahme des Massnahmenpakets zur F\u{f6}rderung des Baustoffkreislaufs Regio Basel)"]
+#[doc = ""]
+#[doc = "<p>Kantonale Abstimmung vom 19. November 2023<br></p>"]
 pub mod aenderung_des_umweltschutzgesetzes_basel_landschaft_betreffend_einfuehrung_kantonaler_deponieabgaben_massnahme_des_massnahmenpakets_zur_foerderung_des_baustoffkreislaufs_regio_basel {
     use super::*;
 
@@ -15311,7 +15560,7 @@ pub mod aenderung_des_umweltschutzgesetzes_basel_landschaft_betreffend_einfuehru
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -15352,7 +15601,7 @@ pub mod aenderung_des_umweltschutzgesetzes_basel_landschaft_betreffend_einfuehru
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -15377,7 +15626,7 @@ pub mod aenderung_des_umweltschutzgesetzes_basel_landschaft_betreffend_einfuehru
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -15463,7 +15712,9 @@ pub mod aenderung_des_umweltschutzgesetzes_basel_landschaft_betreffend_einfuehru
     }
 }
 
-/// Finanzausgleich nach Gemeinde und Jahr (seit 2010)
+#[doc = "Finanzausgleich nach Gemeinde und Jahr (seit 2010)"]
+#[doc = ""]
+#[doc = "<p>Finanzausgleichsverf\u{fc}gung<br></p>"]
 pub mod finanzausgleich_nach_gemeinde_und_jahr_seit_2010 {
     use super::*;
 
@@ -15487,7 +15738,7 @@ pub mod finanzausgleich_nach_gemeinde_und_jahr_seit_2010 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -15508,7 +15759,7 @@ pub mod finanzausgleich_nach_gemeinde_und_jahr_seit_2010 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -15533,7 +15784,7 @@ pub mod finanzausgleich_nach_gemeinde_und_jahr_seit_2010 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -15619,7 +15870,9 @@ pub mod finanzausgleich_nach_gemeinde_und_jahr_seit_2010 {
     }
 }
 
-/// Gemeindefinanzen nach Rechnungsteil, Funktion, Kontenart und Jahr (seit 2014)
+#[doc = "Gemeindefinanzen nach Rechnungsteil, Funktion, Kontenart und Jahr (seit 2014)"]
+#[doc = ""]
+#[doc = "<p>Gemeindefinanzstatistik (HRM2)<br></p>"]
 pub mod gemeindefinanzen_nach_rechnungsteil_funktion_kontenart_und_jahr_seit_2014 {
     use super::*;
 
@@ -15655,7 +15908,7 @@ pub mod gemeindefinanzen_nach_rechnungsteil_funktion_kontenart_und_jahr_seit_201
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -15688,7 +15941,7 @@ pub mod gemeindefinanzen_nach_rechnungsteil_funktion_kontenart_und_jahr_seit_201
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -15713,7 +15966,7 @@ pub mod gemeindefinanzen_nach_rechnungsteil_funktion_kontenart_und_jahr_seit_201
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -15799,7 +16052,9 @@ pub mod gemeindefinanzen_nach_rechnungsteil_funktion_kontenart_und_jahr_seit_201
     }
 }
 
-/// Altersbetreuung: Versorgungsregionen
+#[doc = "Altersbetreuung: Versorgungsregionen"]
+#[doc = ""]
+#[doc = "<p>Baselbieter Versorgungsregionen (VR) gem\u{e4}ss Altersbetreuungs- und Pflegegesetz (APG) 2021.\u{a0}Polygondaten als Shapefile oder GeoJSON.</p><p>Das <a href=\"https://bl.clex.ch/app/de/texts_of_law/941\" target=\"_blank\">Altersbetreuungs- und Pflegegesetz (APG)</a> verpflichtet die Gemeinden dazu, sich zur Planung und Sicherstellung der Versorgung der Bev\u{f6}lkerung mit Angeboten zur Betreuung und Pflege zu sogenannten Versorgungsregionen zusammenschliessen. Da einzelne Versorgungsregionen sehr klein sind, verwendet der Kanton f\u{fc}r Planungszwecke die aggregierten Versorgungsregionen. Bei den aggregierten Versorgungsregionen werden die Regionen Obereres Homburgertal und Farnsberg plus dem Oberbaselbiet zugeschlagen.<br/></p>"]
 pub mod altersbetreuung_versorgungsregionen {
     use super::*;
 
@@ -15821,7 +16076,7 @@ pub mod altersbetreuung_versorgungsregionen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Versorgung,
         Versorgu1,
@@ -15836,7 +16091,7 @@ pub mod altersbetreuung_versorgungsregionen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -15861,7 +16116,7 @@ pub mod altersbetreuung_versorgungsregionen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -15947,7 +16202,9 @@ pub mod altersbetreuung_versorgungsregionen {
     }
 }
 
-/// Staatssteuern der natürlichen Personen nach Gemeinde und Jahr (seit 2013)
+#[doc = "Staatssteuern der nat\u{fc}rlichen Personen nach Gemeinde und Jahr (seit 2013)"]
+#[doc = ""]
+#[doc = "<p>Steuerstatistik</p>"]
 pub mod staatssteuern_der_natuerlichen_personen_nach_gemeinde_und_jahr_seit_2013 {
     use super::*;
 
@@ -15971,7 +16228,7 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_gemeinde_und_jahr_seit_2013
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -15992,7 +16249,7 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_gemeinde_und_jahr_seit_2013
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -16017,7 +16274,7 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_gemeinde_und_jahr_seit_2013
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -16103,7 +16360,9 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_gemeinde_und_jahr_seit_2013
     }
 }
 
-/// Änderung der Kantonsverfassung betreffend Einführung kantonaler Deponieabgaben (Massnahme des Massnahmenpakets zur Förderung des Baustoffkreislaufs Regio Basel)
+#[doc = "\u{c4}nderung der Kantonsverfassung betreffend Einf\u{fc}hrung kantonaler Deponieabgaben (Massnahme des Massnahmenpakets zur F\u{f6}rderung des Baustoffkreislaufs Regio Basel)"]
+#[doc = ""]
+#[doc = "<p>Kantonale Abstimmung vom 19. November 2023<br></p>"]
 pub mod aenderung_der_kantonsverfassung_betreffend_einfuehrung_kantonaler_deponieabgaben_massnahme_des_massnahmenpakets_zur_foerderung_des_baustoffkreislaufs_regio_basel {
     use super::*;
 
@@ -16142,7 +16401,7 @@ pub mod aenderung_der_kantonsverfassung_betreffend_einfuehrung_kantonaler_deponi
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -16179,7 +16438,7 @@ pub mod aenderung_der_kantonsverfassung_betreffend_einfuehrung_kantonaler_deponi
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -16204,7 +16463,7 @@ pub mod aenderung_der_kantonsverfassung_betreffend_einfuehrung_kantonaler_deponi
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -16290,7 +16549,9 @@ pub mod aenderung_der_kantonsverfassung_betreffend_einfuehrung_kantonaler_deponi
     }
 }
 
-/// Staatssteuern der natürlichen Personen nach Vermögensklasse und Jahr (seit 2013)
+#[doc = "Staatssteuern der nat\u{fc}rlichen Personen nach Verm\u{f6}gensklasse und Jahr (seit 2013)"]
+#[doc = ""]
+#[doc = "<p>Steuerstatistik<br></p>"]
 pub mod staatssteuern_der_natuerlichen_personen_nach_vermoegensklasse_und_jahr_seit_2013 {
     use super::*;
 
@@ -16314,7 +16575,7 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_vermoegensklasse_und_jahr_s
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         KlasseSteuerbaresVermoegenCode,
@@ -16335,7 +16596,7 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_vermoegensklasse_und_jahr_s
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -16360,7 +16621,7 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_vermoegensklasse_und_jahr_s
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -16446,13 +16707,19 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_vermoegensklasse_und_jahr_s
     }
 }
 
-/// Covid-19: Tägliche Spitalkapazität (März 2020 - Mai 2023)
+#[doc = "Covid-19: T\u{e4}gliche Spitalkapazit\u{e4}t (M\u{e4}rz 2020 - Mai 2023)"]
+#[doc = ""]
+#[doc = "<p>Covid-19-Monitoring.\u{a0}T\u{e4}gliche Spitalkapazit\u{e4}t von Spit\u{e4}lern im Kanton BL.\u{a0}Die Daten werden nach dem 02.05.23 nicht mehr aktualisiert.<br/></p>"]
 pub mod covid_19_taegliche_spitalkapazitaet_maerz_2020_mai_2023 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// geoRegion
         ///
@@ -16542,7 +16809,7 @@ pub mod covid_19_taegliche_spitalkapazitaet_maerz_2020_mai_2023 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         Georegion,
@@ -16597,7 +16864,7 @@ pub mod covid_19_taegliche_spitalkapazitaet_maerz_2020_mai_2023 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -16622,7 +16889,7 @@ pub mod covid_19_taegliche_spitalkapazitaet_maerz_2020_mai_2023 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -16708,13 +16975,19 @@ pub mod covid_19_taegliche_spitalkapazitaet_maerz_2020_mai_2023 {
     }
 }
 
-/// Covid-19: Täglich geimpfte Personen nach Impfstoff und Typ der Impfung (Dezember 2020 - Mai 2023)
+#[doc = "Covid-19: T\u{e4}glich geimpfte Personen nach Impfstoff und Typ der Impfung (Dezember 2020 - Mai 2023)"]
+#[doc = ""]
+#[doc = "<p>Covid-19-Monitoring. T\u{e4}glich geimpfte Personen mit Wohnsitz BL. Die Daten werden nach dem 02.05.23 nicht mehr aktualisiert.<br/></p>"]
 pub mod covid_19_taeglich_geimpfte_personen_nach_impfstoff_und_typ_der_impfung_dezember_2020_mai_2023 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// geoRegion
         ///
@@ -16752,7 +17025,7 @@ pub mod covid_19_taeglich_geimpfte_personen_nach_impfstoff_und_typ_der_impfung_d
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         Georegion,
@@ -16783,7 +17056,7 @@ pub mod covid_19_taeglich_geimpfte_personen_nach_impfstoff_und_typ_der_impfung_d
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -16808,7 +17081,7 @@ pub mod covid_19_taeglich_geimpfte_personen_nach_impfstoff_und_typ_der_impfung_d
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -16894,7 +17167,9 @@ pub mod covid_19_taeglich_geimpfte_personen_nach_impfstoff_und_typ_der_impfung_d
     }
 }
 
-/// Erwerbstätige nach Wohngemeinde, Arbeitsort und Jahr (seit 2014)
+#[doc = "Erwerbst\u{e4}tige nach Wohngemeinde, Arbeitsort und Jahr (seit 2014)"]
+#[doc = ""]
+#[doc = "<p>Pendlermobilit\u{e4}t</p><p><br></p><p>Methodik</p><p>Der vorliegende Datensatz zu den Pendlerstr\u{f6}men stammt aus einer Registerverkn\u{fc}pfung des Bundesamts f\u{fc}r Statistik (BFS), die auf Basis der folgenden Datenquellen erstellt wurde:</p><ol><li>Statistik der Bev\u{f6}lkerung und der Haushalte (STATPOP): Enth\u{e4}lt Meldungen der Einwohnerregister der Gemeinden und liefert den Wohnort.</li><li>Register der Alters- und Hinterlassenenversicherung (AHV-Register): Enth\u{e4}lt Meldungen der AHV-Ausgleichskassen. Liefert das Unternehmen, in welchem eine Person arbeitet (ab Jahreseinkommen von 2\u{2019}300 Franken).\u{a0}</li><li>Unternehmensstatistik (STATENT): Gibt Auskunft \u{fc}ber den Standort der verschiedenen Arbeitsst\u{e4}tten (d.h. Filialen, Niederlassungen usw.) der Unternehmen und die Anzahl der dort arbeitenden Personen.</li></ol><p>Fehlende Angaben wurden mithilfe eines Algorithmus modelliert.</p>"]
 pub mod erwerbstaetige_nach_wohngemeinde_arbeitsort_und_jahr_seit_2014 {
     use super::*;
 
@@ -16924,7 +17199,7 @@ pub mod erwerbstaetige_nach_wohngemeinde_arbeitsort_und_jahr_seit_2014 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsGemeindenummer,
@@ -16951,7 +17226,7 @@ pub mod erwerbstaetige_nach_wohngemeinde_arbeitsort_und_jahr_seit_2014 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -16976,7 +17251,7 @@ pub mod erwerbstaetige_nach_wohngemeinde_arbeitsort_und_jahr_seit_2014 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -17062,7 +17337,9 @@ pub mod erwerbstaetige_nach_wohngemeinde_arbeitsort_und_jahr_seit_2014 {
     }
 }
 
-/// Räumliche Grundlagedaten nach Gemeinde (Januar 2024)
+#[doc = "R\u{e4}umliche Grundlagedaten nach Gemeinde (Januar 2024)"]
+#[doc = ""]
+#[doc = "<p>GEOSTAT</p><p>Das Merkmal AREA_HA wird von swisstopo j\u{e4}hrlich basierend auf swissBOUNDARIES3D berechnet und weist \u{ab}offizielle\u{bb}, auf Hektaren gerundete Fl\u{e4}chenangaben aus. Die Daten sind f\u{fc}r beliebige Summenbildungen geeignet. F\u{fc}r die Gemeinden entspricht diese Fl\u{e4}chenangabe der Landfl\u{e4}che ohne allf\u{e4}llige Seefl\u{e4}chenanteile an Seen &gt; 5 km2. Kleinere Gew\u{e4}sser sind hingegen in dieser Fl\u{e4}che inbegriffen.<br></p><p><br></p>"]
 pub mod raeumliche_grundlagedaten_nach_gemeinde_januar_2024 {
     use super::*;
 
@@ -17130,7 +17407,7 @@ pub mod raeumliche_grundlagedaten_nach_gemeinde_januar_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Gmdnr,
         Gmdname,
@@ -17167,7 +17444,7 @@ pub mod raeumliche_grundlagedaten_nach_gemeinde_januar_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -17192,7 +17469,7 @@ pub mod raeumliche_grundlagedaten_nach_gemeinde_januar_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -17278,7 +17555,9 @@ pub mod raeumliche_grundlagedaten_nach_gemeinde_januar_2024 {
     }
 }
 
-/// Nationalratswahlen 2015: Kandidierendenresultate, Wahlberechtigte und Listenstimmen
+#[doc = "Nationalratswahlen 2015: Kandidierendenresultate, Wahlberechtigte und Listenstimmen"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Wahlen vom 18. Oktober 2015<br></p>"]
 pub mod nationalratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_listenstimmen {
     use super::*;
 
@@ -17359,7 +17638,7 @@ pub mod nationalratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_list
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -17536,7 +17815,7 @@ pub mod nationalratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -17561,7 +17840,7 @@ pub mod nationalratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -17647,7 +17926,9 @@ pub mod nationalratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_list
     }
 }
 
-/// Swisslos Sportfonds: Bilanz nach Gesuchsteller, Kategorie, Objekt und Jahr (seit 2011)
+#[doc = "Swisslos Sportfonds: Bilanz nach Gesuchsteller, Kategorie, Objekt und Jahr (seit 2011)"]
+#[doc = ""]
+#[doc = "<p>Beitr\u{e4}ge zur F\u{f6}rderung des kantonalen Breitensports. Bei Betr\u{e4}gen an nat\u{fc}rliche Personen werden keine Werte ausgewiesen.</p>"]
 pub mod swisslos_sportfonds_bilanz_nach_gesuchsteller_kategorie_objekt_und_jahr_seit_2011 {
     use super::*;
 
@@ -17671,7 +17952,7 @@ pub mod swisslos_sportfonds_bilanz_nach_gesuchsteller_kategorie_objekt_und_jahr_
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Gesuchsteller,
@@ -17692,7 +17973,7 @@ pub mod swisslos_sportfonds_bilanz_nach_gesuchsteller_kategorie_objekt_und_jahr_
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -17717,7 +17998,7 @@ pub mod swisslos_sportfonds_bilanz_nach_gesuchsteller_kategorie_objekt_und_jahr_
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -17803,13 +18084,19 @@ pub mod swisslos_sportfonds_bilanz_nach_gesuchsteller_kategorie_objekt_und_jahr_
     }
 }
 
-/// Nationalratswahlen 2023: Kandidierende nach Liste, Geschlecht, Jahrgang und Beruf
+#[doc = "Nationalratswahlen 2023: Kandidierende nach Liste, Geschlecht, Jahrgang und Beruf"]
+#[doc = ""]
+#[doc = "<p>Definitive Wahlvorschl\u{e4}ge f\u{fc}r die Nationalratswahlen vom 22. Oktober 2023<br></p>"]
 pub mod nationalratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_und_beruf {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Wahltermin
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub wahltermin: Option<Date>,
         /// Anzahl_Sitze
         pub anzahl_sitze: Option<i64>,
@@ -17873,7 +18160,7 @@ pub mod nationalratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_und
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahltermin,
         AnzahlSitze,
@@ -17930,7 +18217,7 @@ pub mod nationalratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_und
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -17955,7 +18242,7 @@ pub mod nationalratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_und
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -18041,7 +18328,9 @@ pub mod nationalratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_und
     }
 }
 
-/// Staatssteuern der natürlichen Personen nach Einkommensklasse und Jahr (seit 2013)
+#[doc = "Staatssteuern der nat\u{fc}rlichen Personen nach Einkommensklasse und Jahr (seit 2013)"]
+#[doc = ""]
+#[doc = "Steuerstatistik"]
 pub mod staatssteuern_der_natuerlichen_personen_nach_einkommensklasse_und_jahr_seit_2013 {
     use super::*;
 
@@ -18065,7 +18354,7 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_einkommensklasse_und_jahr_s
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         KlasseSteuerbaresEinkommenCode,
@@ -18086,7 +18375,7 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_einkommensklasse_und_jahr_s
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -18111,7 +18400,7 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_einkommensklasse_und_jahr_s
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -18197,7 +18486,9 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_einkommensklasse_und_jahr_s
     }
 }
 
-/// Ständeratswahlen 2015: Kandidierendenresultate
+#[doc = "St\u{e4}nderatswahlen 2015: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 18. Oktober 2015<br></p>"]
 pub mod staenderatswahlen_2015_kandidierendenresultate {
     use super::*;
 
@@ -18236,7 +18527,7 @@ pub mod staenderatswahlen_2015_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -18295,7 +18586,7 @@ pub mod staenderatswahlen_2015_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -18320,7 +18611,7 @@ pub mod staenderatswahlen_2015_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -18406,13 +18697,19 @@ pub mod staenderatswahlen_2015_kandidierendenresultate {
     }
 }
 
-/// OGD-Portal: Tägliche Nutzung nach Datensatz (seit Januar 2024)
+#[doc = "OGD-Portal: T\u{e4}gliche Nutzung nach Datensatz (seit Januar 2024)"]
+#[doc = ""]
+#[doc = "<p class=\"\" style=\"font-family: Roboto, sans-serif;\">Die Daten \u{fc}ber die Nutzung der Datens\u{e4}tze auf dem OGD-Portal BL (data.bl.ch) werden von der Fach- und Koordinationsstelle OGD BL erhoben und ver\u{f6}ffentlicht.</p><p class=\"\" style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">Spalten</span></p><ul style=\"font-family: Roboto, sans-serif;\"><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">date</span>:\u{a0}<span style=\"font-family: sans-serif;\">Enth\u{e4}lt den Tag, an dem die Nutzung gemessen wurde.</span></li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">dataset_title</span>: Der Titel des Datensatzes</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">dataset_id</span>: Die technische ID des Datensatzes.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">visitors</span>: Gibt die Anzahl der t\u{e4}glichen Besucher/innen des Datensatzes an. Die Erfassung der Besucher/innen erfolgt durch Z\u{e4}hlen der einzigartigen (unique) IP-Adressen, die am Erhebungstag Zugriffe verzeichneten. Die IP-Adresse repr\u{e4}sentiert die Netzwerkadresse des Ger\u{e4}ts, von dem aus der Zugriff auf das Portal erfolgte.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">interactions</span>: Umfasst alle Interaktionen mit einem beliebigen Datensatz auf data.bl.ch. Ein/e Besucher/in kann mehrere Interaktionen ausl\u{f6}sen. Zu den Interaktionen z\u{e4}hlen Klicks auf der Webseite (Durchsuchen von Datens\u{e4}tzen, Filtern, usw.) sowie API-Aufrufe (Herunterladen eines Datensatzes als JSON-Datei, usw.).</li></ul><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Bemerkungen</span></p><ul><li>Nur Aufrufe von \u{f6}ffentlich zug\u{e4}nglichen Datens\u{e4}tzen werden ausgewiesen.</li><li>IP-Adressen sowie Interaktionen von Nutzenden mit einem Login des Kantons Basel-Landschaft \u{2013} insbesondere von Mitarbeitenden der Fach- und Koordinationsstelle OGD \u{2013} werden vor der Ver\u{f6}ffentlichung aus dem Datensatz entfernt und somit nicht ausgewiesen.</li><li>Aufrufe von Akteuren, welche durch den User-Agent header eindeutig als Bots erkennbar sind, werden ebenfalls nicht ausgewiesen.</li><li>Kombinationen von Datensatz und Datum, f\u{fc}r welche keine Nutzung passierte (Visitors == 0 &amp; Interactions == 0) sind nicht ausgewiesen.</li><li>Aufgrund von Synchronisationsproblemen k\u{f6}nnen Daten tageweise\u{a0}fehlen</li></ul>"]
 pub mod ogd_portal_taegliche_nutzung_nach_datensatz_seit_januar_2024 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub dataset_id: Option<Date>,
         /// Datensatztitel
         pub date: Option<String>,
@@ -18434,7 +18731,7 @@ pub mod ogd_portal_taegliche_nutzung_nach_datensatz_seit_januar_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         DatasetId,
         Date,
@@ -18455,7 +18752,7 @@ pub mod ogd_portal_taegliche_nutzung_nach_datensatz_seit_januar_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -18480,7 +18777,7 @@ pub mod ogd_portal_taegliche_nutzung_nach_datensatz_seit_januar_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -18566,7 +18863,9 @@ pub mod ogd_portal_taegliche_nutzung_nach_datensatz_seit_januar_2024 {
     }
 }
 
-/// Nationalratswahlen 2023: Kandidierendenresultate, Wahlberechtigte und Listenstimmen
+#[doc = "Nationalratswahlen 2023: Kandidierendenresultate, Wahlberechtigte und Listenstimmen"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Wahlen vom 22. Oktober 2023<br></p>"]
 pub mod nationalratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_listenstimmen {
     use super::*;
 
@@ -18608,6 +18907,10 @@ pub mod nationalratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_list
         pub candidate_party: Option<String>,
         pub candidate_votes: Option<i64>,
         pub candidate_year_of_birth: Option<i64>,
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub election_date: Option<Date>,
         pub election_id: Option<String>,
         pub election_mandates: Option<i64>,
@@ -18670,7 +18973,7 @@ pub mod nationalratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_list
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -18915,7 +19218,7 @@ pub mod nationalratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -18940,7 +19243,7 @@ pub mod nationalratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -19026,12 +19329,18 @@ pub mod nationalratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_list
     }
 }
 
-/// Änderung vom 1. Oktober 2021 des Bundesgesetzes über die Transplantation von Organen, Geweben und ZeIlen
+#[doc = "\u{c4}nderung vom 1. Oktober 2021 des Bundesgesetzes \u{fc}ber die Transplantation von Organen, Geweben und ZeIlen"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Abstimmung vom 15. Mai 2022<br></p>"]
 pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_die_transplantation_von_organen_geweben_und_zeilen {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         pub entity_id: Option<String>,
         pub name: Option<String>,
@@ -19054,7 +19363,7 @@ pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_die_transplantatio
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -19091,7 +19400,7 @@ pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_die_transplantatio
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -19116,7 +19425,7 @@ pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_die_transplantatio
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -19202,7 +19511,9 @@ pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_die_transplantatio
     }
 }
 
-/// Volksinitiative vom 28. Mai 2021 «Für ein besseres Leben im Alter (Initiative für eine 13. AHV-Rente)»
+#[doc = "Volksinitiative vom 28. Mai 2021 \u{ab}F\u{fc}r ein besseres Leben im Alter (Initiative f\u{fc}r eine 13. AHV-Rente)\u{bb}"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Abstimmung vom 3. M\u{e4}rz 2024<br></p>"]
 pub mod volksinitiative_vom_28_mai_2021_fuer_ein_besseres_leben_im_alter_initiative_fuer_eine_13_ahv_rente {
     use super::*;
 
@@ -19238,7 +19549,7 @@ pub mod volksinitiative_vom_28_mai_2021_fuer_ein_besseres_leben_im_alter_initiat
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Answer,
         Counted,
@@ -19287,7 +19598,7 @@ pub mod volksinitiative_vom_28_mai_2021_fuer_ein_besseres_leben_im_alter_initiat
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -19312,7 +19623,7 @@ pub mod volksinitiative_vom_28_mai_2021_fuer_ein_besseres_leben_im_alter_initiat
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -19398,7 +19709,9 @@ pub mod volksinitiative_vom_28_mai_2021_fuer_ein_besseres_leben_im_alter_initiat
     }
 }
 
-/// Ständeratsnachwahl 2019: Kandidierendenresultate
+#[doc = "St\u{e4}nderatsnachwahl 2019: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Nachwahl vom 24. November 2019</p>"]
 pub mod staenderatsnachwahl_2019_kandidierendenresultate {
     use super::*;
 
@@ -19436,7 +19749,7 @@ pub mod staenderatsnachwahl_2019_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -19493,7 +19806,7 @@ pub mod staenderatsnachwahl_2019_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -19518,7 +19831,7 @@ pub mod staenderatsnachwahl_2019_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -19604,7 +19917,9 @@ pub mod staenderatsnachwahl_2019_kandidierendenresultate {
     }
 }
 
-/// Ständeratswahlen 2023: Kandidierendenresultate
+#[doc = "St\u{e4}nderatswahlen 2023: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 22. Oktober 2023<br></p>"]
 pub mod staenderatswahlen_2023_kandidierendenresultate {
     use super::*;
 
@@ -19616,6 +19931,10 @@ pub mod staenderatswahlen_2023_kandidierendenresultate {
         pub candidate_id: Option<i64>,
         pub candidate_votes: Option<i64>,
         pub election_absolute_majority: Option<i64>,
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub election_date: Option<Date>,
         pub election_id: Option<String>,
         pub election_mandates: Option<i64>,
@@ -19644,7 +19963,7 @@ pub mod staenderatswahlen_2023_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -19705,7 +20024,7 @@ pub mod staenderatswahlen_2023_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -19730,7 +20049,7 @@ pub mod staenderatswahlen_2023_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -19816,7 +20135,9 @@ pub mod staenderatswahlen_2023_kandidierendenresultate {
     }
 }
 
-/// Adressen der Privatschulen (Juni 2024)
+#[doc = "Adressen der Privatschulen (Juni 2024)"]
+#[doc = ""]
+#[doc = "<p>Liste der vom Kanton BL bewilligten Privatschulen</p>"]
 pub mod adressen_der_privatschulen_juni_2024 {
     use super::*;
 
@@ -19857,7 +20178,7 @@ pub mod adressen_der_privatschulen_juni_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BfsGemeindenummer,
         Gemeinde,
@@ -19896,7 +20217,7 @@ pub mod adressen_der_privatschulen_juni_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -19921,7 +20242,7 @@ pub mod adressen_der_privatschulen_juni_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -20007,7 +20328,9 @@ pub mod adressen_der_privatschulen_juni_2024 {
     }
 }
 
-/// Staatssteuern der juristischen Personen nach Gewinnklasse und Jahr (seit 2013)
+#[doc = "Staatssteuern der juristischen Personen nach Gewinnklasse und Jahr (seit 2013)"]
+#[doc = ""]
+#[doc = "<p>Steuerstatistik<br></p>"]
 pub mod staatssteuern_der_juristischen_personen_nach_gewinnklasse_und_jahr_seit_2013 {
     use super::*;
 
@@ -20031,7 +20354,7 @@ pub mod staatssteuern_der_juristischen_personen_nach_gewinnklasse_und_jahr_seit_
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         KlasseSteuerbarerGewinnCode,
@@ -20052,7 +20375,7 @@ pub mod staatssteuern_der_juristischen_personen_nach_gewinnklasse_und_jahr_seit_
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -20077,7 +20400,7 @@ pub mod staatssteuern_der_juristischen_personen_nach_gewinnklasse_und_jahr_seit_
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -20163,7 +20486,9 @@ pub mod staatssteuern_der_juristischen_personen_nach_gewinnklasse_und_jahr_seit_
     }
 }
 
-/// Kantonales Gebäude- und Wohnungsregister (kGWR): Wohnungen
+#[doc = "Kantonales Geb\u{e4}ude- und Wohnungsregister (kGWR): Wohnungen"]
+#[doc = ""]
+#[doc = "<p>Wohnungsmerkmale gem\u{e4}ss kGWR</p><p>\u{d6}ffentlich zug\u{e4}ngliche Wohnungsmerkmale gem\u{e4}ss <a href=\"https://bl.clex.ch/frontend/annex_document_dictionaries/21431\" target=\"_blank\">Verordnung \u{fc}ber das kGWR, Anhang 3</a><br></p>"]
 pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_wohnungen {
     use super::*;
 
@@ -20205,6 +20530,10 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_wohnungen {
         /// WKCHE
         pub kocheinrichtung_code: Option<i64>,
         pub kocheinrichtung_bezeichnung: Option<String>,
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub exportdatum: Option<Date>,
     }
 
@@ -20214,7 +20543,7 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_wohnungen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Egid,
         Ewid,
@@ -20273,7 +20602,7 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_wohnungen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -20298,7 +20627,7 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_wohnungen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -20384,7 +20713,9 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_wohnungen {
     }
 }
 
-/// Firmenmutationen nach Rechtsform, NOGA-Einteilung und Gemeinde (seit Februar 2016)
+#[doc = "Firmenmutationen nach Rechtsform, NOGA-Einteilung und Gemeinde (seit Februar 2016)"]
+#[doc = ""]
+#[doc = "<p>T\u{e4}gliche Meldungen aus dem Schweizerischen Handelsamtsblatt (SHAB).\u{a0}Eingetragen und im\u{a0}SHAB ver\u{f6}ffentlicht werden rechtlich verbindliche Tatsachen vorab bei privaten Rechtssubjekten.</p><p>Allgemeine Systematik der Wirtschaftszweige (NOGA)</p><ul><li>Die NOGA-Codes und -Labels stammen aus dem <a href=\"https://www.bfs.admin.ch/bfs/de/home/register/unternehmensregister/betriebs-unternehmensregister.html\" target=\"_blank\">Betriebs- und Unternehmensregister der Schweiz</a> und werden \u{fc}ber die entsprechende Schnittstelle (<a href=\"https://www.bfs.admin.ch/bfs/de/home/register/unternehmensregister/betriebs-unternehmensregister/burweb.html#-2080172010\" target=\"_blank\">BurWeb API</a>) abgefragt.</li><li>Angaben teilweise fehlend</li><li>Nach\u{a0}<a href=\"https://www.kubb-tool.bfs.admin.ch/de/search\" target=\"_blank\">NOGA-Code</a>\u{a0}suchen</li></ul>"]
 pub mod firmenmutationen_nach_rechtsform_noga_einteilung_und_gemeinde_seit_februar_2016 {
     use super::*;
 
@@ -20393,8 +20724,16 @@ pub mod firmenmutationen_nach_rechtsform_noga_einteilung_und_gemeinde_seit_febru
         /// Kategorie
         pub kategorie: Option<String>,
         /// Publikationsdatum im Schweizerischen Handelsamtsblatt
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub publikationsdatum_shab: Option<Date>,
         /// Journaldatum im Handelsregister BL
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub journaldatum_handelsregister: Option<Date>,
         /// Nummer im Schweizerischen Handelsamtsblatt
         pub id_shab: Option<i64>,
@@ -20430,7 +20769,7 @@ pub mod firmenmutationen_nach_rechtsform_noga_einteilung_und_gemeinde_seit_febru
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Kategorie,
         PublikationsdatumShab,
@@ -20473,7 +20812,7 @@ pub mod firmenmutationen_nach_rechtsform_noga_einteilung_und_gemeinde_seit_febru
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -20498,7 +20837,7 @@ pub mod firmenmutationen_nach_rechtsform_noga_einteilung_und_gemeinde_seit_febru
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -20584,7 +20923,9 @@ pub mod firmenmutationen_nach_rechtsform_noga_einteilung_und_gemeinde_seit_febru
     }
 }
 
-/// Staatssteuern der juristischen Personen nach Kapitalklasse und Jahr (seit 2013)
+#[doc = "Staatssteuern der juristischen Personen nach Kapitalklasse und Jahr (seit 2013)"]
+#[doc = ""]
+#[doc = "<p>Steuerstatistik</p><p>Ab 2020 Umsetzung der <a href=\"https://www.baselland.ch/politik-und-behorden/direktionen/finanz-und-kirchendirektion/wissenswertes-zur-steuervorlage-17-sv17\" target=\"_blank\">Steuervorlage 17 (SV17)</a>. Es handelt sich dabei um eine umfassende Unternehmenssteuerreform, welche in erster Linie die privilegierte Gewinnbesteuerung von Statusgesellschaften aufhob und dabei verschiedene Ausgleichsmassnahmen einf\u{fc}hrte, was sich deutlich auf die Entwicklung der Zahlen auswirkte.<br></p>"]
 pub mod staatssteuern_der_juristischen_personen_nach_kapitalklasse_und_jahr_seit_2013 {
     use super::*;
 
@@ -20608,7 +20949,7 @@ pub mod staatssteuern_der_juristischen_personen_nach_kapitalklasse_und_jahr_seit
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         KlasseSteuerbaresKapitalCode,
@@ -20629,7 +20970,7 @@ pub mod staatssteuern_der_juristischen_personen_nach_kapitalklasse_und_jahr_seit
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -20654,7 +20995,7 @@ pub mod staatssteuern_der_juristischen_personen_nach_kapitalklasse_und_jahr_seit
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -20740,13 +21081,19 @@ pub mod staatssteuern_der_juristischen_personen_nach_kapitalklasse_und_jahr_seit
     }
 }
 
-/// Publikationsarchiv Amt für Daten und Statistik BL (seit 2000)
+#[doc = "Publikationsarchiv Amt f\u{fc}r Daten und Statistik BL (seit 2000)"]
+#[doc = ""]
+#[doc = "<p>Digitales Publikationsverzeichnis des Amts f\u{fc}r Daten und Statistik (bis 2023: Statistisches Amt). Es umfasst das Statistische Jahrbuch, Baselland in Zahlen, Webartikel sowie weitere Berichte und Brosch\u{fc}ren im pdf-Format oder als Webseiteninhalt.</p>"]
 pub mod publikationsarchiv_amt_fuer_daten_und_statistik_bl_seit_2000 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Publikationsdatum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub publikationsdatum: Option<Date>,
         /// Publikationsreihe
         pub publikationsreihe: Option<String>,
@@ -20766,7 +21113,7 @@ pub mod publikationsarchiv_amt_fuer_daten_und_statistik_bl_seit_2000 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Publikationsdatum,
         Publikationsreihe,
@@ -20789,7 +21136,7 @@ pub mod publikationsarchiv_amt_fuer_daten_und_statistik_bl_seit_2000 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -20814,7 +21161,7 @@ pub mod publikationsarchiv_amt_fuer_daten_und_statistik_bl_seit_2000 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -20900,7 +21247,9 @@ pub mod publikationsarchiv_amt_fuer_daten_und_statistik_bl_seit_2000 {
     }
 }
 
-/// Steuerfüsse und Steuersätze nach Gemeinde und Jahr (seit 1975)
+#[doc = "Steuerf\u{fc}sse und Steuers\u{e4}tze nach Gemeinde und Jahr (seit 1975)"]
+#[doc = ""]
+#[doc = "<p class=\"\">Statistik der Steuerf\u{fc}sse und -s\u{e4}tze, Geb\u{fc}hren und Ersatzabgaben<br></p>"]
 pub mod steuerfuesse_und_steuersaetze_nach_gemeinde_und_jahr_seit_1975 {
     use super::*;
 
@@ -20924,7 +21273,7 @@ pub mod steuerfuesse_und_steuersaetze_nach_gemeinde_und_jahr_seit_1975 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -20945,7 +21294,7 @@ pub mod steuerfuesse_und_steuersaetze_nach_gemeinde_und_jahr_seit_1975 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -20970,7 +21319,7 @@ pub mod steuerfuesse_und_steuersaetze_nach_gemeinde_und_jahr_seit_1975 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -21056,13 +21405,19 @@ pub mod steuerfuesse_und_steuersaetze_nach_gemeinde_und_jahr_seit_1975 {
     }
 }
 
-/// Covid-19: Tägliche Hospitalisierungen (Februar 2020 - Januar 2023)
+#[doc = "Covid-19: T\u{e4}gliche Hospitalisierungen (Februar 2020 - Januar 2023)"]
+#[doc = ""]
+#[doc = "<p>Covid-19-Monitoring. T\u{e4}gliche Hospitalisierungen von Personen mit Wohnsitz BL.\u{a0}Die Daten werden nach dem 17.01.23 nicht mehr aktualisiert.<br/></p>"]
 pub mod covid_19_taegliche_hospitalisierungen_februar_2020_januar_2023 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
         /// geoRegion
         ///
@@ -21084,7 +21439,7 @@ pub mod covid_19_taegliche_hospitalisierungen_februar_2020_januar_2023 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Datum,
         Georegion,
@@ -21105,7 +21460,7 @@ pub mod covid_19_taegliche_hospitalisierungen_februar_2020_januar_2023 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -21130,7 +21485,7 @@ pub mod covid_19_taegliche_hospitalisierungen_februar_2020_januar_2023 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -21216,7 +21571,9 @@ pub mod covid_19_taegliche_hospitalisierungen_februar_2020_januar_2023 {
     }
 }
 
-/// Bevölkerungsbilanz nach Gemeinde und Quartal (seit 2003)
+#[doc = "Bev\u{f6}lkerungsbilanz nach Gemeinde und Quartal (seit 2003)"]
+#[doc = ""]
+#[doc = "<p>Kantonale Bev\u{f6}lkerungsstatistik</p>"]
 pub mod bevoelkerungsbilanz_nach_gemeinde_und_quartal_seit_2003 {
     use super::*;
 
@@ -21246,7 +21603,7 @@ pub mod bevoelkerungsbilanz_nach_gemeinde_und_quartal_seit_2003 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Quartal,
@@ -21289,7 +21646,7 @@ pub mod bevoelkerungsbilanz_nach_gemeinde_und_quartal_seit_2003 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -21314,7 +21671,7 @@ pub mod bevoelkerungsbilanz_nach_gemeinde_und_quartal_seit_2003 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -21400,7 +21757,9 @@ pub mod bevoelkerungsbilanz_nach_gemeinde_und_quartal_seit_2003 {
     }
 }
 
-/// Im kantonalen Personenregister abfrageberechtigte Stellen (Anmeldungs- und Registerverordnung)
+#[doc = "Im kantonalen Personenregister abfrageberechtigte Stellen (Anmeldungs- und Registerverordnung)"]
+#[doc = ""]
+#[doc = "<p>Verzeichnis\u{a0}aller Stellen, die eine Zugriffsberechtigung auf das kantonale Personenregister arbo BL haben. Es umfasst die rechtlich im <a href=\"https://bl.clex.ch/app/de/texts_of_law/111.11/annex/II\" target=\"_blank\">Anhang II</a> der Anmeldungs- und Registerverordnung (ARV, <a href=\"https://bl.clex.ch/app/de/texts_of_law/111.11\" target=\"_blank\">SGS 111.11</a>) definierten Stellen (auf Grundlage <a href=\"https://bl.clex.ch/app/de/texts_of_law/111/art/14\" target=\"_blank\">\u{a7} 14</a> des Anmeldungs- und Registergesetzes; ARG, <a href=\"https://bl.clex.ch/app/de/texts_of_law/111\" target=\"_blank\">SGS 111</a>) und zeigt, seit wann diese Stellen Zugriff haben und welche Schnittstellen sie verwenden.</p>"]
 pub mod im_kantonalen_personenregister_abfrageberechtigte_stellen_anmeldungs_und_registerverordnung {
     use super::*;
 
@@ -21421,6 +21780,10 @@ pub mod im_kantonalen_personenregister_abfrageberechtigte_stellen_anmeldungs_und
         /// Beschluss (N)
         ///
         /// Datum des Regierungsratsbeschlusses betreffend Einrichtung des neuen Zugriffs
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub beschluss_n: Option<Date>,
         /// GS-Nr. (N)
         ///
@@ -21433,6 +21796,10 @@ pub mod im_kantonalen_personenregister_abfrageberechtigte_stellen_anmeldungs_und
         /// Inkrafttreten (N)
         ///
         /// Rechtliches Inkrafttreten des neuen Zugriffs
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub inkrafttreten_n: Option<Date>,
         /// RRB-Nr. (Änderungen)
         ///
@@ -21478,7 +21845,7 @@ pub mod im_kantonalen_personenregister_abfrageberechtigte_stellen_anmeldungs_und
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Kurzel,
         Direktion,
@@ -21525,7 +21892,7 @@ pub mod im_kantonalen_personenregister_abfrageberechtigte_stellen_anmeldungs_und
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -21550,7 +21917,7 @@ pub mod im_kantonalen_personenregister_abfrageberechtigte_stellen_anmeldungs_und
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -21636,13 +22003,19 @@ pub mod im_kantonalen_personenregister_abfrageberechtigte_stellen_anmeldungs_und
     }
 }
 
-/// Motorfahrzeugbestand nach Fahrzeugart, Treibstoff, Gemeinde und Monat (seit Mai 2024)
+#[doc = "Motorfahrzeugbestand nach Fahrzeugart, Treibstoff, Gemeinde und Monat (seit Mai 2024)"]
+#[doc = ""]
+#[doc = "<p>Motorfahrzeugstatistik (Motorfahrzeuge mit Nummernschild BL). Anzahl Fahrzeuge per Ende Monat.</p><p>Eine Auflistung der verschiedenen Fahrzeugarten befindet sich in den\u{a0}<a href=\"https://www.baselland.ch/politik-und-behorden/direktionen/sicherheitsdirektion/motorfahrzeugkontrolle/fahrzeuge-und-kontrollschilder/vorfuhr/intervalle-der-verschiedenen-fahrzeugarten?searchterm=fahrzeugarten\" target=\"_blank\">Intervallen der verschiedenen Fahrzeugarten</a>. Beispielsweise k\u{f6}nnen vorf\u{fc}hrpflichtige E-Bikes als Mofas mit Elektro-Treibstoff ausgelesen werden.</p>"]
 pub mod motorfahrzeugbestand_nach_fahrzeugart_treibstoff_gemeinde_und_monat_seit_mai_2024 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Jahr_Monat
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub jahr_monat: Option<Date>,
         /// BFS_Gemeindenummer
         pub bfs_gemeindenummer: Option<String>,
@@ -21662,7 +22035,7 @@ pub mod motorfahrzeugbestand_nach_fahrzeugart_treibstoff_gemeinde_und_monat_seit
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         JahrMonat,
         BfsGemeindenummer,
@@ -21685,7 +22058,7 @@ pub mod motorfahrzeugbestand_nach_fahrzeugart_treibstoff_gemeinde_und_monat_seit
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -21710,7 +22083,7 @@ pub mod motorfahrzeugbestand_nach_fahrzeugart_treibstoff_gemeinde_und_monat_seit
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -21796,7 +22169,9 @@ pub mod motorfahrzeugbestand_nach_fahrzeugart_treibstoff_gemeinde_und_monat_seit
     }
 }
 
-/// Nationalratswahlen 2011: Kandidierendenresultate, Wahlberechtigte und Listenstimmen
+#[doc = "Nationalratswahlen 2011: Kandidierendenresultate, Wahlberechtigte und Listenstimmen"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Wahlen vom 23. Oktober 2011<br></p>"]
 pub mod nationalratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_listenstimmen {
     use super::*;
 
@@ -21872,7 +22247,7 @@ pub mod nationalratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_list
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -22035,7 +22410,7 @@ pub mod nationalratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -22060,7 +22435,7 @@ pub mod nationalratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -22146,7 +22521,9 @@ pub mod nationalratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_list
     }
 }
 
-/// Nationalratswahlen: Wähleranteil, Anzahl Kandidierende, Anzahl Listen, Anzahl Gewählte nach Partei und Jahr (seit 1991)
+#[doc = "Nationalratswahlen: W\u{e4}hleranteil, Anzahl Kandidierende, Anzahl Listen, Anzahl Gew\u{e4}hlte nach Partei und Jahr (seit 1991)"]
+#[doc = ""]
+#[doc = "<p>Statistik der Wahlen und Abstimmungen<br></p>"]
 pub mod nationalratswahlen_waehleranteil_anzahl_kandidierende_anzahl_listen_anzahl_gewaehlte_nach_partei_und_jahr_seit_1991 {
     use super::*;
 
@@ -22172,7 +22549,7 @@ pub mod nationalratswahlen_waehleranteil_anzahl_kandidierende_anzahl_listen_anza
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         WahlJahr,
         ParteiId,
@@ -22207,7 +22584,7 @@ pub mod nationalratswahlen_waehleranteil_anzahl_kandidierende_anzahl_listen_anza
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -22232,7 +22609,7 @@ pub mod nationalratswahlen_waehleranteil_anzahl_kandidierende_anzahl_listen_anza
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -22318,7 +22695,9 @@ pub mod nationalratswahlen_waehleranteil_anzahl_kandidierende_anzahl_listen_anza
     }
 }
 
-/// Shared Mobility Angebote nach Anbieter und Standort
+#[doc = "Shared Mobility Angebote nach Anbieter und Standort"]
+#[doc = ""]
+#[doc = "<p class=\"\" style=\"font-family: sans-serif;\">Shared Mobility Angebote, entnommen von <a href=\"sharedmobility.ch\" target=\"_blank\">sharedmobility.ch</a>. Erg\u{e4}nzt mit Gemeindename, gefiltert nach Kanton Basel-Landschaft.</p><p class=\"\" style=\"font-family: sans-serif;\"><b>Spalten</b></p><table class=\"table table-bordered\"><tbody><tr><td><b>coordinates, station_id, provider_id, name</b><br></td><td>Direkt \u{fc}bernommen gem\u{e4}ss <a href=\"github.com/SFOE/sharedmobility\" target=\"_blank\">github.com/SFOE/sharedmobility</a><br></td></tr><tr><td><b>gemeinde</b><br></td><td>Gemeindename, lokalisiert mit WGS84 Koordinaten in coordinates<br></td></tr><tr><td><b>record_date</b><br></td><td>Datum des letzten Abgleichs mit sharedmobility.ch<br></td></tr></tbody></table>"]
 pub mod shared_mobility_angebote_nach_anbieter_und_standort {
     use super::*;
 
@@ -22338,7 +22717,7 @@ pub mod shared_mobility_angebote_nach_anbieter_und_standort {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         StationId,
         ProviderId,
@@ -22359,7 +22738,7 @@ pub mod shared_mobility_angebote_nach_anbieter_und_standort {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -22384,7 +22763,7 @@ pub mod shared_mobility_angebote_nach_anbieter_und_standort {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -22470,7 +22849,9 @@ pub mod shared_mobility_angebote_nach_anbieter_und_standort {
     }
 }
 
-/// Öffentlich zugängliche Gastwirtschaften nach Betriebsart und Standort (Februar 2024)
+#[doc = "\u{d6}ffentlich zug\u{e4}ngliche Gastwirtschaften nach Betriebsart und Standort (Februar 2024)"]
+#[doc = ""]
+#[doc = "<p>Liste der vom Kanton BL bewilligten und \u{f6}ffentlich zug\u{e4}nglichen Gastwirtschaften. Stand: 29.02.2024</p><p>F\u{fc}r die F\u{fc}hrung eines Restaurants, Bistros, Caf\u{e9}s, etc. ist eine Betriebsbewilligung erforderlich.<br></p>"]
 pub mod oeffentlich_zugaengliche_gastwirtschaften_nach_betriebsart_und_standort_februar_2024 {
     use super::*;
 
@@ -22508,7 +22889,7 @@ pub mod oeffentlich_zugaengliche_gastwirtschaften_nach_betriebsart_und_standort_
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Betriebsnummer,
         BfsGemeindenummer,
@@ -22547,7 +22928,7 @@ pub mod oeffentlich_zugaengliche_gastwirtschaften_nach_betriebsart_und_standort_
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -22572,7 +22953,7 @@ pub mod oeffentlich_zugaengliche_gastwirtschaften_nach_betriebsart_und_standort_
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -22658,7 +23039,9 @@ pub mod oeffentlich_zugaengliche_gastwirtschaften_nach_betriebsart_und_standort_
     }
 }
 
-/// Apotheken mit Betriebsbewilligung oder Impfberechtigung nach Standort (April 2024)
+#[doc = "Apotheken mit Betriebsbewilligung oder Impfberechtigung nach Standort (April 2024)"]
+#[doc = ""]
+#[doc = "<p>Liste der vom Kanton BL bewilligten Apotheken</p>"]
 pub mod apotheken_mit_betriebsbewilligung_oder_impfberechtigung_nach_standort_april_2024 {
     use super::*;
 
@@ -22691,7 +23074,7 @@ pub mod apotheken_mit_betriebsbewilligung_oder_impfberechtigung_nach_standort_ap
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Firma,
         Adresse,
@@ -22722,7 +23105,7 @@ pub mod apotheken_mit_betriebsbewilligung_oder_impfberechtigung_nach_standort_ap
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -22747,7 +23130,7 @@ pub mod apotheken_mit_betriebsbewilligung_oder_impfberechtigung_nach_standort_ap
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -22833,7 +23216,9 @@ pub mod apotheken_mit_betriebsbewilligung_oder_impfberechtigung_nach_standort_ap
     }
 }
 
-/// Regierungsratswahlen 2015: Kandidierendenresultate
+#[doc = "Regierungsratswahlen 2015: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 8. Februar 2015</p>"]
 pub mod regierungsratswahlen_2015_kandidierendenresultate {
     use super::*;
 
@@ -22872,7 +23257,7 @@ pub mod regierungsratswahlen_2015_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -22931,7 +23316,7 @@ pub mod regierungsratswahlen_2015_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -22956,7 +23341,7 @@ pub mod regierungsratswahlen_2015_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -23042,7 +23427,9 @@ pub mod regierungsratswahlen_2015_kandidierendenresultate {
     }
 }
 
-/// Wohnbevölkerung nach Gemeinde und Jahr (1699 - 2000)
+#[doc = "Wohnbev\u{f6}lkerung nach Gemeinde und Jahr (1699 - 2000)"]
+#[doc = ""]
+#[doc = "Volksz\u{e4}hlungen in der Schweiz vor 1850; Eidgen\u{f6}ssische Volksz\u{e4}hlungen 1850-2000<div><br></div><div>Leere Datenfelder: Daten wurden nicht erhoben</div><div><br></div><div>Quellen</div><ul><li>Schuler, Martin: <a href=\"https://www.bfs.admin.ch/bfs/de/home/aktuell/neue-veroeffentlichungen.assetdetail.25105964.html\" target=\"_blank\">Volksz\u{e4}hlungen in der Schweiz vor 1850</a>. Die Bev\u{f6}lkerungszahlen auf lokaler Ebene. Bundesamt f\u{fc}r Statistik (BFS), 2023.</li><li>Bundesamt f\u{fc}r Statistik:\u{a0}<a href=\"https://www.bfs.admin.ch/bfs/de/home/aktuell/neue-veroeffentlichungen.assetdetail.24306873.html\" target=\"_blank\">Kanton Basel-Landschaft - Die Bev\u{f6}lkerungszahlen auf lokaler Ebene vor 1850</a></li><li>Bundesamt f\u{fc}r Statistik:\u{a0}<a href=\"https://opendata.swiss/de/dataset/daten-der-eidgenossischen-volkszahlungen-ab-1850-nach-gemeinden-csv-datensatz\" target=\"_blank\">Volksz\u{e4}hlungen 1850-2000</a> (opendata.swiss)</li></ul><div><br></div><div>Gemeinden: Gemeindestand und BFS-Gemeindenummern mit Basis Jahr 2000</div><div><br></div><div>Gemeindegebiete: Langenbruck ab 1699 inkl. B\u{e4}renwil, Laufen bis 1850 bestehend aus Laufen Stadt und Laufen Vorstadt, Muttenz bis 1870 inkl. Birsfelden, Arisdorf bis 1880 inkl. Olsberg</div><div><br></div><div><br></div><div>Erl\u{e4}uterungen</div><div><br></div><div>Einwohnerinnen und Einwohner</div><div><br></div><div>Unter dem Bev\u{f6}lkerungskonzept \u{ab}Einwohnerinnen und Einwohner\u{bb} versteht man alle im Staatsgebiete anwesenden Personen an dem Orte, wo sie sich am festgelegten Stichtag befinden. In den Volksz\u{e4}hlungen 1850 und 1860 wurde die Zahl der Einwohnerinnen und Einwohner ermittelt. Zwar wurde 1860 auch die Zahl der vor\u{fc}bergehend Abwesenden bestimmt, in der Einteilung der Einwohnerinnen und Einwohner nach Geschlecht, Konfession, Zivilstand, Heimatsverh\u{e4}ltnisse wurden die vor\u{fc}bergehend Abwesenden aber nicht abgezogen.</div><div><br></div><div>Ortsanwesende oder faktische Bev\u{f6}lkerung</div><div><br></div><div>Unter der ortsanwesenden oder faktischen Bev\u{f6}lkerung versteht man die am Tag der Z\u{e4}hlung am Z\u{e4}hlungsorte anwesende Bev\u{f6}lkerung ausschliesslich der vor\u{fc}bergehend Abwesenden und einschliesslich der Durchreisenden. In den Volksz\u{e4}hlungen 1870 bis 1930 wurde zus\u{e4}tzlich zur Wohnbev\u{f6}lkerung die ortsanwesende Bev\u{f6}lkerung ermittelt.</div><div><br></div><div>Wohnbev\u{f6}lkerung</div><div><br></div><div>Die Wohnbev\u{f6}lkerung beinhaltet alle Personen, die sich zum Zeitpunkt der Erhebung in der Schweiz aufhielten oder ihre Schriften hier deponiert hatten und auch dann, wenn sie vor\u{fc}bergehend abwesend waren. Auch Saisonarbeiter, Kurzaufenthalter und Asylsuchende geh\u{f6}ren zur Wohnbev\u{f6}lkerung, nicht aber Touristen, Besucher oder Gesch\u{e4}ftsreisende. Die Wohnbev\u{f6}lkerung wurde in den Volksz\u{e4}hlungen 1870 bis 2000 ermittelt.</div><div><br></div><div>Sprache</div><div><br></div><div>In den Jahren 1860 und 1870 wurden die Angaben der Haushalte auf die Bev\u{f6}lkerung hochgerechnet.</div><div><br></div><div>Konfession/Religion</div><div><br></div><div>Aus Gr\u{fc}nden der Datenbeschaffenheit sind die Christkatholiken bis 1960 im Total der Katholiken enthalten, ab 1970 in der Kategorie \u{ab}Andere_Religion\u{bb}.</div><div><br></div><div>Weiterf\u{fc}hrende Informationen</div><ul><li>Amt f\u{fc}r Daten und Statistik: <a href=\"https://www.baselland.ch/politik-und-behorden/direktionen/finanz-und-kirchendirektion/statistisches-amt/schwerpunkt-demografie/demografiebericht-2011/11-demografiebericht.pdf\" target=\"_blank\">Demografiebericht 2011</a></li></ul><ul><li>Amt f\u{fc}r Daten und Statistik:\u{a0}<a href=\"https://www.baselland.ch/politik-und-behorden/direktionen/finanz-und-kirchendirektion/statistisches-amt/publikationen/bevoelkerung/webartikel_vom_05-04-2023_bevoelkerungsstatistik_2022\" target=\"_blank\">Bev\u{f6}lkerungsstatistik 2022</a></li></ul>"]
 pub mod wohnbevoelkerung_nach_gemeinde_und_jahr_1699_2000 {
     use super::*;
 
@@ -23134,7 +23521,7 @@ pub mod wohnbevoelkerung_nach_gemeinde_und_jahr_1699_2000 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         Datenquelle,
@@ -23185,7 +23572,7 @@ pub mod wohnbevoelkerung_nach_gemeinde_und_jahr_1699_2000 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -23210,7 +23597,7 @@ pub mod wohnbevoelkerung_nach_gemeinde_und_jahr_1699_2000 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -23296,7 +23683,9 @@ pub mod wohnbevoelkerung_nach_gemeinde_und_jahr_1699_2000 {
     }
 }
 
-/// Strompreise nach Netzbetreiber, Kategorie, Gemeinde und Jahr (seit 2018)
+#[doc = "Strompreise nach Netzbetreiber, Kategorie, Gemeinde und Jahr (seit 2018)"]
+#[doc = ""]
+#[doc = "<p>Die Eidgen\u{f6}ssische Elektrizit\u{e4}tskommission ElCom erfasst j\u{e4}hrlich die <a href=\"https://www.elcom.admin.ch/elcom/de/home/themen/strompreise/tarif-rohdaten-verteilnetzbetreiber.html\" target=\"_blank\">Basisdaten f\u{fc}r Tarife der Schweizer Verteilnetzbetreiber</a>.\u{a0}Diese Basisdaten beinhalten Informationen \u{fc}ber die Stromnetzbetreiber, die in den jeweiligen Gemeinden t\u{e4}tig sind, sowie Details zu deren Kostenmodellen und Angeboten.</p><p>Dieser Datensatz enth\u{e4}lt einen bereinigten Auszug der Basisdaten f\u{fc}r Tarife der Schweizer Verteilnetzbetreiber f\u{fc}r den Kanton Basel-Landschaft. Zus\u{e4}tzlich zu den Basisdaten enth\u{e4}lt dieser Datensatz eine Berechnung der monatlichen Kosten f\u{fc}r einen typischen Verbraucher der jeweiligen Verbrauchskategorie.</p><p>Hinweise:</p><ul><li>In diesem Datensatz sind lediglich die pro Verteilnetzbetreiber und Gemeinde geltenden Standardprodukte enthalten. Diese Standardprodukte entsprechen meist dem \u{f6}kologisch vertr\u{e4}glichsten Produkt des Betreibers.</li><li>Es existieren Gemeinden, in welchen mehrere Verteilnetzbetreiber aktiv sind.</li><li>Das Kostenmodell setzt sich aus einem monatlichen Grundtarif (fixe Kosten) und Arbeitspreis pro kWh (variable Kosten) zusammen. Die H\u{f6}he des Grundtarifs und der Arbeitspreis variiert je nach Verbrauchskategorie. Es existieren 15 verschiedene Verbrauchskategorien von privaten Kleinhaushalten, bis hin zu industriellen Grossbetrieben. Beschreibungen zu den Verbrauchskategorien sind im Datensatz enthalten.</li><li>Die variablen Kosten, angegeben in Rappen pro kWh, umfassen den Transportpreis f\u{fc}r den Strom, den Strompreis selbst sowie kommunale Geb\u{fc}hren und den Netzzuschlag.\u{a0}</li><li>Die fixen Kosten sind in Rappen pro Monat ausgewiesen.</li><li>Der typische Verbrauch in kWh pro Jahr ist ein zur Verbrauchskategorie geh\u{f6}riger Sch\u{e4}tzwert und gibt den ungef\u{e4}hren j\u{e4}hrlichen Verbrauch eines Verbrauchers in dieser Kategorie an.</li><li>Die typischen monatlichen Kosten ergeben sich aus dem typischen Verbrauch und dem Kostenmodell der jeweiligen Verbrauchskategorie. Die Berechnung lautet dabei wie folgt: Kosten_typischer_Verbrauch_Chf_pro_Monat = (Typischer_Verbrauch_kWh_pro_Jahr/12 * Variable_Kosten_Rp_pro_kWh + Fixe_Kosten_Rp_pro_Monat)/100<br/></li></ul>"]
 pub mod strompreise_nach_netzbetreiber_kategorie_gemeinde_und_jahr_seit_2018 {
     use super::*;
 
@@ -23332,7 +23721,7 @@ pub mod strompreise_nach_netzbetreiber_kategorie_gemeinde_und_jahr_seit_2018 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsGemeindenummer,
@@ -23367,7 +23756,7 @@ pub mod strompreise_nach_netzbetreiber_kategorie_gemeinde_und_jahr_seit_2018 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -23392,7 +23781,7 @@ pub mod strompreise_nach_netzbetreiber_kategorie_gemeinde_und_jahr_seit_2018 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -23478,12 +23867,18 @@ pub mod strompreise_nach_netzbetreiber_kategorie_gemeinde_und_jahr_seit_2018 {
     }
 }
 
-/// Änderung vom 1. Oktober 2021 des Bundesgesetzes über Filmproduktion und Filmkultur
+#[doc = "\u{c4}nderung vom 1. Oktober 2021 des Bundesgesetzes \u{fc}ber Filmproduktion und Filmkultur"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Abstimmung vom 15. Mai 2022<br></p>"]
 pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_filmproduktion_und_filmkultur {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         pub entity_id: Option<String>,
         pub name: Option<String>,
@@ -23506,7 +23901,7 @@ pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_filmproduktion_und
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -23543,7 +23938,7 @@ pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_filmproduktion_und
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -23568,7 +23963,7 @@ pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_filmproduktion_und
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -23654,7 +24049,9 @@ pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_filmproduktion_und
     }
 }
 
-/// Sitzverlegungen und Domiziländerungen von Firmen nach Rechtsform, NOGA-Einteilung und Gemeinde (seit Februar 2016)
+#[doc = "Sitzverlegungen und Domizil\u{e4}nderungen von Firmen nach Rechtsform, NOGA-Einteilung und Gemeinde (seit Februar 2016)"]
+#[doc = ""]
+#[doc = "<p>T\u{e4}gliche Adress\u{e4}nderungen aus dem Schweizerischen Handelsamtsblatt (SHAB). Eingetragen und im\u{a0}SHAB ver\u{f6}ffentlicht werden rechtlich verbindliche Tatsachen vorab bei privaten Rechtssubjekten.</p><p>Allgemeine Systematik der Wirtschaftszweige (NOGA)</p><ul><li>Die NOGA-Codes und -Labels stammen aus dem <a href=\"https://www.bfs.admin.ch/bfs/de/home/register/unternehmensregister/betriebs-unternehmensregister.html\" target=\"_blank\">Betriebs- und Unternehmensregister der Schweiz</a> und werden \u{fc}ber die entsprechende Schnittstelle (<a href=\"https://www.bfs.admin.ch/bfs/de/home/register/unternehmensregister/betriebs-unternehmensregister/burweb.html\" target=\"_blank\">BurWeb API</a>) abgefragt.</li><li>Angaben teilweise fehlend</li><li>Nach\u{a0}<a href=\"https://www.kubb-tool.bfs.admin.ch/de/search\" target=\"_blank\">NOGA-Code</a>\u{a0}suchen</li></ul>"]
 pub mod sitzverlegungen_und_domizilaenderungen_von_firmen_nach_rechtsform_noga_einteilung_und_gemeinde_seit_februar_2016 {
     use super::*;
 
@@ -23663,8 +24060,16 @@ pub mod sitzverlegungen_und_domizilaenderungen_von_firmen_nach_rechtsform_noga_e
         /// Kategorie
         pub kategorie: Option<String>,
         /// Publikationsdatum im Schweizerischen Handelsamtsblatt
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub publikationsdatum_shab: Option<Date>,
         /// Journaldatum im Handelsregister BL
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub journaldatum_handelsregister: Option<Date>,
         /// Nummer im Schweizerischen Handelsamtsblatt
         pub id_shab: Option<i64>,
@@ -23708,7 +24113,7 @@ pub mod sitzverlegungen_und_domizilaenderungen_von_firmen_nach_rechtsform_noga_e
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Kategorie,
         PublikationsdatumShab,
@@ -23759,7 +24164,7 @@ pub mod sitzverlegungen_und_domizilaenderungen_von_firmen_nach_rechtsform_noga_e
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -23784,7 +24189,7 @@ pub mod sitzverlegungen_und_domizilaenderungen_von_firmen_nach_rechtsform_noga_e
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -23870,7 +24275,9 @@ pub mod sitzverlegungen_und_domizilaenderungen_von_firmen_nach_rechtsform_noga_e
     }
 }
 
-/// Mittlere Wohnbevölkerung nach Nationalität, Gemeinde und Jahr (seit 1980)
+#[doc = "Mittlere Wohnbev\u{f6}lkerung nach Nationalit\u{e4}t, Gemeinde und Jahr (seit 1980)"]
+#[doc = ""]
+#[doc = "<p>Kantonale Bev\u{f6}lkerungsstatistik</p><p>Die mittlere Wohnbev\u{f6}lkerung entspricht dem gewichteten Durchschnitt der Quartalsbest\u{e4}nde aus der kantonalen Bev\u{f6}lkerungsstatistik. Sie hat damit einen anderen zeitlichen Bezug als der in der kantonalen Bev\u{f6}lkerungsstatistik \u{fc}bliche Jahresendbestand. Die mittlere Wohnbev\u{f6}lkerung dient als Grundlage, wenn das Mittel der im Kanton niedergelassenen Personen \u{fc}ber das gesamte Jahr interessiert und wird beispielsweise f\u{fc}r die Berechnung des Baselbieter Finanzausgleichs verwendet. Die Berechnungsformel lautet von unten nach oben gerechnet wie folgt: ((1 x 4. Quartal Vorjahr) + (2 x 1. Quartal Jahr) + (2 x 2. Quartal Jahr) + (2 x 3. Quartal Jahr) + (1 x 4. Quartal Jahr)) / 8.<br></p>"]
 pub mod mittlere_wohnbevoelkerung_nach_nationalitaet_gemeinde_und_jahr_seit_1980 {
     use super::*;
 
@@ -23892,7 +24299,7 @@ pub mod mittlere_wohnbevoelkerung_nach_nationalitaet_gemeinde_und_jahr_seit_1980
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         GemeindeNummer,
@@ -23919,7 +24326,7 @@ pub mod mittlere_wohnbevoelkerung_nach_nationalitaet_gemeinde_und_jahr_seit_1980
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -23944,7 +24351,7 @@ pub mod mittlere_wohnbevoelkerung_nach_nationalitaet_gemeinde_und_jahr_seit_1980
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -24030,7 +24437,9 @@ pub mod mittlere_wohnbevoelkerung_nach_nationalitaet_gemeinde_und_jahr_seit_1980
     }
 }
 
-/// Haushalte nach Haushaltsgrösse, Gemeinde und Jahr (seit 2012)
+#[doc = "Haushalte nach Haushaltsgr\u{f6}sse, Gemeinde und Jahr (seit 2012)"]
+#[doc = ""]
+#[doc = "<p>Statistik der Bev\u{f6}lkerung und der Haushalte (STATPOP)<br></p>"]
 pub mod haushalte_nach_haushaltsgroesse_gemeinde_und_jahr_seit_2012 {
     use super::*;
 
@@ -24054,7 +24463,7 @@ pub mod haushalte_nach_haushaltsgroesse_gemeinde_und_jahr_seit_2012 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -24075,7 +24484,7 @@ pub mod haushalte_nach_haushaltsgroesse_gemeinde_und_jahr_seit_2012 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -24100,7 +24509,7 @@ pub mod haushalte_nach_haushaltsgroesse_gemeinde_und_jahr_seit_2012 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -24186,7 +24595,9 @@ pub mod haushalte_nach_haushaltsgroesse_gemeinde_und_jahr_seit_2012 {
     }
 }
 
-/// Ständeratswahlen 2019: Kandidierendenresultate
+#[doc = "St\u{e4}nderatswahlen 2019: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kantonale Wahlen vom 20. Oktober 2019<br></p>"]
 pub mod staenderatswahlen_2019_kandidierendenresultate {
     use super::*;
 
@@ -24224,7 +24635,7 @@ pub mod staenderatswahlen_2019_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -24281,7 +24692,7 @@ pub mod staenderatswahlen_2019_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -24306,7 +24717,7 @@ pub mod staenderatswahlen_2019_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -24392,7 +24803,9 @@ pub mod staenderatswahlen_2019_kandidierendenresultate {
     }
 }
 
-/// Kantonales Gebäude- und Wohnungsregister (kGWR): Gebäudeadressen
+#[doc = "Kantonales Geb\u{e4}ude- und Wohnungsregister (kGWR): Geb\u{e4}udeadressen"]
+#[doc = ""]
+#[doc = "<p>Geb\u{e4}udeadressen gem\u{e4}ss kGWR</p><p>\u{d6}ffentlich zug\u{e4}ngliche Geb\u{e4}udemerkmale gem\u{e4}ss Verordnung \u{fc}ber das <a href=\"https://bl.clex.ch/frontend/annex_document_dictionaries/21431\" target=\"_blank\">kGWR, Anhang 3</a><br></p>"]
 pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeudeadressen {
     use super::*;
 
@@ -24423,6 +24836,10 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeudeadressen {
         pub n_eingangskoordinate: Option<f64>,
         pub offizielle_adresse_code: Option<i64>,
         pub offizielle_adresse_bezeichnung: Option<String>,
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub exportdatum: Option<Date>,
     }
 
@@ -24432,7 +24849,7 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeudeadressen {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Egid,
         GemeindenummerBfs,
@@ -24491,7 +24908,7 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeudeadressen {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -24516,7 +24933,7 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeudeadressen {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -24602,7 +25019,9 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeudeadressen {
     }
 }
 
-/// Wahlen Gemeindekommissionen 2024: Kandidierendenresultate
+#[doc = "Wahlen Gemeindekommissionen 2024: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kommunale Wahlen vom 3. M\u{e4}rz 2024\u{a0}(offiziell kandidierende Personen)</p>"]
 pub mod wahlen_gemeindekommissionen_2024_kandidierendenresultate {
     use super::*;
 
@@ -24640,7 +25059,7 @@ pub mod wahlen_gemeindekommissionen_2024_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         BfsGemeindenummer,
@@ -24675,7 +25094,7 @@ pub mod wahlen_gemeindekommissionen_2024_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -24700,7 +25119,7 @@ pub mod wahlen_gemeindekommissionen_2024_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -24786,7 +25205,9 @@ pub mod wahlen_gemeindekommissionen_2024_kandidierendenresultate {
     }
 }
 
-/// Adressen der Gemeindeverwaltungen (August 2024)
+#[doc = "Adressen der Gemeindeverwaltungen (August 2024)"]
+#[doc = ""]
+#[doc = "<p>Liste der Gemeindeadressen</p>"]
 pub mod adressen_der_gemeindeverwaltungen_august_2024 {
     use super::*;
 
@@ -24842,7 +25263,7 @@ pub mod adressen_der_gemeindeverwaltungen_august_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BfsNummer,
         Name,
@@ -24873,7 +25294,7 @@ pub mod adressen_der_gemeindeverwaltungen_august_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -24898,7 +25319,7 @@ pub mod adressen_der_gemeindeverwaltungen_august_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -24984,7 +25405,9 @@ pub mod adressen_der_gemeindeverwaltungen_august_2024 {
     }
 }
 
-/// Nationalratswahlen 2023: Unveränderte und veränderte Wahlzettel nach Liste und Gemeinde
+#[doc = "Nationalratswahlen 2023: Unver\u{e4}nderte und ver\u{e4}nderte Wahlzettel nach Liste und Gemeinde"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Wahlen vom 22. Oktober 2023<br></p>"]
 pub mod nationalratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_liste_und_gemeinde {
     use super::*;
 
@@ -25018,7 +25441,7 @@ pub mod nationalratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_li
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BfsGemeindenummer,
         Gemeinde,
@@ -25055,7 +25478,7 @@ pub mod nationalratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_li
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -25080,7 +25503,7 @@ pub mod nationalratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_li
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -25166,7 +25589,9 @@ pub mod nationalratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_li
     }
 }
 
-/// Lernende an Baselbieter Schulen nach Schulstufe und Geschlecht (seit 1986)
+#[doc = "Lernende an Baselbieter Schulen nach Schulstufe und Geschlecht (seit 1986)"]
+#[doc = ""]
+#[doc = "<p class=\"\">Lernende Primarstufe, Sekundarstufe I und Sekundarstufe II, ohne Terti\u{e4}rstufe (Hochschulen und h\u{f6}here Berufsbildung)<br></p><p class=\"\"><b>Hinweise</b></p><ul><li>Sonderklassen umfassen die Einf\u{fc}hrungsklassen, Kleinklassen und Fremdsprachenintegrationsklassen</li><li>Zur separativen Sonderschulung werden auch die Heimschulen gez\u{e4}hlt</li><li>Ab 2015 aufgrund von Harmos sechs- anstatt f\u{fc}nfj\u{e4}hrige Primarschule, daf\u{fc}r drei- anstatt vierj\u{e4}hrige Sekundarschule.</li><li>Ab 1994 inkl. Bezirk Laufen.</li><li>EBA: Eidgen\u{f6}ssisches Berufsattest (2-j\u{e4}hrige Berufslehren)</li><li>EFZ: Eidgen\u{f6}ssisches F\u{e4}higkeitszeugnis (3- und 4-j\u{e4}hrige Berufslehren)</li></ul>"]
 pub mod lernende_an_baselbieter_schulen_nach_schulstufe_und_geschlecht_seit_1986 {
     use super::*;
 
@@ -25202,7 +25627,7 @@ pub mod lernende_an_baselbieter_schulen_nach_schulstufe_und_geschlecht_seit_1986
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         SchulstufeGrobCode,
@@ -25235,7 +25660,7 @@ pub mod lernende_an_baselbieter_schulen_nach_schulstufe_und_geschlecht_seit_1986
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -25260,7 +25685,7 @@ pub mod lernende_an_baselbieter_schulen_nach_schulstufe_und_geschlecht_seit_1986
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -25346,7 +25771,9 @@ pub mod lernende_an_baselbieter_schulen_nach_schulstufe_und_geschlecht_seit_1986
     }
 }
 
-/// Arbeitsstätten und Beschäftigte nach Wirtschaftssektor, Gemeinde und Jahr (seit 2011)
+#[doc = "Arbeitsst\u{e4}tten und Besch\u{e4}ftigte nach Wirtschaftssektor, Gemeinde und Jahr (seit 2011)"]
+#[doc = ""]
+#[doc = "<p>Statistik der Unternehmensstruktur (STATENT)<br></p>"]
 pub mod arbeitsstaetten_und_beschaeftigte_nach_wirtschaftssektor_gemeinde_und_jahr_seit_2011 {
     use super::*;
 
@@ -25372,7 +25799,7 @@ pub mod arbeitsstaetten_und_beschaeftigte_nach_wirtschaftssektor_gemeinde_und_ja
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsGemeindenummer,
@@ -25395,7 +25822,7 @@ pub mod arbeitsstaetten_und_beschaeftigte_nach_wirtschaftssektor_gemeinde_und_ja
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -25420,7 +25847,7 @@ pub mod arbeitsstaetten_und_beschaeftigte_nach_wirtschaftssektor_gemeinde_und_ja
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -25506,7 +25933,9 @@ pub mod arbeitsstaetten_und_beschaeftigte_nach_wirtschaftssektor_gemeinde_und_ja
     }
 }
 
-/// Lernendenprognose nach Bildungsinstitution, Schulstufe und Klassentyp
+#[doc = "Lernendenprognose nach Bildungsinstitution, Schulstufe und Klassentyp"]
+#[doc = ""]
+#[doc = "<p>Primarschule und Sekundarstufe I</p>"]
 pub mod lernendenprognose_nach_bildungsinstitution_schulstufe_und_klassentyp {
     use super::*;
 
@@ -25534,7 +25963,7 @@ pub mod lernendenprognose_nach_bildungsinstitution_schulstufe_und_klassentyp {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BildungsinstitutionId,
@@ -25559,7 +25988,7 @@ pub mod lernendenprognose_nach_bildungsinstitution_schulstufe_und_klassentyp {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -25584,7 +26013,7 @@ pub mod lernendenprognose_nach_bildungsinstitution_schulstufe_und_klassentyp {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -25670,7 +26099,9 @@ pub mod lernendenprognose_nach_bildungsinstitution_schulstufe_und_klassentyp {
     }
 }
 
-/// Kantonales Gebäude- und Wohnungsregister (kGWR): Gebäude
+#[doc = "Kantonales Geb\u{e4}ude- und Wohnungsregister (kGWR): Geb\u{e4}ude"]
+#[doc = ""]
+#[doc = "<p>Geb\u{e4}udemerkmale gem\u{e4}ss kGWR</p><p>\u{d6}ffentlich zug\u{e4}ngliche Geb\u{e4}udemerkmale gem\u{e4}ss <a href=\"https://bl.clex.ch/frontend/annex_document_dictionaries/21431\" target=\"_blank\">Verordnung \u{fc}ber das kGWR, Anhang 3</a></p><p>Neben den vom Bund definierten Merkmalen (siehe <a href=\"https://www.housing-stat.ch/de/help/42.html\" target=\"_blank\">GWR Merkmalskatalog 4.2</a>) enth\u{e4}lt der Datensatz die folgenden kantonalen Merkmale (Quelle: Energiestatistik 2022):</p><ul><li>Photovoltaik (Ja/Nein)</li><li>Leistung Photovoltaik (Kilowatt Peak)</li><li>Datenquelle Photovoltaik</li></ul><p><br></p>"]
 pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeude {
     use super::*;
 
@@ -25734,6 +26165,10 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeude {
         pub energie_waermequelle_heizung_primaer_bezeichnung: Option<String>,
         pub informationsquelle_heizung_primaer_code: Option<i64>,
         pub informationsquelle_heizung_primaer_bezeichnung: Option<String>,
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub aktualisierungsdatum_heizung_primaer: Option<Date>,
         /// GWAERZH2
         pub waermeerzeuger_heizung_sekundaer_code: Option<i64>,
@@ -25743,6 +26178,10 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeude {
         pub energie_waermequelle_heizung_sekundaer_bezeichnung: Option<String>,
         pub informationsquelle_heizung_sekundaer_code: Option<i64>,
         pub informationsquelle_heizung_sekundaer_bezeichnung: Option<String>,
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub aktualisierungsdatum_heizung_sekundaer: Option<Date>,
         /// GWAERZW1
         pub waermeerzeuger_warmwasser_primaer_code: Option<i64>,
@@ -25752,6 +26191,10 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeude {
         pub energie_waermequelle_warmwasser_primaer_bezeichnung: Option<String>,
         pub informationsquelle_warmwasser_primaer_code: Option<i64>,
         pub informationsquelle_warmwasser_primaer_bezeichnung: Option<String>,
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub aktualisierungsdatum_warmwasser_primaer: Option<Date>,
         /// GWAERZW2
         pub waermeerzeuger_warmwasser_sekundaer_code: Option<i64>,
@@ -25761,10 +26204,18 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeude {
         pub energie_waermequelle_warmwasser_sekundaer_bezeichnung: Option<String>,
         pub informationsquelle_warmwasser_sekundaer_code: Option<i64>,
         pub informationsquelle_warmwasser_sekundaer_bezeichnung: Option<String>,
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub aktualisierungsdatum_warmwasser_sekundaer: Option<Date>,
         pub photovoltaik: Option<String>,
         pub leistung_photovoltaik_kwp: Option<f64>,
         pub datenquelle_photovoltaik: Option<String>,
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub exportdatum: Option<Date>,
     }
 
@@ -25774,7 +26225,7 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeude {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Egid,
         GemeindenummerBfs,
@@ -25969,7 +26420,7 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeude {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -25994,7 +26445,7 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeude {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -26080,7 +26531,9 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeude {
     }
 }
 
-/// Baugesuche und Baubewilligungen nach Gebäudeart, Gemeinde und Jahr (seit 1991/1992)
+#[doc = "Baugesuche und Baubewilligungen nach Geb\u{e4}udeart, Gemeinde und Jahr (seit 1991/1992)"]
+#[doc = ""]
+#[doc = "<p>Bewilligte Gesuche, einschliesslich Nachtragsbewilligungen. Achtung: Die Daten k\u{f6}nnen sich r\u{fc}ckwirkend \u{e4}ndern! Die Gemeinde Liesberg wird aufgesplittet nach den beiden Ortschaften Liesberg und Liesberg Dorf ausgewiesen.</p><p><br></p>"]
 pub mod baugesuche_und_baubewilligungen_nach_gebaeudeart_gemeinde_und_jahr_seit_1991_1992 {
     use super::*;
 
@@ -26106,7 +26559,7 @@ pub mod baugesuche_und_baubewilligungen_nach_gebaeudeart_gemeinde_und_jahr_seit_
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -26129,7 +26582,7 @@ pub mod baugesuche_und_baubewilligungen_nach_gebaeudeart_gemeinde_und_jahr_seit_
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -26154,7 +26607,7 @@ pub mod baugesuche_und_baubewilligungen_nach_gebaeudeart_gemeinde_und_jahr_seit_
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -26240,7 +26693,9 @@ pub mod baugesuche_und_baubewilligungen_nach_gebaeudeart_gemeinde_und_jahr_seit_
     }
 }
 
-/// Nationalratswahlen 2019: Kandidierendenresultate, Wahlberechtigte und Listenstimmen
+#[doc = "Nationalratswahlen 2019: Kandidierendenresultate, Wahlberechtigte und Listenstimmen"]
+#[doc = ""]
+#[doc = "<p>Eidgen\u{f6}ssische Wahlen vom 20. Oktober 2019<br></p>"]
 pub mod nationalratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_listenstimmen {
     use super::*;
 
@@ -26329,7 +26784,7 @@ pub mod nationalratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_list
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         CandidateElected,
         CandidateFamilyName,
@@ -26530,7 +26985,7 @@ pub mod nationalratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -26555,7 +27010,7 @@ pub mod nationalratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -26641,7 +27096,9 @@ pub mod nationalratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_list
     }
 }
 
-/// Leerwohnungsziffer nach Zimmerzahl, Gemeinde und Jahr (seit 2002)
+#[doc = "Leerwohnungsziffer nach Zimmerzahl, Gemeinde und Jahr (seit 2002)"]
+#[doc = ""]
+#[doc = "Leerwohnungsziffer (leer stehende Wohnungen im Verh\u{e4}ltnis zum Wohnungsbestand des Vorjahres) am 1. Juni des jeweiligen Jahres"]
 pub mod leerwohnungsziffer_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
     use super::*;
 
@@ -26665,7 +27122,7 @@ pub mod leerwohnungsziffer_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -26686,7 +27143,7 @@ pub mod leerwohnungsziffer_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -26711,7 +27168,7 @@ pub mod leerwohnungsziffer_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -26797,7 +27254,9 @@ pub mod leerwohnungsziffer_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
     }
 }
 
-/// Bevölkerungsbestand nach Geschlecht, Alter, Gemeinde und Jahr (seit 2003)
+#[doc = "Bev\u{f6}lkerungsbestand nach Geschlecht, Alter, Gemeinde und Jahr (seit 2003)"]
+#[doc = ""]
+#[doc = "<p>Kantonale Bev\u{f6}lkerungsstatistik</p>"]
 pub mod bevoelkerungsbestand_nach_geschlecht_alter_gemeinde_und_jahr_seit_2003 {
     use super::*;
 
@@ -26826,7 +27285,7 @@ pub mod bevoelkerungsbestand_nach_geschlecht_alter_gemeinde_und_jahr_seit_2003 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         GemeindeNummer,
@@ -26867,7 +27326,7 @@ pub mod bevoelkerungsbestand_nach_geschlecht_alter_gemeinde_und_jahr_seit_2003 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -26892,7 +27351,7 @@ pub mod bevoelkerungsbestand_nach_geschlecht_alter_gemeinde_und_jahr_seit_2003 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -26978,7 +27437,9 @@ pub mod bevoelkerungsbestand_nach_geschlecht_alter_gemeinde_und_jahr_seit_2003 {
     }
 }
 
-/// Leerwohnungsbestand nach Zimmerzahl, Gemeinde und Jahr (seit 2002)
+#[doc = "Leerwohnungsbestand nach Zimmerzahl, Gemeinde und Jahr (seit 2002)"]
+#[doc = ""]
+#[doc = "<p>Leer stehende Wohnungen am 1. Juni des jeweiligen Jahres</p>"]
 pub mod leerwohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
     use super::*;
 
@@ -27002,7 +27463,7 @@ pub mod leerwohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -27023,7 +27484,7 @@ pub mod leerwohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -27048,7 +27509,7 @@ pub mod leerwohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -27134,7 +27595,9 @@ pub mod leerwohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
     }
 }
 
-/// Neu erstellte Wohnungen nach Gemeinde und Jahr (seit 1994)
+#[doc = "Neu erstellte Wohnungen nach Gemeinde und Jahr (seit 1994)"]
+#[doc = ""]
+#[doc = "<p>Bau- und Wohnbaustatistik</p>"]
 pub mod neu_erstellte_wohnungen_nach_gemeinde_und_jahr_seit_1994 {
     use super::*;
 
@@ -27156,7 +27619,7 @@ pub mod neu_erstellte_wohnungen_nach_gemeinde_und_jahr_seit_1994 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -27175,7 +27638,7 @@ pub mod neu_erstellte_wohnungen_nach_gemeinde_und_jahr_seit_1994 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -27200,7 +27663,7 @@ pub mod neu_erstellte_wohnungen_nach_gemeinde_und_jahr_seit_1994 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -27286,7 +27749,9 @@ pub mod neu_erstellte_wohnungen_nach_gemeinde_und_jahr_seit_1994 {
     }
 }
 
-/// CO2-Emissionen nach Energieträger, Gemeinde und Jahr (seit 2018)
+#[doc = "CO2-Emissionen nach Energietr\u{e4}ger, Gemeinde und Jahr (seit 2018)"]
+#[doc = ""]
+#[doc = "<p>Energiestatistik</p><p>CO2-Emissionen in Tonnen und pro Einwohner/in, die durch Energiegewinnung und -verbrauch innerhalb des Kantons Basel-Landschaft entstehen. CO2-Emissionen aus Treibstoffen (Benzin, Diesel) sind darin nicht ber\u{fc}cksichtigt, da diese nur auf Ebene des gesamten Kantons bekannt sind. Der Datensatz ist Teil der kantonalen Energiestatistik, die alle zwei Jahre durchgef\u{fc}hrt wird.</p><p>Die CO2-Emissionen pro Einwohner/in werden aufgrund der mittleren Wohnbev\u{f6}lkerung berechnet. Die Umrechnung von Energieverbrauch zu CO2-Emissionen wird anhand der Emissionsfaktoren gem\u{e4}ss dem nationalen Treibhausgasinventar gemacht. Erneuerbare Energietr\u{e4}ger gelten als klimaneutral, da \u{fc}ber den gesamten Zyklus die gleiche Menge CO2 gebunden wie emittiert wird. Deshalb werden sie hier nicht aufgef\u{fc}hrt.</p>"]
 pub mod co2_emissionen_nach_energietraeger_gemeinde_und_jahr_seit_2018 {
     use super::*;
 
@@ -27306,7 +27771,7 @@ pub mod co2_emissionen_nach_energietraeger_gemeinde_und_jahr_seit_2018 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Erhebungsjahr,
         BfsGemeindenummer,
@@ -27329,7 +27794,7 @@ pub mod co2_emissionen_nach_energietraeger_gemeinde_und_jahr_seit_2018 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -27354,7 +27819,7 @@ pub mod co2_emissionen_nach_energietraeger_gemeinde_und_jahr_seit_2018 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -27440,7 +27905,9 @@ pub mod co2_emissionen_nach_energietraeger_gemeinde_und_jahr_seit_2018 {
     }
 }
 
-/// Lernende mit Wohnkanton BL an Schulen in der Schweiz nach Schulstufe, Geschlecht, Wohngemeinde und Jahr (seit 2014)
+#[doc = "Lernende mit Wohnkanton BL an Schulen in der Schweiz nach Schulstufe, Geschlecht, Wohngemeinde und Jahr (seit 2014)"]
+#[doc = ""]
+#[doc = "<p>Statistik der Lernenden</p><p>Ab 2015 aufgrund von HarmoS 6- statt 5-j\u{e4}hrige Primarschule, daf\u{fc}r 3- statt 4-j\u{e4}hrige Sekundarschule.</p><p>Separative Sonderschulung inkl. Heimschulen.\u{a0}</p><p>EBA = Eidg. Berufsattest (2-j\u{e4}hrige Berufslehren). </p><p>EFZ = Eidg. F\u{e4}higkeitszeugnis (3- und 4-j\u{e4}hrige Berufslehren).\u{a0}</p>"]
 pub mod lernende_mit_wohnkanton_bl_an_schulen_in_der_schweiz_nach_schulstufe_geschlecht_wohngemeinde_und_jahr_seit_2014 {
     use super::*;
 
@@ -27467,7 +27934,7 @@ pub mod lernende_mit_wohnkanton_bl_an_schulen_in_der_schweiz_nach_schulstufe_ges
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         BfsNummer,
@@ -27504,7 +27971,7 @@ pub mod lernende_mit_wohnkanton_bl_an_schulen_in_der_schweiz_nach_schulstufe_ges
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -27529,7 +27996,7 @@ pub mod lernende_mit_wohnkanton_bl_an_schulen_in_der_schweiz_nach_schulstufe_ges
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -27615,7 +28082,9 @@ pub mod lernende_mit_wohnkanton_bl_an_schulen_in_der_schweiz_nach_schulstufe_ges
     }
 }
 
-/// Nachnamen der ständigen Wohnbevölkerung nach Gemeinde (seit 2022)
+#[doc = "Nachnamen der st\u{e4}ndigen Wohnbev\u{f6}lkerung nach Gemeinde (seit 2022)"]
+#[doc = ""]
+#[doc = "<p>Statistik der Bev\u{f6}lkerung und der Haushalte (STATPOP)</p><p>Nachnamen mit weniger als 3 Nennungen werden nicht ver\u{f6}ffentlicht.<br></p>"]
 pub mod nachnamen_der_staendigen_wohnbevoelkerung_nach_gemeinde_seit_2022 {
     use super::*;
 
@@ -27657,7 +28126,7 @@ pub mod nachnamen_der_staendigen_wohnbevoelkerung_nach_gemeinde_seit_2022 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         TimePeriod,
         Lastname,
@@ -27682,7 +28151,7 @@ pub mod nachnamen_der_staendigen_wohnbevoelkerung_nach_gemeinde_seit_2022 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -27707,7 +28176,7 @@ pub mod nachnamen_der_staendigen_wohnbevoelkerung_nach_gemeinde_seit_2022 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -27793,7 +28262,9 @@ pub mod nachnamen_der_staendigen_wohnbevoelkerung_nach_gemeinde_seit_2022 {
     }
 }
 
-/// Einwohnerratswahlen 2024: Kandidierendenresultate
+#[doc = "Einwohnerratswahlen 2024: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kommunale Wahlen vom 3. M\u{e4}rz 2024\u{a0}(offiziell kandidierende Personen)<br></p>"]
 pub mod einwohnerratswahlen_2024_kandidierendenresultate {
     use super::*;
 
@@ -27881,7 +28352,7 @@ pub mod einwohnerratswahlen_2024_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         AnzahlSitze,
@@ -27976,7 +28447,7 @@ pub mod einwohnerratswahlen_2024_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -28001,7 +28472,7 @@ pub mod einwohnerratswahlen_2024_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -28087,7 +28558,9 @@ pub mod einwohnerratswahlen_2024_kandidierendenresultate {
     }
 }
 
-/// Drogerien mit Betriebsbewilligung nach Standort (April 2024)
+#[doc = "Drogerien mit Betriebsbewilligung nach Standort (April 2024)"]
+#[doc = ""]
+#[doc = "<p>Liste der vom Kanton BL bewilligten Drogerien</p>"]
 pub mod drogerien_mit_betriebsbewilligung_nach_standort_april_2024 {
     use super::*;
 
@@ -28121,7 +28594,7 @@ pub mod drogerien_mit_betriebsbewilligung_nach_standort_april_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Drogerie,
         Adresse,
@@ -28150,7 +28623,7 @@ pub mod drogerien_mit_betriebsbewilligung_nach_standort_april_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -28175,7 +28648,7 @@ pub mod drogerien_mit_betriebsbewilligung_nach_standort_april_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -28261,7 +28734,9 @@ pub mod drogerien_mit_betriebsbewilligung_nach_standort_april_2024 {
     }
 }
 
-/// Luftqualität Station Sissach-Bützenen (halbstündliche Messdaten seit Januar 2020)
+#[doc = "Luftqualit\u{e4}t Station Sissach-B\u{fc}tzenen (halbst\u{fc}ndliche Messdaten seit Januar 2020)"]
+#[doc = ""]
+#[doc = "<p class=\"\">Echtzeitdaten der Luftmessstation Sissach-B\u{fc}tzenen. Die Messwerte werden halbst\u{fc}ndlich ausgewiesen und st\u{fc}ndlich (jeweils 20 Minuten nach der vollen Stunde mit einer m\u{f6}glichen Latenz von 1 bis 4 Stunden) aktualisiert. Die ausgewiesenen Werte werden unbereinigt von der Messstation bezogen. Validierte Messwerte sind direkt vom Lufthygieneamt beider Basel zu beziehen.<br></p><p class=\"\">Aufgrund messtechnischer Ungenauigkeiten k\u{f6}nnen bei geringer Konzentration eines Schadstoffs auch Negativwerte auftreten (Nullpunktrauschen). Die Handhabung negativer Messwerte ist in der aktuell g\u{fc}ltigen\u{a0}<a href=\"https://www.bafu.admin.ch/bafu/de/home/themen/luft/publikationen-studien/publikationen/immissionsmessung-von-luftfremdstoffen.html\" style=\"background-color: rgb(255, 255, 255); font-family: sans-serif; font-size: 14px; font-weight: 400;\" target=\"_blank\">Imissionsmessempfehlung\u{a0}</a>2021 beschrieben.</p><p class=\"\">Ein Datensatz der Messwerte zwischen 2018 und 2019 kann\u{a0}<a href=\"https://fkd-sta-files.bl.ch/ogd/luftqualitaet/airmet_sissach_buetzenen_2018_2019.csv\" style=\"background-color: rgb(255, 255, 255); font-family: sans-serif; font-size: 14px; font-weight: 400;\" target=\"_blank\">mit diesem Link</a>\u{a0}bezogen werden.<br></p><p class=\"\"><b>Ausgewiesene Werte</b></p><ul><li>Anfangszeit: Zeitstempel des Beginns der halbst\u{fc}ndlichen Messung im Format %Y-%m-%dT%H:%M:%S</li><li>Lungeng\u{e4}ngiger Feinstaub PM10 (\u{b5}g/m3): Lungeng\u{e4}ngiger Feinstaub PM10 in Mikrogramm pro Kubikmeter.</li><li>Lungeng\u{e4}ngiger Feinstaub PM2.5 (\u{b5}g/m3): Lungeng\u{e4}ngiger Feinstaub PM2.5 in Mikrogramm pro Kubikmeter.</li><li>Stickstoffdioxid NO2 (\u{b5}g/m3): Gemessene Stickstoffdioxid-Konzentration in Mikrogramm pro Kubikmeter.</li><li>Ozon O3 (\u{b5}g/m3): Gemessene Ozon-Konzentration in Mikrogramm pro Kubikmeter.</li></ul><p class=\"\"><b>Standortbeschreibung</b></p><p class=\"\">Die Messstation liegt in einem Wohnquartier von Sissach, direkt neben einer Schule. Sie misst den kleinst\u{e4}dtischen Hintergrund.</p><p class=\"\"><b>Lage</b></p><p class=\"\">Kleinst\u{e4}dtisch/Vorst\u{e4}dtisch, Hintergrund</p><p class=\"\"><b>Koordinaten</b></p><p class=\"\">2628410 / 1257208; 327 m \u{fc}. M.</p><p class=\"\"><b>Bebauung</b></p><p class=\"\">Offene Bebauung</p>"]
 pub mod luftqualitaet_station_sissach_buetzenen_halbstuendliche_messdaten_seit_januar_2020 {
     use super::*;
 
@@ -28294,7 +28769,7 @@ pub mod luftqualitaet_station_sissach_buetzenen_halbstuendliche_messdaten_seit_j
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Anfangszeit,
         Pm10,
@@ -28315,7 +28790,7 @@ pub mod luftqualitaet_station_sissach_buetzenen_halbstuendliche_messdaten_seit_j
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -28340,7 +28815,7 @@ pub mod luftqualitaet_station_sissach_buetzenen_halbstuendliche_messdaten_seit_j
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -28426,7 +28901,9 @@ pub mod luftqualitaet_station_sissach_buetzenen_halbstuendliche_messdaten_seit_j
     }
 }
 
-/// Luftqualität Station A2 Hard (halbstündliche Messdaten seit Januar 2020)
+#[doc = "Luftqualit\u{e4}t Station A2 Hard (halbst\u{fc}ndliche Messdaten seit Januar 2020)"]
+#[doc = ""]
+#[doc = "<p class=\"\" style=\"\">Echtzeitdaten der Luftmessstation A2 Hard. Die Messwerte werden halbst\u{fc}ndlich ausgewiesen und st\u{fc}ndlich (jeweils 20 Minuten nach der vollen Stunde mit einer m\u{f6}glichen Latenz von 1 bis 4 Stunden) aktualisiert. Die ausgewiesenen Werte werden unbereinigt von der Messstation bezogen. Validierte Messwerte sind direkt vom Lufthygieneamt beider Basel zu beziehen.</p><p class=\"\" style=\"\">Aufgrund messtechnischer Ungenauigkeiten k\u{f6}nnen bei geringer Konzentration eines Schadstoffs auch Negativwerte auftreten (Nullpunktrauschen). Die Handhabung negativer Messwerte ist in der aktuell g\u{fc}ltigen <a href=\"https://www.bafu.admin.ch/bafu/de/home/themen/luft/publikationen-studien/publikationen/immissionsmessung-von-luftfremdstoffen.html\" target=\"_blank\">Imissionsmessempfehlung </a>2021 beschrieben.\u{a0}Ein Datensatz der Messwerte zwischen 2003 und 2019 kann\u{a0}<a href=\"https://fkd-sta-files.bl.ch/ogd/luftqualitaet/airmet_a2_hard_2003_2019.csv\" style=\"font-family: sans-serif; font-size: 14px; background-color: rgb(255, 255, 255); font-weight: 400;\" target=\"_blank\">mit diesem Link</a>\u{a0}bezogen werden.</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Ausgewiesene Werte</span></p><ul><li>Anfangszeit: Zeitstempel des Beginns der halbst\u{fc}ndlichen Messung im Format %Y-%m-%dT%H:%M:%S</li><li>Stickstoffdioxid NO2 (\u{b5}g/m3): Gemessene Stickstoffdioxid-Konzentration in Mikrogramm pro Kubikmeter.</li><li>Lungeng\u{e4}ngiger Feinstaub PM10 (\u{b5}g/m3): Lungeng\u{e4}ngiger Feinstaub PM10 in Mikrogramm pro Kubikmeter.</li><li>Lungeng\u{e4}ngiger Feinstaub PM2.5 (\u{b5}g/m3): Lungeng\u{e4}ngiger Feinstaub PM2.5 in Mikrogramm pro Kubikmeter.</li></ul><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Standortbeschreibung</span></p><p class=\"\" style=\"\">Die Messstation liegt direkt an der A2 im Abschnitt Hardwald, einer der am st\u{e4}rksten befahrenen Autobahnabschnitte der Schweiz. Zus\u{e4}tzlich wird dieser Abschnitt stark vom Schwerverkehr frequentiert. Die Station A2 Hard gibt damit die Belastung wieder, welche direkt an stark befahrenen Hochleistungsstrassen auftreten. Sie ist Teil eines gesamtschweizerischen Monitoring-Programms zur \u{dc}berwachung des alpenquerenden G\u{fc}terverkehrs entlang der A2 und A13.</p><p class=\"\" style=\"\">Die Station A2 Hard befindet sich seit 14.6.2023 wegen Bauarbeiten vor\u{fc}bergehend auf der gegen\u{fc}berliegenden Fahrbahnseite in ca. 400 m Entfernung.</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Lage</span></p><p class=\"\" style=\"font-family: sans-serif;\">Kleinst\u{e4}dtisch/Vorst\u{e4}dtisch, Verkehr</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Koordinaten</span></p><p class=\"\" style=\"\">2615839 / 1265282; 275 m \u{fc}. M.<br></p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Bebauung</span></p><p class=\"\" style=\"font-family: sans-serif;\">Offene Bebauung</p>"]
 pub mod luftqualitaet_station_a2_hard_halbstuendliche_messdaten_seit_januar_2020 {
     use super::*;
 
@@ -28455,7 +28932,7 @@ pub mod luftqualitaet_station_a2_hard_halbstuendliche_messdaten_seit_januar_2020
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Anfangszeit,
         Pm10,
@@ -28474,7 +28951,7 @@ pub mod luftqualitaet_station_a2_hard_halbstuendliche_messdaten_seit_januar_2020
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -28499,7 +28976,7 @@ pub mod luftqualitaet_station_a2_hard_halbstuendliche_messdaten_seit_januar_2020
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -28585,7 +29062,9 @@ pub mod luftqualitaet_station_a2_hard_halbstuendliche_messdaten_seit_januar_2020
     }
 }
 
-/// Betriebe mit einer Verkaufsbewilligung für Spirituosen nach Standort (Februar 2024)
+#[doc = "Betriebe mit einer Verkaufsbewilligung f\u{fc}r Spirituosen nach Standort (Februar 2024)"]
+#[doc = ""]
+#[doc = "<p>Liste der Betriebe mit vom Kanton BL bewilligten Spirituosenverkauf. Stand: 29.02.2024</p><p>Der gewerbsm\u{e4}ssige Verkauf von alkoholischen Getr\u{e4}nken ist bewilligungspflichtig. In gastgewerblichen Bewilligungen ist der Verkauf von alkoholischen Getr\u{e4}nken bereits mitenthalten. In diesen F\u{e4}llen ist kein zus\u{e4}tzlicher Antrag notwendig.<br></p>"]
 pub mod betriebe_mit_einer_verkaufsbewilligung_fuer_spirituosen_nach_standort_februar_2024 {
     use super::*;
 
@@ -28620,7 +29099,7 @@ pub mod betriebe_mit_einer_verkaufsbewilligung_fuer_spirituosen_nach_standort_fe
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Betriebsnummer,
         BfsGemeindenummer,
@@ -28655,7 +29134,7 @@ pub mod betriebe_mit_einer_verkaufsbewilligung_fuer_spirituosen_nach_standort_fe
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -28680,7 +29159,7 @@ pub mod betriebe_mit_einer_verkaufsbewilligung_fuer_spirituosen_nach_standort_fe
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -28766,7 +29245,9 @@ pub mod betriebe_mit_einer_verkaufsbewilligung_fuer_spirituosen_nach_standort_fe
     }
 }
 
-/// Luftqualität Station Dornach (halbstündliche Messdaten seit Januar 2020)
+#[doc = "Luftqualit\u{e4}t Station Dornach (halbst\u{fc}ndliche Messdaten seit Januar 2020)"]
+#[doc = ""]
+#[doc = "<p class=\"\" style=\"\">Echtzeitdaten der Luftmessstation Dornach. Die Station wird gemeinsam mit dem Amt f\u{fc}r Umwelt Kanton Solothurn betrieben. Die Messwerte werden halbst\u{fc}ndlich ausgewiesen und st\u{fc}ndlich (jeweils 20 Minuten nach der vollen Stunde mit einer m\u{f6}glichen Latenz von 1 bis 4 Stunden) aktualisiert. Die ausgewiesenen Werte werden unbereinigt von der Messstation bezogen. Validierte Messwerte sind direkt vom Lufthygieneamt beider Basel zu beziehen.</p><p class=\"\" style=\"\">Aufgrund messtechnischer Ungenauigkeiten k\u{f6}nnen bei geringer Konzentration eines Schadstoffs auch Negativwerte auftreten (Nullpunktrauschen). Die Handhabung negativer Messwerte ist in der aktuell g\u{fc}ltigen\u{a0}<a href=\"https://www.bafu.admin.ch/bafu/de/home/themen/luft/publikationen-studien/publikationen/immissionsmessung-von-luftfremdstoffen.html\" style=\"background-color: rgb(255, 255, 255); font-family: sans-serif; font-size: 14px; font-weight: 400;\" target=\"_blank\">Imissionsmessempfehlung\u{a0}</a>2021 beschrieben.</p><p class=\"\" style=\"\">Ein Datensatz der Messwerte zwischen 1993 und 2019 kann <a href=\"https://fkd-sta-files.bl.ch/ogd/luftqualitaet/airmet_dornach_1993_2019.csv\" target=\"_blank\">mit diesem Link</a>\u{a0}bezogen werden.</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Ausgewiesene Werte</span></p><ul><li>Anfangszeit: Zeitstempel des Beginns der halbst\u{fc}ndlichen Messung im Format %Y-%m-%dT%H:%M:%S</li><li>Lungeng\u{e4}ngiger Feinstaub PM10 (\u{b5}g/m3): Lungeng\u{e4}ngiger Feinstaub PM10 in Mikrogramm pro Kubikmeter.</li><li>Lungeng\u{e4}ngiger Feinstaub PM2.5 (\u{b5}g/m3): Lungeng\u{e4}ngiger Feinstaub PM2.5 in Mikrogramm pro Kubikmeter.</li><li>Stickstoffdioxid NO2 (\u{b5}g/m3): Gemessene Stickstoffdioxid-Konzentration in Mikrogramm pro Kubikmeter.</li><li>Ozon O3 (\u{b5}g/m3): Gemessene Ozon-Konzentration in Mikrogramm pro Kubikmeter.</li></ul><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Standortbeschreibung</span></p><p class=\"\" style=\"font-family: sans-serif;\">Die Messstation befindet sich in einem typischen Wohnquartier. Sie gibt einen \u{dc}berblick \u{fc}ber die Luftschadstoffbelastung in der Agglomeration der Stadt Basel. Sie misst die Hintergrundbelastung wie sie typischerweise in Wohnquartieren anzutreffen ist, als Mix verschiedenster Schadstoffquellen.</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Lage</span></p><p class=\"\" style=\"font-family: sans-serif;\">Kleinst\u{e4}dtisch/Vorst\u{e4}dtisch, Hintergrund</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Koordinaten</span></p><p class=\"\" style=\"font-family: sans-serif;\">2613144 / 1258911; 305 m \u{fc}. M.</p><p class=\"\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\">Bebauung</span></p><p class=\"\" style=\"font-family: sans-serif;\">Offene Bebauung</p>"]
 pub mod luftqualitaet_station_dornach_halbstuendliche_messdaten_seit_januar_2020 {
     use super::*;
 
@@ -28799,7 +29280,7 @@ pub mod luftqualitaet_station_dornach_halbstuendliche_messdaten_seit_januar_2020
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Anfangszeit,
         Pm10,
@@ -28820,7 +29301,7 @@ pub mod luftqualitaet_station_dornach_halbstuendliche_messdaten_seit_januar_2020
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -28845,7 +29326,7 @@ pub mod luftqualitaet_station_dornach_halbstuendliche_messdaten_seit_januar_2020
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -28931,7 +29412,9 @@ pub mod luftqualitaet_station_dornach_halbstuendliche_messdaten_seit_januar_2020
     }
 }
 
-/// Gemeinderatsnachwahlen 2024: Anzahl Sitze, Wahlberechtigte und Wahlzettel nach Gemeinde
+#[doc = "Gemeinderatsnachwahlen 2024: Anzahl Sitze, Wahlberechtigte und Wahlzettel nach Gemeinde"]
+#[doc = ""]
+#[doc = "<p>Kommunale Nachwahlen vom 14. April 2024, 9. Juni 2024 und\u{a0}22. September 2024</p><p>Quellen: Landeskanzlei BL / Wahlb\u{fc}ros der Gemeinden</p><p>Keine Angaben (...) zu Stimmberechtigten, Wahlzetteln und Stimmen bei stillen Wahlen</p>"]
 pub mod gemeinderatsnachwahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_nach_gemeinde {
     use super::*;
 
@@ -28973,7 +29456,7 @@ pub mod gemeinderatsnachwahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         BfsGemeindenummer,
@@ -29012,7 +29495,7 @@ pub mod gemeinderatsnachwahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -29037,7 +29520,7 @@ pub mod gemeinderatsnachwahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -29123,7 +29606,9 @@ pub mod gemeinderatsnachwahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_
     }
 }
 
-/// Bewilligte Tagesbetreuungseinrichtungen für Kinder nach Standort (Oktober 2024)
+#[doc = "Bewilligte Tagesbetreuungseinrichtungen f\u{fc}r Kinder nach Standort (Oktober 2024)"]
+#[doc = ""]
+#[doc = "<p>Liste der vom Kanton BL bewilligten Tagesbetreuungseinrichtungen f\u{fc}r Kinder. Stand per Anfang Monat.</p>"]
 pub mod bewilligte_tagesbetreuungseinrichtungen_fuer_kinder_nach_standort_oktober_2024 {
     use super::*;
 
@@ -29211,7 +29696,7 @@ pub mod bewilligte_tagesbetreuungseinrichtungen_fuer_kinder_nach_standort_oktobe
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Bfs,
         Gemeinde,
@@ -29260,7 +29745,7 @@ pub mod bewilligte_tagesbetreuungseinrichtungen_fuer_kinder_nach_standort_oktobe
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -29285,7 +29770,7 @@ pub mod bewilligte_tagesbetreuungseinrichtungen_fuer_kinder_nach_standort_oktobe
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -29371,7 +29856,9 @@ pub mod bewilligte_tagesbetreuungseinrichtungen_fuer_kinder_nach_standort_oktobe
     }
 }
 
-/// Gemeinderatswahlen 2024: Anzahl Sitze, Wahlberechtigte und Wahlzettel nach Gemeinde
+#[doc = "Gemeinderatswahlen 2024: Anzahl Sitze, Wahlberechtigte und Wahlzettel nach Gemeinde"]
+#[doc = ""]
+#[doc = "<p>Kommunale Wahlen vom 3. M\u{e4}rz 2024</p><p>Keine Angaben (...) zu Stimmberechtigten, Wahlzetteln und Stimmen bei stillen Wahlen</p>"]
 pub mod gemeinderatswahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_nach_gemeinde {
     use super::*;
 
@@ -29415,7 +29902,7 @@ pub mod gemeinderatswahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_nach
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         BfsGemeindenummer,
@@ -29456,7 +29943,7 @@ pub mod gemeinderatswahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_nach
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -29481,7 +29968,7 @@ pub mod gemeinderatswahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_nach
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -29567,7 +30054,9 @@ pub mod gemeinderatswahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_nach
     }
 }
 
-/// Firmen nach Zweck, Rechtsform, NOGA-Einteilung und Standort
+#[doc = "Firmen nach Zweck, Rechtsform, NOGA-Einteilung und Standort"]
+#[doc = ""]
+#[doc = "<p>Zentraler Firmenindex (Zefix). Tagesaktueller Auszug der im Handelsregister eingetragenen Rechtseinheiten.</p><p style=\"font-family: sans-serif;\">Die Daten werden t\u{e4}glich \u{fc}ber die <a href=\"https://www.zefix.admin.ch/ZefixPublicREST/swagger-ui/index.html\" target=\"_blank\">Zefix PublicREST API</a> abgefragt.</p><p style=\"font-family: sans-serif;\">Status</p><ul><li>Active = aktiv</li><li>Being cancelled = in Liquidation</li></ul><p style=\"font-family: sans-serif;\">Zweck</p><ul><li style=\"font-family: sans-serif;\">Angaben teilweise fehlend (z. B. bei Zweigniederlassungen)</li></ul><p style=\"font-family: sans-serif;\">Allgemeine Systematik der Wirtschaftszweige (NOGA)</p><ul><li>Die NOGA-Codes und -Labels stammen aus dem\u{a0}<a href=\"https://www.bfs.admin.ch/bfs/de/home/register/unternehmensregister/betriebs-unternehmensregister.html\" target=\"_blank\">Betriebs- und Unternehmensregister der Schweiz</a>\u{a0}und werden \u{fc}ber die entsprechende Schnittstelle (<a href=\"https://www.bfs.admin.ch/bfs/de/home/register/unternehmensregister/betriebs-unternehmensregister/burweb.html#-2080172010\" target=\"_blank\">BurWeb API</a>) abgefragt.</li><li>Angaben teilweise fehlend</li><li>Nach <a href=\"https://www.kubb-tool.bfs.admin.ch/de/search\" target=\"_blank\">NOGA-Code</a> suchen</li></ul><p>Geolokalisierungsmethoden</p><ul><li>Treffer im kGWR: Die Adresse der Firma ist im <a href=\"https://data.bl.ch/explore/dataset/12180\" target=\"_blank\">kantonalen Geb\u{e4}ude- und Wohnungsregister</a> erfasst.</li><li>Treffer im kGWR mit angepasster Adresse: Die Adresse der Firma ist mit unterschiedlicher Strassennummer, Strassennamen, Postleitzahl oder Gemeindename im <a href=\"https://data.bl.ch/explore/dataset/12180\" target=\"_blank\">kantonalen Geb\u{e4}ude- und Wohnungsregister</a> erfasst, konnte aber dennoch lokalisiert werden.</li><li>Kein Treffer im kGWR: Die Adresse der Firma konnte keinem Eintrag im\u{a0}<a href=\"https://data.bl.ch/explore/dataset/12180\" style=\"background-color: rgb(255, 255, 255); font-family: sans-serif; font-size: 14px; font-weight: 400;\" target=\"_blank\">kantonalen Geb\u{e4}ude- und Wohnungsregister</a>\u{a0}zugewiesen werden.<br></li></ul>"]
 pub mod firmen_nach_zweck_rechtsform_noga_einteilung_und_standort {
     use super::*;
 
@@ -29599,6 +30088,10 @@ pub mod firmen_nach_zweck_rechtsform_noga_einteilung_und_standort {
         pub n_eingangskoordinate: Option<f64>,
         pub koordinaten: Option<GeoPoint2d>,
         pub lokalisierungsmethode: Option<String>,
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub datum: Option<Date>,
     }
 
@@ -29608,7 +30101,7 @@ pub mod firmen_nach_zweck_rechtsform_noga_einteilung_und_standort {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         FirmensitzCode,
         Firmensitz,
@@ -29671,7 +30164,7 @@ pub mod firmen_nach_zweck_rechtsform_noga_einteilung_und_standort {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -29696,7 +30189,7 @@ pub mod firmen_nach_zweck_rechtsform_noga_einteilung_und_standort {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -29782,7 +30275,9 @@ pub mod firmen_nach_zweck_rechtsform_noga_einteilung_und_standort {
     }
 }
 
-/// Gemeindekennzahlen (2024)
+#[doc = "Gemeindekennzahlen (2024)"]
+#[doc = ""]
+#[doc = "<p>Daten und Kennziffern aus den <a href=\"https://gemeindeportraets.bl.ch\" target=\"_blank\">Gemeindeportr\u{e4}ts</a></p><p>Aktuell verf\u{fc}gbare Daten je nach Indikator.</p>"]
 pub mod gemeindekennzahlen_2024 {
     use super::*;
 
@@ -29860,7 +30355,7 @@ pub mod gemeindekennzahlen_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BfsNummer,
         Gemeinde,
@@ -29935,7 +30430,7 @@ pub mod gemeindekennzahlen_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -29960,7 +30455,7 @@ pub mod gemeindekennzahlen_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -30046,13 +30541,19 @@ pub mod gemeindekennzahlen_2024 {
     }
 }
 
-/// Wetterstation Basel / Binningen: Tageswerte Klimamessnetz (seit 1864)
+#[doc = "Wetterstation Basel / Binningen: Tageswerte Klimamessnetz (seit 1864)"]
+#[doc = ""]
+#[doc = "<p>Tagesdaten der NBCN-Station (Swiss National Basic Climate Network) Basel-Binningen</p><p>Methodischer Hinweis:<br>Die Berechnung des Tagesmittels erfolgte je nach historischer Zeitperiode unterschiedlich.<br><br>bis 1970:<br>Tagesmittel - berechnet wird das 3-er Mittel aus 07, 13 und 21 Uhr<br>Min - ist der tiefere Wert der beiden Messungen um 7.30 und 21.30 Uhr<br>Max - ist der h\u{f6}here Wert der beiden Messungen\u{a0} um 7.30 und 21.30 Uhr</p><p>1971 bis 1980:<br>Tagesmittel - T<sub>m</sub>= n - k (n-Min) f\u{fc}r n = 3-er Mittel aus\u{a0}07, 13 und 21 Uhr<br>Min -\u{a0}ist der tiefere Wert der beiden Messungen um 7.30 und 19.30 Uhr<br>Max -\u{a0}ist der h\u{f6}here Wert der beiden Messungen um 19.30 und 21.30 Uhr</p><p>ab 1981:<br>Tagesmittel - Tagesmittel berechnet sich aus dem 24 Stundenmittel von 2.40 bis 23.40 UTC<br>Min -\u{a0}ist der tiefste Tageswert<br>Max -\u{a0}ist der h\u{f6}chste Tageswert</p><p>ab 2018: Die Tagesmittel werden aus den von der MeteoSchweiz gemessenen 10min-Werten von 00:10 bis 00:00 aggregiert (z.B. 26.1.2023 00:10 bis 27.1.2023: 00:00 f\u{fc}r den 26.1.2023).</p>"]
 pub mod wetterstation_basel_binningen_tageswerte_klimamessnetz_seit_1864 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Jahr
         pub jahr: Option<String>,
@@ -30107,7 +30608,7 @@ pub mod wetterstation_basel_binningen_tageswerte_klimamessnetz_seit_1864 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         Jahr,
@@ -30142,7 +30643,7 @@ pub mod wetterstation_basel_binningen_tageswerte_klimamessnetz_seit_1864 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -30167,7 +30668,7 @@ pub mod wetterstation_basel_binningen_tageswerte_klimamessnetz_seit_1864 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -30253,13 +30754,19 @@ pub mod wetterstation_basel_binningen_tageswerte_klimamessnetz_seit_1864 {
     }
 }
 
-/// OGD-Portal: Tägliche Nutzung (seit Januar 2024)
+#[doc = "OGD-Portal: T\u{e4}gliche Nutzung (seit Januar 2024)"]
+#[doc = ""]
+#[doc = "<p class=\"\">Die Daten \u{fc}ber die Nutzung des OGD-Portals BL (data.bl.ch) werden von der Fach- und Koordinationsstelle OGD BL erhoben und ver\u{f6}ffentlicht.</p><p class=\"\"><b>Spalten</b></p><ul><li><b>Datum</b>: Enth\u{e4}lt den Tag, an dem die Nutzung gemessen wurde.</li><li><b>Visitors</b>: Gibt die Anzahl der t\u{e4}glichen Besucher/innen des OGD-Portals an. Die Erfassung der Besucher/innen erfolgt durch Z\u{e4}hlen der einzigartigen (unique) IP-Adressen, die am Erhebungstag Zugriffe verzeichneten. Die IP-Adresse repr\u{e4}sentiert die Netzwerkadresse des Ger\u{e4}ts, von dem aus der Zugriff auf das Portal erfolgte.</li><li><b>Datensatzinteraktionen</b>: Umfasst alle Interaktionen mit einem beliebigen Datensatz auf data.bl.ch. Ein/e Besucher/in kann mehrere Interaktionen ausl\u{f6}sen. Zu den Interaktionen z\u{e4}hlen Klicks auf der Webseite (Durchsuchen von Datens\u{e4}tzen, Filtern, usw.) sowie API-Aufrufe (Herunterladen eines Datensatzes als JSON-Datei, usw.).</li></ul><p class=\"\"><b>Bemerkungen</b></p><ul><li>Nur Aufrufe von \u{f6}ffentlich zug\u{e4}nglichen Datens\u{e4}tzen werden ausgewiesen.</li><li>IP-Adressen sowie Interaktionen von Nutzenden mit einem Login des Kantons Basel-Landschaft \u{2013} insbesondere von Mitarbeitenden der Fach- und Koordinationsstelle OGD \u{2013} werden vor der Ver\u{f6}ffentlichung aus dem Datensatz entfernt und somit nicht ausgewiesen.</li><li>Aufrufe von Akteuren, welche durch den User-Agent header eindeutig als Bots erkennbar sind, werden ebenfalls nicht ausgewiesen.</li><li>Aufgrund von Synchronisationsproblemen k\u{f6}nnen Daten tageweise\u{a0}fehlen</li></ul>"]
 pub mod ogd_portal_taegliche_nutzung_seit_januar_2024 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Visitors
         ///
@@ -30277,7 +30784,7 @@ pub mod ogd_portal_taegliche_nutzung_seit_januar_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         UniqueIpCount,
@@ -30294,7 +30801,7 @@ pub mod ogd_portal_taegliche_nutzung_seit_januar_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -30319,7 +30826,7 @@ pub mod ogd_portal_taegliche_nutzung_seit_januar_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -30405,7 +30912,9 @@ pub mod ogd_portal_taegliche_nutzung_seit_januar_2024 {
     }
 }
 
-/// Bevölkerungsbilanz nach Gemeinde und Jahr (seit 1980)
+#[doc = "Bev\u{f6}lkerungsbilanz nach Gemeinde und Jahr (seit 1980)"]
+#[doc = ""]
+#[doc = "<p>Kantonale Bev\u{f6}lkerungsstatistik</p>"]
 pub mod bevoelkerungsbilanz_nach_gemeinde_und_jahr_seit_1980 {
     use super::*;
 
@@ -30438,7 +30947,7 @@ pub mod bevoelkerungsbilanz_nach_gemeinde_und_jahr_seit_1980 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Jahr,
         GemeindeNummer,
@@ -30487,7 +30996,7 @@ pub mod bevoelkerungsbilanz_nach_gemeinde_und_jahr_seit_1980 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -30512,7 +31021,7 @@ pub mod bevoelkerungsbilanz_nach_gemeinde_und_jahr_seit_1980 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -30598,7 +31107,9 @@ pub mod bevoelkerungsbilanz_nach_gemeinde_und_jahr_seit_1980 {
     }
 }
 
-/// Wahlen Gemeindekommissionen 2024: Anzahl Sitze, Wahlberechtigte und Wahlzettel nach Gemeinde
+#[doc = "Wahlen Gemeindekommissionen 2024: Anzahl Sitze, Wahlberechtigte und Wahlzettel nach Gemeinde"]
+#[doc = ""]
+#[doc = "<p>Kommunale Wahlen vom 3. M\u{e4}rz 2024</p>"]
 pub mod wahlen_gemeindekommissionen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_nach_gemeinde {
     use super::*;
 
@@ -30642,7 +31153,7 @@ pub mod wahlen_gemeindekommissionen_2024_anzahl_sitze_wahlberechtigte_und_wahlze
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         BfsGemeindenummer,
@@ -30683,7 +31194,7 @@ pub mod wahlen_gemeindekommissionen_2024_anzahl_sitze_wahlberechtigte_und_wahlze
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -30708,7 +31219,7 @@ pub mod wahlen_gemeindekommissionen_2024_anzahl_sitze_wahlberechtigte_und_wahlze
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -30794,7 +31305,9 @@ pub mod wahlen_gemeindekommissionen_2024_anzahl_sitze_wahlberechtigte_und_wahlze
     }
 }
 
-/// Adressen der Sonderschulen und Schulheime (Juni 2024)
+#[doc = "Adressen der Sonderschulen und Schulheime (Juni 2024)"]
+#[doc = ""]
+#[doc = "<p>Liste der Tagessonderschulen und Schulheime</p>"]
 pub mod adressen_der_sonderschulen_und_schulheime_juni_2024 {
     use super::*;
 
@@ -30833,7 +31346,7 @@ pub mod adressen_der_sonderschulen_und_schulheime_juni_2024 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         BfsGemeindenummer,
         Standortgemeinde,
@@ -30870,7 +31383,7 @@ pub mod adressen_der_sonderschulen_und_schulheime_juni_2024 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -30895,7 +31408,7 @@ pub mod adressen_der_sonderschulen_und_schulheime_juni_2024 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -30981,7 +31494,9 @@ pub mod adressen_der_sonderschulen_und_schulheime_juni_2024 {
     }
 }
 
-/// Datensatz-Katalog
+#[doc = "Datensatz-Katalog"]
+#[doc = ""]
+#[doc = "<p>Liste aller Datens\u{e4}tze auf dem OGD-Portal BL (data.bl.ch)</p>"]
 pub mod datensatz_katalog {
     use super::*;
 
@@ -31015,7 +31530,7 @@ pub mod datensatz_katalog {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         DatasetId,
         Title,
@@ -31058,7 +31573,7 @@ pub mod datensatz_katalog {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -31083,7 +31598,7 @@ pub mod datensatz_katalog {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -31169,13 +31684,19 @@ pub mod datensatz_katalog {
     }
 }
 
-/// Abstimmungsarchiv nach Vorlage und Datum (seit 2003)
+#[doc = "Abstimmungsarchiv nach Vorlage und Datum (seit 2003)"]
+#[doc = ""]
+#[doc = "<p>Kantonsresultate aller eidgen\u{f6}ssischen und kantonalen Vorlagen</p><p><b>Hinweis</b>: Der Datensatz wird an Abstimmungssonntagen nach der abgeschlossenen Ausz\u{e4}hlung aktualisiert.\u{a0}Detaillierte Angaben zu den Ergebnissen der Gemeinden befinden sich im Datensatz\u{a0}<a href=\"https://data.bl.ch/explore/dataset/11990/table/?disjunctive.name&amp;disjunctive.domain0&amp;sort=date\" target=\"_blank\">Abstimmungsarchiv nach Vorlage, Gemeinde und Datum (seit 2003)</a>.</p><p><b>Spaltenbeschriebe</b></p><li><strong>date</strong>: Das Datum, an dem die Abstimmung stattgefunden hat.</li><li><strong>vote_id</strong>: Eine eindeutige Identifikationsnummer f\u{fc}r jede Abstimmungsvorlage bestehend aus dem Datum des Abstimmungstags und einem pro Abstimmungstag eindeutigen K\u{fc}rzel.</li><li><strong>domain</strong>: Der Geltungsbereich der Abstimmung, z. B. \"federation\" f\u{fc}r nationale Abstimmungen oder \"canton\" f\u{fc}r kantonale Abstimmungen.</li><li><strong>type</strong>: Die Art der Vorlage: \"proposal\" f\u{fc}r einen Vorschlag, \"counter-proposal\" f\u{fc}r einen Gegenvorschlag oder \"tie-breaker\" f\u{fc}r eine Stichfrage.</li><li><strong>title_de_CH</strong>: Der Titel der Vorlage in deutscher Sprache.</li><li><strong>entities_total</strong>: Die Gesamtzahl der Gemeinden, die an der Abstimmung teilnehmen.</li><li><strong>entities_counted</strong>: Die Anzahl der Gemeinden, deren Ergebnisse bereits ausgez\u{e4}hlt wurden.</li><li><strong>answer</strong>: Das Ergebnis der Abstimmung: \"accepted\" = Vorschlag oder Gegenvorschlag angenommen, \"rejected\" = Vorschlag oder Gegenvorschlag abgelehnt, \"proposal\" = Stichentscheid f\u{fc}r Vorschlag, \"counter-proposal\" = Stichentscheid f\u{fc}r Gegenvorschlag.</li><li><strong>percent_yeas</strong>: Der Prozentsatz der abgegebenen Stimmen, die f\u{fc}r die Vorlage gestimmt haben.</li><li><strong>percent_nays</strong>: Der Prozentsatz der abgegebenen Stimmen, die gegen die Vorlage gestimmt haben.</li><li><strong>percent_turnout</strong>: Die Wahlbeteiligung, gemessen als Prozentsatz der Stimmberechtigten, die an der Abstimmung teilgenommen haben.</li><li><strong>eligible_voters</strong>: Die Anzahl der Personen, die wahlberechtigt waren.</li><li><strong>expats</strong>: Die Anzahl der stimmberechtigten Schweizer B\u{fc}rger, die im Ausland leben und an der Abstimmung teilgenommen haben.</li><li><strong>empty</strong>: Die Anzahl der abgegebenen, aber leeren Stimmzettel.</li><li><strong>invalid</strong>: Die Anzahl der abgegebenen, aber ung\u{fc}ltigen Stimmzettel.</li><li><strong>yeas</strong>: Die absolute Anzahl der Ja-Stimmen.</li><li><strong>nays</strong>: Die absolute Anzahl der Nein-Stimmen.</li><li><strong>url</strong>: Der Weblink zu den detaillierten Abstimmungsergebnissen auf wahlen.bl.ch.</li><p><br></p><p><br></p>"]
 pub mod abstimmungsarchiv_nach_vorlage_und_datum_seit_2003 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Datum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         pub vote_id: Option<String>,
         /// domain
@@ -31224,7 +31745,7 @@ pub mod abstimmungsarchiv_nach_vorlage_und_datum_seit_2003 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         VoteId,
@@ -31273,7 +31794,7 @@ pub mod abstimmungsarchiv_nach_vorlage_und_datum_seit_2003 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -31298,7 +31819,7 @@ pub mod abstimmungsarchiv_nach_vorlage_und_datum_seit_2003 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -31384,13 +31905,19 @@ pub mod abstimmungsarchiv_nach_vorlage_und_datum_seit_2003 {
     }
 }
 
-/// Abstimmungsarchiv nach Vorlage, Gemeinde und Datum (seit 2003)
+#[doc = "Abstimmungsarchiv nach Vorlage, Gemeinde und Datum (seit 2003)"]
+#[doc = ""]
+#[doc = "<p class=\"\">Gemeinderesultate aller eidgen\u{f6}ssischen und kantonalen Vorlagen</p><p style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">Hinweis</span>: Der Datensatz wird an Abstimmungssonntagen viertelst\u{fc}ndlich aktualisiert. Solange die Gemeinden nicht fertig ausgez\u{e4}hlt sind, zeigen die Eintr\u{e4}ge lediglich den aktuellen Stand der Ausz\u{e4}hlung und nicht das definitive Ergebnis der Abstimmung. Die Spalte <i>counted</i>\u{a0}gibt an, ob die Gemeinde ausgez\u{e4}hlt ist. Aggregierte Angaben auf Kantonsebene befinden sich im Datensatz\u{a0}<a href=\"https://data.bl.ch/explore/dataset/10500/table/?disjunctive.type&amp;disjunctive.answer&amp;sort=date\" target=\"_blank\">Abstimmungsarchiv nach Vorlage und Datum (seit 2003)</a>.</p><p style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">Spaltenbeschriebe</span></p><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">date</span>: Das Datum, an dem die Abstimmung stattgefunden hat.</li><li style=\"font-family: Roboto, sans-serif;\"><strong>entity_id</strong>: Eine eindeutige Kennung f\u{fc}r die Einheit (BFS Code).</li><li style=\"font-family: Roboto, sans-serif;\"><strong>name</strong>: Der Name der\u{a0} Gemeine.</li><li style=\"font-family: Roboto, sans-serif;\"><strong>district</strong>: Der Bezirk, dem die Gemeinde angeh\u{f6}rt.<br></li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">vote_id</span>: Eine eindeutige Identifikationsnummer f\u{fc}r jede Abstimmungsvorlage bestehend aus dem Datum des Abstimmungstags und einem pro Abstimmungstag eindeutigen K\u{fc}rzel.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">domain</span>: Der Geltungsbereich der Abstimmung, z. B. \"federation\" f\u{fc}r nationale Abstimmungen oder \"canton\" f\u{fc}r kantonale Abstimmungen.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">type</span>: Die Art der Vorlage: \"proposal\" f\u{fc}r einen Vorschlag, \"counter-proposal\" f\u{fc}r einen Gegenvorschlag oder \"tie-breaker\" f\u{fc}r eine Stichfrage.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">title_de_CH</span>: Der Titel der Vorlage in deutscher Sprache.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">counted</span>: Hat den Wert \"True\" wenn gemeinde Ausgez\u{e4}hlt ist.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">answer</span>: Das Ergebnis der Abstimmung: \"accepted\" = Vorschlag oder Gegenvorschlag angenommen, \"rejected\" = Vorschlag oder Gegenvorschlag abgelehnt, \"proposal\" = Stichentscheid f\u{fc}r Vorschlag, \"counter-proposal\" = Stichentscheid f\u{fc}r Gegenvorschlag.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">percent_yeas</span>: Der Prozentsatz der abgegebenen Stimmen, die f\u{fc}r die Vorlage gestimmt haben.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">percent_nays</span>: Der Prozentsatz der abgegebenen Stimmen, die gegen die Vorlage gestimmt haben.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">percent_turnout</span>: Die Wahlbeteiligung, gemessen als Prozentsatz der Stimmberechtigten, die an der Abstimmung teilgenommen haben.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">eligible_voters</span>: Die Anzahl der Personen, die wahlberechtigt waren.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">expats</span>: Die Anzahl der stimmberechtigten Schweizer B\u{fc}rger, die im Ausland leben und an der Abstimmung teilgenommen haben.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">empty</span>: Die Anzahl der abgegebenen, aber leeren Stimmzettel.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">invalid</span>: Die Anzahl der abgegebenen, aber ung\u{fc}ltigen Stimmzettel.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">yeas</span>: Die absolute Anzahl der Ja-Stimmen.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">nays</span>: Die absolute Anzahl der Nein-Stimmen.</li><li style=\"font-family: Roboto, sans-serif;\"><span style=\"font-weight: bolder;\">url</span>: Der Weblink zu den detaillierten Abstimmungsergebnissen auf wahlen.bl.ch.</li><p></p>"]
 pub mod abstimmungsarchiv_nach_vorlage_gemeinde_und_datum_seit_2003 {
     use super::*;
 
     #[derive(Deserialize, Serialize, Debug, Clone)]
     pub struct Record {
         /// Abstimmungsdatum
+        #[serde(
+            serialize_with = "serialize_date",
+            deserialize_with = "deserialize_date"
+        )]
         pub date: Option<Date>,
         /// Gemeindenummer (BFS)
         pub entity_id: Option<String>,
@@ -31443,7 +31970,7 @@ pub mod abstimmungsarchiv_nach_vorlage_gemeinde_und_datum_seit_2003 {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Date,
         EntityId,
@@ -31496,7 +32023,7 @@ pub mod abstimmungsarchiv_nach_vorlage_gemeinde_und_datum_seit_2003 {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -31521,7 +32048,7 @@ pub mod abstimmungsarchiv_nach_vorlage_gemeinde_und_datum_seit_2003 {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
@@ -31607,7 +32134,9 @@ pub mod abstimmungsarchiv_nach_vorlage_gemeinde_und_datum_seit_2003 {
     }
 }
 
-/// Gemeinderatswahlen 2024: Kandidierendenresultate
+#[doc = "Gemeinderatswahlen 2024: Kandidierendenresultate"]
+#[doc = ""]
+#[doc = "<p>Kommunale Wahlen vom 3. M\u{e4}rz 2024\u{a0}(offiziell kandidierende Personen)</p><p>Keine Angaben (...) zur Stimmenzahl bei stillen Wahlen</p><p>Teilweise fehlende Angaben (...) zu Kandidaten-Nr., Jahrgang und Parteizugeh\u{f6}rigkeit<br></p>"]
 pub mod gemeinderatswahlen_2024_kandidierendenresultate {
     use super::*;
 
@@ -31645,7 +32174,7 @@ pub mod gemeinderatswahlen_2024_kandidierendenresultate {
         pub results: Vec<Record>,
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Debug, Clone, Copy)]
     pub enum Field {
         Wahlbezeichnung,
         BfsGemeindenummer,
@@ -31680,7 +32209,7 @@ pub mod gemeinderatswahlen_2024_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone, Default)]
+    #[derive(Debug, Clone, Default)]
     pub struct Order(String);
 
     impl Order {
@@ -31705,7 +32234,7 @@ pub mod gemeinderatswahlen_2024_kandidierendenresultate {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Debug, Clone)]
     pub struct Filter(String);
 
     impl Filter {
