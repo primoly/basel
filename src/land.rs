@@ -1,47 +1,7 @@
+use crate::common::{deserialize_date, serialize_date, Filter, GeoPoint2d, Order};
 use geojson::GeoJson;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use time::macros::format_description;
+use serde::{Deserialize, Serialize};
 use time::{Date, OffsetDateTime};
-
-#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
-pub struct GeoPoint2d {
-    pub lat: f64,
-    pub lon: f64,
-}
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct File {
-    pub url: String,
-    pub width: u16,
-    pub height: u16,
-}
-
-fn deserialize_date<'de, D>(deserializer: D) -> Result<Option<Date>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s = String::deserialize(deserializer)?;
-    let format = format_description!("[year]-[month]-[day]");
-    let date = time::Date::parse(&s, format).unwrap();
-    Ok(Some(date))
-}
-
-fn serialize_date<S: Serializer>(date: &Option<Date>, serializer: S) -> Result<S::Ok, S::Error> {
-    if let Some(date) = date {
-        serializer.serialize_some(&format!(
-            "{:04}-{:02}-{:02}",
-            date.year(),
-            date.month(),
-            date.day()
-        ))
-    } else {
-        serializer.serialize_none()
-    }
-}
-
-fn escape(value: &str) -> String {
-    value.replace('\\', "\\\\").replace('"', "\\\"")
-}
 
 #[doc = "# St\u{e4}nderatswahlen 2011: Kandidierendenresultate"]
 #[doc = ""]
@@ -112,7 +72,7 @@ pub mod staenderatswahlen_2011_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -143,111 +103,17 @@ pub mod staenderatswahlen_2011_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11820/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -303,7 +169,7 @@ pub mod bundesbeschluss_vom_17_dezember_2021_ueber_die_zusatzfinanzierung_der_ah
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -322,111 +188,17 @@ pub mod bundesbeschluss_vom_17_dezember_2021_ueber_die_zusatzfinanzierung_der_ah
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10540/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -502,7 +274,7 @@ pub mod regierungsratswahlen_2023_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -533,111 +305,17 @@ pub mod regierungsratswahlen_2023_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11600/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -691,7 +369,7 @@ pub mod volksinitiative_vom_10_maerz_2020_fuer_tiefere_praemien_kostenbremse_im_
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -711,111 +389,17 @@ pub mod volksinitiative_vom_10_maerz_2020_fuer_tiefere_praemien_kostenbremse_im_
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12530/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -869,7 +453,7 @@ pub mod uebernahme_der_eu_verordnung_ueber_die_europaeische_grenz_und_kuestenwac
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -889,111 +473,17 @@ pub mod uebernahme_der_eu_verordnung_ueber_die_europaeische_grenz_und_kuestenwac
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10470/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -1041,7 +531,7 @@ pub mod unternehmensneugruendungen_und_unternehmensschliessungen_nach_wirtschaft
         Anzahl,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -1055,111 +545,17 @@ pub mod unternehmensneugruendungen_und_unternehmensschliessungen_nach_wirtschaft
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10180/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -1235,7 +631,7 @@ pub mod regierungsratswahlen_2003_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -1266,111 +662,17 @@ pub mod regierungsratswahlen_2003_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11920/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -1415,7 +717,7 @@ pub mod parteistimmen_und_parteistaerken_bei_den_nationalratswahlen_nach_gemeind
         Parteistarke,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -1428,111 +730,17 @@ pub mod parteistimmen_und_parteistaerken_bei_den_nationalratswahlen_nach_gemeind
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10520/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -1608,7 +816,7 @@ pub mod regierungsratsersatzwahl_2013_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -1639,111 +847,17 @@ pub mod regierungsratsersatzwahl_2013_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11930/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -1831,7 +945,7 @@ pub mod landratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_parteist
         ListVotes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -1868,111 +982,17 @@ pub mod landratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11850/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -2040,7 +1060,7 @@ pub mod volksinitiative_vom_16_juli_2021_fuer_eine_sichere_und_nachhaltige_alter
         BallotAnswer,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Answer => "answer",
@@ -2066,111 +1086,17 @@ pub mod volksinitiative_vom_16_juli_2021_fuer_eine_sichere_und_nachhaltige_alter
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12400/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -2312,7 +1238,7 @@ pub mod nationalratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_list
         ListVotes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -2402,111 +1328,17 @@ pub mod nationalratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11910/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -2574,7 +1406,7 @@ pub mod volksinitiative_vom_28_mai_2021_fuer_ein_besseres_leben_im_alter_initiat
         BallotAnswer,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Answer => "answer",
@@ -2600,111 +1432,17 @@ pub mod volksinitiative_vom_28_mai_2021_fuer_ein_besseres_leben_im_alter_initiat
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12390/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -2755,7 +1493,7 @@ pub mod erwerbstaetige_nach_wohngemeinde_arbeitsort_und_jahr_seit_2014 {
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -2770,111 +1508,17 @@ pub mod erwerbstaetige_nach_wohngemeinde_arbeitsort_und_jahr_seit_2014 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10950/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -2950,7 +1594,7 @@ pub mod staenderatswahlen_2003_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -2981,111 +1625,17 @@ pub mod staenderatswahlen_2003_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11900/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -3141,7 +1691,7 @@ pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_alters_und_h
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -3160,111 +1710,17 @@ pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_alters_und_h
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10550/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -3326,7 +1782,7 @@ pub mod arealstatistik_bodennutzung_und_bedeckung_nach_hauptbereich_klasse_und_g
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Erhebungsperiode => "erhebungsperiode",
@@ -3340,111 +1796,17 @@ pub mod arealstatistik_bodennutzung_und_bedeckung_nach_hauptbereich_klasse_und_g
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11970/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -3502,7 +1864,7 @@ pub mod bundesbeschluss_vom_16_dezember_2022_ueber_eine_besondere_besteuerung_gr
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -3522,111 +1884,17 @@ pub mod bundesbeschluss_vom_16_dezember_2022_ueber_eine_besondere_besteuerung_gr
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12080/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -3697,7 +1965,7 @@ pub mod aenderung_des_umweltschutzgesetzes_basel_landschaft_betreffend_einfuehru
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -3719,111 +1987,17 @@ pub mod aenderung_des_umweltschutzgesetzes_basel_landschaft_betreffend_einfuehru
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12330/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -3876,7 +2050,7 @@ pub mod lernende_mit_wohnkanton_bl_an_schulen_in_der_schweiz_nach_schulstufe_ges
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -3896,111 +2070,17 @@ pub mod lernende_mit_wohnkanton_bl_an_schulen_in_der_schweiz_nach_schulstufe_ges
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10420/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -4056,7 +2136,7 @@ pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_verrechnungs
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -4075,111 +2155,17 @@ pub mod aenderung_vom_17_dezember_2021_des_bundesgesetzes_ueber_die_verrechnungs
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10560/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -4255,7 +2241,7 @@ pub mod staenderatswahlen_2007_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -4286,111 +2272,17 @@ pub mod staenderatswahlen_2007_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11860/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -4440,7 +2332,7 @@ pub mod covid_19_taegliche_hospitalisierungen_februar_2020_januar_2023 {
         Version,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Datum => "datum",
@@ -4452,111 +2344,17 @@ pub mod covid_19_taegliche_hospitalisierungen_februar_2020_januar_2023 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10360/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -4618,7 +2416,7 @@ pub mod covid_19_taegliche_tests_nach_typ_des_tests_februar_2020_januar_2023 {
         Nachweismethode,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Datum => "datum",
@@ -4634,111 +2432,17 @@ pub mod covid_19_taegliche_tests_nach_typ_des_tests_februar_2020_januar_2023 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10380/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -4794,7 +2498,7 @@ pub mod volksinitiative_vom_17_september_2019_keine_massentierhaltung_in_der_sch
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -4813,111 +2517,17 @@ pub mod volksinitiative_vom_17_september_2019_keine_massentierhaltung_in_der_sch
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10530/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -5005,7 +2615,7 @@ pub mod landratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_parteist
         ListVotes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -5042,111 +2652,17 @@ pub mod landratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11720/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -5222,7 +2738,7 @@ pub mod regierungsratswahlen_2007_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -5253,111 +2769,17 @@ pub mod regierungsratswahlen_2007_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11880/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -5445,7 +2867,7 @@ pub mod landratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_parteist
         ListVotes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -5482,111 +2904,17 @@ pub mod landratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11770/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -5632,7 +2960,7 @@ pub mod luftqualitaet_station_schoenenbuch_halbstuendliche_messdaten_januar_2000
         O3,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Anfangzeit => "anfangzeit",
@@ -5643,111 +2971,17 @@ pub mod luftqualitaet_station_schoenenbuch_halbstuendliche_messdaten_januar_2000
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12580/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -5838,7 +3072,7 @@ pub mod landratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_parteist
         ListVotes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -5876,111 +3110,17 @@ pub mod landratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11590/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -6187,7 +3327,7 @@ pub mod historische_gebaeude_firststaenderbauten_nach_haustyp_und_gemeinde {
         Kommentar,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::BfsNummer => "bfs_nummer",
@@ -6230,111 +3370,17 @@ pub mod historische_gebaeude_firststaenderbauten_nach_haustyp_und_gemeinde {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11100/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -6425,7 +3471,7 @@ pub mod landratswahlen_2023_panaschierstimmen_der_kandidierenden {
         VotesFromLeer,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::EntityDistrictId => "entity_district_id",
@@ -6459,111 +3505,17 @@ pub mod landratswahlen_2023_panaschierstimmen_der_kandidierenden {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11610/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -6619,7 +3571,7 @@ pub mod covid_19_breites_testen_bl_woechentliche_anzahl_pools_bzw_positive_pools
         AnteilPositivePools,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Datum => "datum",
@@ -6631,111 +3583,17 @@ pub mod covid_19_breites_testen_bl_woechentliche_anzahl_pools_bzw_positive_pools
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11960/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -6823,7 +3681,7 @@ pub mod landratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_parteist
         ListVotes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -6860,111 +3718,17 @@ pub mod landratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11810/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -7010,7 +3774,7 @@ pub mod luftqualitaet_station_sissach_west_halbstuendliche_messdaten_januar_2007
         O3,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Anfangszeit => "anfangszeit",
@@ -7021,111 +3785,17 @@ pub mod luftqualitaet_station_sissach_west_halbstuendliche_messdaten_januar_2007
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10910/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -7167,7 +3837,7 @@ pub mod baukosten_nach_art_und_kategorie_der_auftraggeber_bezirk_und_jahr_seit_1
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -7179,111 +3849,17 @@ pub mod baukosten_nach_art_und_kategorie_der_auftraggeber_bezirk_und_jahr_seit_1
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10240/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -7342,7 +3918,7 @@ pub mod bevoelkerungsbilanz_nach_gemeinde_und_quartal_seit_2003 {
         Endbestand,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -7365,111 +3941,17 @@ pub mod bevoelkerungsbilanz_nach_gemeinde_und_quartal_seit_2003 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10680/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -7586,7 +4068,7 @@ pub mod im_kantonalen_personenregister_abfrageberechtigte_stellen_anmeldungs_und
         Meldungen,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Kurzel => "kurzel",
@@ -7611,111 +4093,17 @@ pub mod im_kantonalen_personenregister_abfrageberechtigte_stellen_anmeldungs_und
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12200/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -7757,7 +4145,7 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_einkommensklasse_und_jahr_s
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -7769,111 +4157,17 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_einkommensklasse_und_jahr_s
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10590/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -7912,7 +4206,7 @@ pub mod neu_erstellte_wohnungen_nach_gemeinde_und_jahr_seit_1994 {
         NeuErstellteWohnungen,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -7923,111 +4217,17 @@ pub mod neu_erstellte_wohnungen_nach_gemeinde_und_jahr_seit_1994 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10230/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -8069,7 +4269,7 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_vermoegensklasse_und_jahr_s
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -8081,111 +4281,17 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_vermoegensklasse_und_jahr_s
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10600/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -8230,7 +4336,7 @@ pub mod arbeitsstaetten_und_beschaeftigte_nach_wirtschaftssektor_gemeinde_und_ja
         Beschaftigte,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -8243,111 +4349,17 @@ pub mod arbeitsstaetten_und_beschaeftigte_nach_wirtschaftssektor_gemeinde_und_ja
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10990/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -8423,7 +4435,7 @@ pub mod regierungsratswahlen_2019_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -8454,111 +4466,17 @@ pub mod regierungsratswahlen_2019_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11750/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -8600,7 +4518,7 @@ pub mod vornamen_der_neugeborenen_nach_geschlecht_und_jahr_seit_2021 {
         RangNachJahr,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -8612,111 +4530,17 @@ pub mod vornamen_der_neugeborenen_nach_geschlecht_und_jahr_seit_2021 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10070/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -8779,7 +4603,7 @@ pub mod wahlen_gemeindekommissionen_2024_kandidierendenresultate {
         Parteibezeichnung,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Wahlbezeichnung => "wahlbezeichnung",
@@ -8798,111 +4622,17 @@ pub mod wahlen_gemeindekommissionen_2024_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12380/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -8953,7 +4683,7 @@ pub mod abschluesse_von_studierenden_mit_wohnkanton_bl_an_schweizer_hochschulen_
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -8968,111 +4698,17 @@ pub mod abschluesse_von_studierenden_mit_wohnkanton_bl_an_schweizer_hochschulen_
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10430/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -9126,7 +4762,7 @@ pub mod bundesgesetz_vom_29_september_2023_ueber_eine_sichere_stromversorgung_mi
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -9146,111 +4782,17 @@ pub mod bundesgesetz_vom_29_september_2023_ueber_eine_sichere_stromversorgung_mi
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12550/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -9347,7 +4889,7 @@ pub mod landratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_beruf_u
         Ort,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::WahlkreisNr => "wahlkreis_nr",
@@ -9376,111 +4918,17 @@ pub mod landratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_beruf_u
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11660/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -9519,7 +4967,7 @@ pub mod co2_emissionen_nach_energietraeger_gemeinde_und_jahr_seit_2018 {
         Co2KgProPerson,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Erhebungsjahr => "erhebungsjahr",
@@ -9532,111 +4980,17 @@ pub mod co2_emissionen_nach_energietraeger_gemeinde_und_jahr_seit_2018 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12020/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -9677,7 +5031,7 @@ pub mod endverbrauch_von_elektrizitaet_nach_gemeinde_und_jahr_seit_1990 {
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -9689,111 +5043,17 @@ pub mod endverbrauch_von_elektrizitaet_nach_gemeinde_und_jahr_seit_1990 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10190/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -9865,7 +5125,7 @@ pub mod wahlen_gemeindekommissionen_2024_anzahl_sitze_wahlberechtigte_und_wahlze
         AbsolutesMehr,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Wahlbezeichnung => "wahlbezeichnung",
@@ -9887,111 +5147,17 @@ pub mod wahlen_gemeindekommissionen_2024_anzahl_sitze_wahlberechtigte_und_wahlze
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12370/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -10054,7 +5220,7 @@ pub mod wahlen_gemeindepraesidien_2024_kandidierendenresultate {
         StilleWahl,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Wahlbezeichnung => "wahlbezeichnung",
@@ -10073,111 +5239,17 @@ pub mod wahlen_gemeindepraesidien_2024_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12490/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -10312,7 +5384,7 @@ pub mod covid_19_taegliche_spitalkapazitaet_maerz_2020_mai_2023 {
         Version,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -10341,111 +5413,17 @@ pub mod covid_19_taegliche_spitalkapazitaet_maerz_2020_mai_2023 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10370/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -10521,7 +5499,7 @@ pub mod regierungsratswahlen_2011_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -10552,111 +5530,17 @@ pub mod regierungsratswahlen_2011_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11840/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -10713,7 +5597,7 @@ pub mod landratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_partei
         ModifiedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::EntityDistrictId => "entity_district_id",
@@ -10730,111 +5614,17 @@ pub mod landratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_partei
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12000/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -10883,7 +5673,7 @@ pub mod bevoelkerungsbestand_nach_nationalitaet_konfession_gemeinde_und_quartal_
         AnzahlPersonen,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -10901,111 +5691,17 @@ pub mod bevoelkerungsbestand_nach_nationalitaet_konfession_gemeinde_und_quartal_
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10020/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -11074,7 +5770,7 @@ pub mod gemeinderatsnachwahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_
         GultigeStimmen,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Wahlbezeichnung => "wahlbezeichnung",
@@ -11095,111 +5791,17 @@ pub mod gemeinderatsnachwahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12420/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -11241,7 +5843,7 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_gemeinde_und_jahr_seit_2013
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -11253,111 +5855,17 @@ pub mod staatssteuern_der_natuerlichen_personen_nach_gemeinde_und_jahr_seit_2013
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10630/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -11425,7 +5933,7 @@ pub mod aenderung_der_kantonsverfassung_vom_13_januar_2022_betreffend_anpassung_
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -11445,111 +5953,17 @@ pub mod aenderung_der_kantonsverfassung_vom_13_januar_2022_betreffend_anpassung_
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10480/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -11607,7 +6021,7 @@ pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_die_transplantatio
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -11627,111 +6041,17 @@ pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_die_transplantatio
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10460/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -11773,7 +6093,7 @@ pub mod staatssteuern_der_juristischen_personen_nach_kapitalklasse_und_jahr_seit
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -11785,111 +6105,17 @@ pub mod staatssteuern_der_juristischen_personen_nach_kapitalklasse_und_jahr_seit
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10620/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -11980,7 +6206,7 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_wohnungen {
         Exportdatum,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Egid => "egid",
@@ -12012,111 +6238,17 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_wohnungen {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12170/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -12158,7 +6290,7 @@ pub mod swisslos_sportfonds_bilanz_nach_gesuchsteller_kategorie_objekt_und_jahr_
         AusbezahlterBetragChf,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -12170,111 +6302,17 @@ pub mod swisslos_sportfonds_bilanz_nach_gesuchsteller_kategorie_objekt_und_jahr_
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11450/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -12331,7 +6369,7 @@ pub mod nationalratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_li
         ZusatzstimmenVeranderteWahlzettel,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::BfsGemeindenummer => "bfs_gemeindenummer",
@@ -12354,111 +6392,17 @@ pub mod nationalratswahlen_2023_unveraenderte_und_veraenderte_wahlzettel_nach_li
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12300/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -12512,7 +6456,7 @@ pub mod aenderung_des_energiegesetzes_vom_19_oktober_2023 {
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -12532,111 +6476,17 @@ pub mod aenderung_des_energiegesetzes_vom_19_oktober_2023 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12560/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -12757,7 +6607,7 @@ pub mod gemeindekennzahlen_2024 {
         Webseite,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::BfsNummer => "bfs_nummer",
@@ -12798,111 +6648,17 @@ pub mod gemeindekennzahlen_2024 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10650/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -12944,7 +6700,7 @@ pub mod haushalte_nach_haushaltsgroesse_gemeinde_und_jahr_seit_2012 {
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -12956,111 +6712,17 @@ pub mod haushalte_nach_haushaltsgroesse_gemeinde_und_jahr_seit_2012 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10060/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -13102,7 +6764,7 @@ pub mod finanzausgleich_nach_gemeinde_und_jahr_seit_2010 {
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -13114,111 +6776,17 @@ pub mod finanzausgleich_nach_gemeinde_und_jahr_seit_2010 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10570/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -13356,7 +6924,7 @@ pub mod einwohnerratswahlen_2024_kandidierendenresultate {
         StimmenTotal,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Wahlbezeichnung => "wahlbezeichnung",
@@ -13410,111 +6978,17 @@ pub mod einwohnerratswahlen_2024_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10840/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -13562,7 +7036,7 @@ pub mod wohngebaeude_nach_energietraeger_der_heizung_bauperiode_gemeinde_und_jah
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -13576,111 +7050,17 @@ pub mod wohngebaeude_nach_energietraeger_der_heizung_bauperiode_gemeinde_und_jah
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11940/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -13725,7 +7105,7 @@ pub mod durchschnittlicher_quadratmeterpreis_von_bauland_nach_gemeinde_und_jahr_
         QuadratmeterpreisChf,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -13738,111 +7118,17 @@ pub mod durchschnittlicher_quadratmeterpreis_von_bauland_nach_gemeinde_und_jahr_
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12070/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -13884,7 +7170,7 @@ pub mod leerwohnungsziffer_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
         Leerwohnungsziffer,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -13896,111 +7182,17 @@ pub mod leerwohnungsziffer_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10260/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -14058,7 +7250,7 @@ pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_filmproduktion_und
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -14078,111 +7270,17 @@ pub mod aenderung_vom_1_oktober_2021_des_bundesgesetzes_ueber_filmproduktion_und
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10450/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -14258,7 +7356,7 @@ pub mod regierungsratswahlen_2015_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -14289,111 +7387,17 @@ pub mod regierungsratswahlen_2015_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11800/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -14458,7 +7462,7 @@ pub mod oeffentlich_zugaengliche_gastwirtschaften_nach_betriebsart_und_standort_
         NameDesGebaeudes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Betriebsnummer => "betriebsnummer",
@@ -14479,111 +7483,17 @@ pub mod oeffentlich_zugaengliche_gastwirtschaften_nach_betriebsart_und_standort_
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10170/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -14646,7 +7556,7 @@ pub mod gemeinderatswahlen_2024_kandidierendenresultate {
         Parteibezeichnung,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Wahlbezeichnung => "wahlbezeichnung",
@@ -14665,111 +7575,17 @@ pub mod gemeinderatswahlen_2024_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10700/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -14808,7 +7624,7 @@ pub mod kennzahlen_der_sozialhilfe_nach_gemeinde_und_jahr_seit_2005 {
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -14823,111 +7639,17 @@ pub mod kennzahlen_der_sozialhilfe_nach_gemeinde_und_jahr_seit_2005 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10300/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -14976,7 +7698,7 @@ pub mod publikationsarchiv_amt_fuer_daten_und_statistik_bl_seit_2000 {
         Link,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Publikationsdatum => "publikationsdatum",
@@ -14989,111 +7711,17 @@ pub mod publikationsarchiv_amt_fuer_daten_und_statistik_bl_seit_2000 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12570/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -15218,7 +7846,7 @@ pub mod wohnbevoelkerung_nach_gemeinde_und_jahr_1699_2000 {
         Nichtlandessprache,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -15245,111 +7873,17 @@ pub mod wohnbevoelkerung_nach_gemeinde_und_jahr_1699_2000 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12150/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -15411,7 +7945,7 @@ pub mod nachnamen_der_staendigen_wohnbevoelkerung_nach_gemeinde_seit_2022 {
         PctGde,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::TimePeriod => "time_period",
@@ -15425,111 +7959,17 @@ pub mod nachnamen_der_staendigen_wohnbevoelkerung_nach_gemeinde_seit_2022 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11080/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -15594,7 +8034,7 @@ pub mod bevoelkerungsbilanz_nach_gemeinde_und_jahr_seit_1980 {
         Endbestand,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -15620,111 +8060,17 @@ pub mod bevoelkerungsbilanz_nach_gemeinde_und_jahr_seit_1980 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10040/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -15778,7 +8124,7 @@ pub mod altersprognose_nach_versorgungsregion_geschlecht_alter_und_jahr_2020_mit
         AnzahlPersonen,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -15794,111 +8140,17 @@ pub mod altersprognose_nach_versorgungsregion_geschlecht_alter_und_jahr_2020_mit
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10050/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -15943,7 +8195,7 @@ pub mod wohnbevoelkerung_nach_geschlecht_altersgruppe_gemeinde_und_jahr_1941_200
         Anzahl,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -15956,111 +8208,17 @@ pub mod wohnbevoelkerung_nach_geschlecht_altersgruppe_gemeinde_und_jahr_1941_200
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12140/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -16131,7 +8289,7 @@ pub mod covid_19_taeglich_geimpfte_personen_nach_impfstoff_und_typ_der_impfung_d
         Version,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -16148,111 +8306,17 @@ pub mod covid_19_taeglich_geimpfte_personen_nach_impfstoff_und_typ_der_impfung_d
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10390/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -16330,7 +8394,7 @@ pub mod klimanormwerte_nach_ausgewaehlten_messstationen {
         Jahr,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Referenzperiode => "referenzperiode",
@@ -16354,111 +8418,17 @@ pub mod klimanormwerte_nach_ausgewaehlten_messstationen {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10140/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -16516,7 +8486,7 @@ pub mod teilrevision_des_sozialhilfegesetzes_vom_4_november_2021_betreffend_anre
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -16536,111 +8506,17 @@ pub mod teilrevision_des_sozialhilfegesetzes_vom_4_november_2021_betreffend_anre
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10490/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -16694,7 +8570,7 @@ pub mod volksinitiative_vom_16_dezember_2021_fuer_freiheit_und_koerperliche_unve
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -16714,111 +8590,17 @@ pub mod volksinitiative_vom_16_dezember_2021_fuer_freiheit_und_koerperliche_unve
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12540/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -16883,7 +8665,7 @@ pub mod adressen_der_sonderschulen_und_schulheime_juni_2024 {
         NEingangskoordinate,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::BfsGemeindenummer => "bfs_gemeindenummer",
@@ -16903,111 +8685,17 @@ pub mod adressen_der_sonderschulen_und_schulheime_juni_2024 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11200/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -17052,7 +8740,7 @@ pub mod abfallmengen_nach_kategorie_gemeinde_und_jahr_seit_2017 {
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -17065,111 +8753,17 @@ pub mod abfallmengen_nach_kategorie_gemeinde_und_jahr_seit_2017 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12060/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -17225,7 +8819,7 @@ pub mod covid_19_taegliche_fallzahlen_februar_2020_januar_2023 {
         Per1000persons,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Datum => "datum",
@@ -17239,111 +8833,17 @@ pub mod covid_19_taegliche_fallzahlen_februar_2020_januar_2023 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10340/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -17402,7 +8902,7 @@ pub mod bewilligte_spitex_organisationen_nach_standort_august_2024 {
         Gkodn,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Id => "id",
@@ -17419,111 +8919,17 @@ pub mod bewilligte_spitex_organisationen_nach_standort_august_2024 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10330/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -17591,7 +8997,7 @@ pub mod adressen_der_privatschulen_juni_2024 {
         NEingangskoordinate,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::BfsGemeindenummer => "bfs_gemeindenummer",
@@ -17612,111 +9018,17 @@ pub mod adressen_der_privatschulen_juni_2024 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11160/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -17773,7 +9085,7 @@ pub mod bevoelkerungsbestand_nach_geschlecht_alter_gemeinde_und_jahr_seit_2003 {
         AnzahlPersonen,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -17795,111 +9107,17 @@ pub mod bevoelkerungsbestand_nach_geschlecht_alter_gemeinde_und_jahr_seit_2003 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10010/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -17941,7 +9159,7 @@ pub mod staatssteuern_der_juristischen_personen_nach_gewinnklasse_und_jahr_seit_
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -17953,111 +9171,17 @@ pub mod staatssteuern_der_juristischen_personen_nach_gewinnklasse_und_jahr_seit_
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10610/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -18207,7 +9331,7 @@ pub mod nationalratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_list
         ListVotes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -18305,111 +9429,17 @@ pub mod nationalratswahlen_2011_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11830/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -18465,7 +9495,7 @@ pub mod drogerien_mit_betriebsbewilligung_nach_standort_april_2024 {
         Gkodn,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Drogerie => "drogerie",
@@ -18481,111 +9511,17 @@ pub mod drogerien_mit_betriebsbewilligung_nach_standort_april_2024 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10400/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -18629,7 +9565,7 @@ pub mod gemeinnuetzige_wohnungen_nach_zimmerzahl_gemeinde_und_jahr_seit_2016 {
         Anzahl,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -18641,111 +9577,17 @@ pub mod gemeinnuetzige_wohnungen_nach_zimmerzahl_gemeinde_und_jahr_seit_2016 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12250/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -18787,7 +9629,7 @@ pub mod durchschnittlicher_verkaufspreis_von_eigentumswohnungen_nach_zimmerzahl_
         VerkaufspreisChf,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -18799,111 +9641,17 @@ pub mod durchschnittlicher_verkaufspreis_von_eigentumswohnungen_nach_zimmerzahl_
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10210/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -19049,7 +9797,7 @@ pub mod nationalratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_list
         ListVotes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -19143,111 +9891,17 @@ pub mod nationalratswahlen_2007_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11870/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -19283,7 +9937,7 @@ pub mod landratswahlen_wahlkreise {
         Wahlkreis,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Wahlkreisn => "wahlkreisn",
@@ -19292,111 +9946,17 @@ pub mod landratswahlen_wahlkreise {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11710/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -19490,7 +10050,7 @@ pub mod raeumliche_grundlagedaten_nach_gemeinde_januar_2024 {
         ZCntr,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Gmdnr => "gmdnr",
@@ -19510,111 +10070,17 @@ pub mod raeumliche_grundlagedaten_nach_gemeinde_januar_2024 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10100/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -19662,7 +10128,7 @@ pub mod lernendenprognose_nach_bildungsinstitution_schulstufe_und_klassentyp {
         AnzahlLernende,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -19676,111 +10142,17 @@ pub mod lernendenprognose_nach_bildungsinstitution_schulstufe_und_klassentyp {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11010/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -19838,7 +10210,7 @@ pub mod aenderung_vom_16_dezember_2022_des_bundesgesetzes_ueber_die_gesetzlichen
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -19858,111 +10230,17 @@ pub mod aenderung_vom_16_dezember_2022_des_bundesgesetzes_ueber_die_gesetzlichen
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12100/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -20034,7 +10312,7 @@ pub mod gemeinderatswahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_nach
         AbsolutesMehr,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Wahlbezeichnung => "wahlbezeichnung",
@@ -20056,111 +10334,17 @@ pub mod gemeinderatswahlen_2024_anzahl_sitze_wahlberechtigte_und_wahlzettel_nach
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10710/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -20218,7 +10402,7 @@ pub mod bundesgesetz_vom_30_september_2022_ueber_die_ziele_im_klimaschutz_die_in
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -20238,111 +10422,17 @@ pub mod bundesgesetz_vom_30_september_2022_ueber_die_ziele_im_klimaschutz_die_in
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12090/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -20430,7 +10520,7 @@ pub mod landratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_parteist
         ListVotes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -20467,111 +10557,17 @@ pub mod landratswahlen_2003_kandidierendenresultate_wahlberechtigte_und_parteist
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11890/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -20608,7 +10604,7 @@ pub mod altersbetreuung_versorgungsregionen {
         Versorgu1,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Versorgung => "versorgung",
@@ -20617,111 +10613,17 @@ pub mod altersbetreuung_versorgungsregionen {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10740/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -20786,7 +10688,7 @@ pub mod aenderung_der_kantonsverfassung_betreffend_einfuehrung_kantonaler_deponi
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -20806,111 +10708,17 @@ pub mod aenderung_der_kantonsverfassung_betreffend_einfuehrung_kantonaler_deponi
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12320/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -20960,7 +10768,7 @@ pub mod covid_19_taegliche_todesfaelle_februar_2020_januar_2023 {
         Version,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Datum => "datum",
@@ -20972,111 +10780,17 @@ pub mod covid_19_taegliche_todesfaelle_februar_2020_januar_2023 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10350/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -21139,7 +10853,7 @@ pub mod gemeinderatsnachwahlen_2024_kandidierendenresultate {
         Parteibezeichnung,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Wahlbezeichnung => "wahlbezeichnung",
@@ -21158,111 +10872,17 @@ pub mod gemeinderatsnachwahlen_2024_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12430/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -21382,7 +11002,7 @@ pub mod bewilligte_tagesbetreuungseinrichtungen_fuer_kinder_nach_standort_oktobe
         Gbez,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Bfs => "bfs",
@@ -21408,111 +11028,17 @@ pub mod bewilligte_tagesbetreuungseinrichtungen_fuer_kinder_nach_standort_oktobe
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10440/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -21566,7 +11092,7 @@ pub mod aenderung_des_steuergesetzes_vermoegenssteuerreform_i {
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -21586,111 +11112,17 @@ pub mod aenderung_des_steuergesetzes_vermoegenssteuerreform_i {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10670/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -21733,7 +11165,7 @@ pub mod mittlere_wohnbevoelkerung_nach_nationalitaet_gemeinde_und_jahr_seit_1980
         AnzahlPersonen,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -21748,111 +11180,17 @@ pub mod mittlere_wohnbevoelkerung_nach_nationalitaet_gemeinde_und_jahr_seit_1980
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10080/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -21912,7 +11250,7 @@ pub mod lernende_an_baselbieter_schulen_nach_schulstufe_und_geschlecht_seit_1986
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -21930,111 +11268,17 @@ pub mod lernende_an_baselbieter_schulen_nach_schulstufe_und_geschlecht_seit_1986
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10410/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -22088,7 +11332,7 @@ pub mod hotels_und_kurbetriebe_angebot_und_nachfrage_nach_gemeinde_und_jahr_seit
         Zimmernaechte,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -22104,111 +11348,17 @@ pub mod hotels_und_kurbetriebe_angebot_und_nachfrage_nach_gemeinde_und_jahr_seit
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10160/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -22255,7 +11405,7 @@ pub mod gebaeude_nach_eigentuemertyp_wirtschaftsabschnitt_gemeinde_und_jahr_seit
         Anzahl,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -22268,111 +11418,17 @@ pub mod gebaeude_nach_eigentuemertyp_wirtschaftsabschnitt_gemeinde_und_jahr_seit
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12240/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -22582,7 +11638,7 @@ pub mod nationalratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_list
         ListVotes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -22734,111 +11790,17 @@ pub mod nationalratswahlen_2023_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12270/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -22998,7 +11960,7 @@ pub mod nationalratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_list
         ListVotes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -23105,111 +12067,17 @@ pub mod nationalratswahlen_2015_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11790/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -23260,7 +12128,7 @@ pub mod ueberbauungsstand_nach_zone_erschliessung_gemeinde_und_jahr_seit_2016 {
         FlaecheM2,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -23275,111 +12143,17 @@ pub mod ueberbauungsstand_nach_zone_erschliessung_gemeinde_und_jahr_seit_2016 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10090/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -23430,7 +12204,7 @@ pub mod nationalratswahlen_waehleranteil_anzahl_kandidierende_anzahl_listen_anza
         FrauenAnteil,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::WahlJahr => "wahl_jahr",
@@ -23449,111 +12223,17 @@ pub mod nationalratswahlen_waehleranteil_anzahl_kandidierende_anzahl_listen_anza
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12290/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -23629,7 +12309,7 @@ pub mod staenderatswahlen_2015_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -23660,111 +12340,17 @@ pub mod staenderatswahlen_2015_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11780/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -23838,7 +12424,7 @@ pub mod staenderatswahlen_2019_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -23868,111 +12454,17 @@ pub mod staenderatswahlen_2019_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11730/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -24043,7 +12535,7 @@ pub mod adressen_der_primar_sekundar_und_musikschulen_juni_2024 {
         NEingangskoordinate,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::BfsGemeindenummer => "bfs_gemeindenummer",
@@ -24065,111 +12557,17 @@ pub mod adressen_der_primar_sekundar_und_musikschulen_juni_2024 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11150/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -24279,7 +12677,7 @@ pub mod nationalratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_und
         Wohnort,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Wahltermin => "wahltermin",
@@ -24309,111 +12707,17 @@ pub mod nationalratswahlen_2023_kandidierende_nach_liste_geschlecht_jahrgang_und
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12190/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -24495,7 +12799,7 @@ pub mod staenderatswahlen_2023_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -24527,111 +12831,17 @@ pub mod staenderatswahlen_2023_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12280/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -24708,7 +12918,7 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeudeadressen {
         Exportdatum,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Egid => "egid",
@@ -24743,111 +12953,17 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeudeadressen {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12180/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -24892,7 +13008,7 @@ pub mod baugesuche_und_baubewilligungen_nach_gebaeudeart_gemeinde_und_jahr_seit_
         Anzahl,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -24905,111 +13021,17 @@ pub mod baugesuche_und_baubewilligungen_nach_gebaeudeart_gemeinde_und_jahr_seit_
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10270/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -25136,7 +13158,7 @@ pub mod raumgliederungen_nach_gemeinde_maerz_2024 {
         FunktionalesStadtischesGebiet2014,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::BfsNummer => "bfs_nummer",
@@ -25179,111 +13201,17 @@ pub mod raumgliederungen_nach_gemeinde_maerz_2024 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10110/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -25341,7 +13269,7 @@ pub mod covid_19_woechentliche_fallzahlen_hospitalisierungen_und_tests_seit_febr
         Datacomplete,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Valuecategory => "valuecategory",
@@ -25361,111 +13289,17 @@ pub mod covid_19_woechentliche_fallzahlen_hospitalisierungen_und_tests_seit_febr
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11050/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -25560,7 +13394,7 @@ pub mod sitzverlegungen_und_domizilaenderungen_von_firmen_nach_rechtsform_noga_e
         NogaAbteilung,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Kategorie => "kategorie",
@@ -25587,111 +13421,17 @@ pub mod sitzverlegungen_und_domizilaenderungen_von_firmen_nach_rechtsform_noga_e
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12470/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -25774,7 +13514,7 @@ pub mod firmenmutationen_nach_rechtsform_noga_einteilung_und_gemeinde_seit_febru
         NogaAbteilung,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Kategorie => "kategorie",
@@ -25797,111 +13537,17 @@ pub mod firmenmutationen_nach_rechtsform_noga_einteilung_und_gemeinde_seit_febru
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12460/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -25939,7 +13585,7 @@ pub mod shared_mobility_angebote_nach_anbieter_und_standort {
         RecordDate,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::StationId => "station_id",
@@ -25951,111 +13597,17 @@ pub mod shared_mobility_angebote_nach_anbieter_und_standort {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10290/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -26105,7 +13657,7 @@ pub mod ogd_portal_taegliche_nutzung_nach_datensatz_seit_januar_2024 {
         Interactions,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::DatasetId => "dataset_id",
@@ -26117,111 +13669,17 @@ pub mod ogd_portal_taegliche_nutzung_nach_datensatz_seit_januar_2024 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12610/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -26305,7 +13763,7 @@ pub mod firmen_nach_zweck_rechtsform_noga_einteilung_und_standort {
         Datum,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::FirmensitzCode => "firmensitz_code",
@@ -26338,111 +13796,17 @@ pub mod firmen_nach_zweck_rechtsform_noga_einteilung_und_standort {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12480/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -26489,7 +13853,7 @@ pub mod bevoelkerungsbestand_nach_geschlecht_nationalitaet_zivilstand_und_konfes
         AnzahlPersonen,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -26506,111 +13870,17 @@ pub mod bevoelkerungsbestand_nach_geschlecht_nationalitaet_zivilstand_und_konfes
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10030/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -26684,7 +13954,7 @@ pub mod staenderatsnachwahl_2019_kandidierendenresultate {
         EntityUnaccountedBallots,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -26714,111 +13984,17 @@ pub mod staenderatsnachwahl_2019_kandidierendenresultate {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11760/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -26860,7 +14036,7 @@ pub mod jugend_und_sport_anzahl_kurse_teilnehmende_und_leitende_nach_sportart_un
         Anzahl,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -26872,111 +14048,17 @@ pub mod jugend_und_sport_anzahl_kurse_teilnehmende_und_leitende_nach_sportart_un
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11470/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -27152,7 +14234,7 @@ pub mod nationalratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_list
         ListVotes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::CandidateElected => "candidate_elected",
@@ -27275,111 +14357,17 @@ pub mod nationalratswahlen_2019_kandidierendenresultate_wahlberechtigte_und_list
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11740/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -27435,7 +14423,7 @@ pub mod apotheken_mit_betriebsbewilligung_oder_impfberechtigung_nach_standort_ap
         NEingangskoordinate,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Firma => "firma",
@@ -27452,111 +14440,17 @@ pub mod apotheken_mit_betriebsbewilligung_oder_impfberechtigung_nach_standort_ap
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10320/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -27616,7 +14510,7 @@ pub mod gemeindefinanzen_nach_rechnungsteil_funktion_kontenart_und_jahr_seit_201
         BetragChf,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -27634,111 +14528,17 @@ pub mod gemeindefinanzen_nach_rechnungsteil_funktion_kontenart_und_jahr_seit_201
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10640/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -27790,7 +14590,7 @@ pub mod covid_19_breites_testen_bl_woechentlich_getestete_bzw_positive_personen_
         AnzahlPositivePersonen,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Datum => "datum",
@@ -27802,111 +14602,17 @@ pub mod covid_19_breites_testen_bl_woechentlich_getestete_bzw_positive_personen_
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11950/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -28107,7 +14813,7 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeude {
         Exportdatum,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Egid => "egid",
@@ -28234,111 +14940,17 @@ pub mod kantonales_gebaeude_und_wohnungsregister_kgwr_gebaeude {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12160/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -28410,7 +15022,7 @@ pub mod wetterstation_basel_binningen_monatswerte_klimamessnetz_seit_1901 {
         Ure200m0,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -28430,111 +15042,17 @@ pub mod wetterstation_basel_binningen_monatswerte_klimamessnetz_seit_1901 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10130/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -28594,7 +15112,7 @@ pub mod betriebe_mit_einer_verkaufsbewilligung_fuer_spirituosen_nach_standort_fe
         NameDesGebaeudes,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Betriebsnummer => "betriebsnummer",
@@ -28613,111 +15131,17 @@ pub mod betriebe_mit_einer_verkaufsbewilligung_fuer_spirituosen_nach_standort_fe
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10960/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -28807,7 +15231,7 @@ pub mod wetterstation_basel_binningen_tageswerte_klimamessnetz_seit_1864 {
         Ure200d0,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -28826,111 +15250,17 @@ pub mod wetterstation_basel_binningen_tageswerte_klimamessnetz_seit_1864 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12030/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -28971,7 +15301,7 @@ pub mod luftqualitaet_station_liestal_halbstuendliche_messdaten_januar_2000_nove
         O3,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Anfangszeit => "anfangszeit",
@@ -28981,111 +15311,17 @@ pub mod luftqualitaet_station_liestal_halbstuendliche_messdaten_januar_2000_nove
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11540/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -29164,7 +15400,7 @@ pub mod adressen_der_gemeindeverwaltungen_august_2024 {
         Gkodn,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::BfsNummer => "bfs_nummer",
@@ -29181,111 +15417,17 @@ pub mod adressen_der_gemeindeverwaltungen_august_2024 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10510/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -29327,7 +15469,7 @@ pub mod swisslos_fonds_unterstuetzte_projekte_nach_sparte_und_betrag_seit_2011 {
         BeitragChf,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -29339,111 +15481,17 @@ pub mod swisslos_fonds_unterstuetzte_projekte_nach_sparte_und_betrag_seit_2011 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11460/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -29492,7 +15540,7 @@ pub mod motorfahrzeugbestand_nach_fahrzeugart_treibstoff_gemeinde_und_monat_seit
         Anzahl,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::JahrMonat => "jahr_monat",
@@ -29505,111 +15553,17 @@ pub mod motorfahrzeugbestand_nach_fahrzeugart_treibstoff_gemeinde_und_monat_seit
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12410/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -29654,7 +15608,7 @@ pub mod durchschnittlicher_quadratmeterpreis_von_wohnbauland_nach_gemeinde_und_j
         QuadratmeterpreisChf,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -29667,111 +15621,17 @@ pub mod durchschnittlicher_quadratmeterpreis_von_wohnbauland_nach_gemeinde_und_j
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10200/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -29863,7 +15723,7 @@ pub mod alterszentren_und_pflegeheime_nach_standort_januar_2024 {
         Gkodn,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::BfsNummer => "bfs_nummer",
@@ -29883,111 +15743,17 @@ pub mod alterszentren_und_pflegeheime_nach_standort_januar_2024 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10310/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -30056,7 +15822,7 @@ pub mod nationalratswahlen_2023_wahlberechtigte_nach_geschlecht_briefliche_stimm
         LeereStimmen,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::BfsGemeindenummer => "bfs_gemeindenummer",
@@ -30081,111 +15847,17 @@ pub mod nationalratswahlen_2023_wahlberechtigte_nach_geschlecht_briefliche_stimm
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12310/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -30229,7 +15901,7 @@ pub mod ogd_portal_taegliche_nutzung_seit_januar_2024 {
         ApiCallsCount,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -30239,111 +15911,17 @@ pub mod ogd_portal_taegliche_nutzung_seit_januar_2024 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12440/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -30385,7 +15963,7 @@ pub mod wohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_1994 {
         AnzahlWohnungen,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -30397,111 +15975,17 @@ pub mod wohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_1994 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10220/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -30543,7 +16027,7 @@ pub mod steuerfuesse_und_steuersaetze_nach_gemeinde_und_jahr_seit_1975 {
         Wert,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -30555,111 +16039,17 @@ pub mod steuerfuesse_und_steuersaetze_nach_gemeinde_und_jahr_seit_1975 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10580/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -30722,7 +16112,7 @@ pub mod datensatz_katalog {
         Rights,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::DatasetId => "dataset_id",
@@ -30745,111 +16135,17 @@ pub mod datensatz_katalog {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10660/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -30909,7 +16205,7 @@ pub mod strompreise_nach_netzbetreiber_kategorie_gemeinde_und_jahr_seit_2018 {
         KostenTypischerVerbrauchChfProMonat,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -30929,111 +16225,17 @@ pub mod strompreise_nach_netzbetreiber_kategorie_gemeinde_und_jahr_seit_2018 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12340/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -31087,7 +16289,7 @@ pub mod volksinitiative_vom_23_januar_2020_maximal_10_des_einkommens_fuer_die_kr
         Id,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -31107,111 +16309,17 @@ pub mod volksinitiative_vom_23_januar_2020_maximal_10_des_einkommens_fuer_die_kr
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12520/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -31253,7 +16361,7 @@ pub mod leerwohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
         LeerStehendeWohnungen,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Jahr => "jahr",
@@ -31265,111 +16373,17 @@ pub mod leerwohnungsbestand_nach_zimmerzahl_gemeinde_und_jahr_seit_2002 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10250/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -31420,7 +16434,7 @@ pub mod luftqualitaet_station_dornach_halbstuendliche_messdaten_seit_januar_2020
         O3,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Anfangszeit => "anfangszeit",
@@ -31432,111 +16446,17 @@ pub mod luftqualitaet_station_dornach_halbstuendliche_messdaten_seit_januar_2020
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12500/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -31582,7 +16502,7 @@ pub mod luftqualitaet_station_a2_hard_halbstuendliche_messdaten_seit_januar_2020
         No2,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Anfangszeit => "anfangszeit",
@@ -31593,111 +16513,17 @@ pub mod luftqualitaet_station_a2_hard_halbstuendliche_messdaten_seit_januar_2020
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12510/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -31748,7 +16574,7 @@ pub mod luftqualitaet_station_sissach_buetzenen_halbstuendliche_messdaten_seit_j
         O3,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Anfangszeit => "anfangszeit",
@@ -31760,111 +16586,17 @@ pub mod luftqualitaet_station_sissach_buetzenen_halbstuendliche_messdaten_seit_j
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/12450/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -31961,7 +16693,7 @@ pub mod abstimmungsarchiv_nach_vorlage_gemeinde_und_datum_seit_2003 {
         UrlWeb,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -31989,111 +16721,17 @@ pub mod abstimmungsarchiv_nach_vorlage_gemeinde_und_datum_seit_2003 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/11990/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
@@ -32184,7 +16822,7 @@ pub mod abstimmungsarchiv_nach_vorlage_und_datum_seit_2003 {
         UrlWeb,
     }
 
-    impl Field {
+    impl crate::common::Field for Field {
         fn name(self) -> &'static str {
             match self {
                 Field::Date => "date",
@@ -32210,111 +16848,17 @@ pub mod abstimmungsarchiv_nach_vorlage_und_datum_seit_2003 {
         }
     }
 
-    #[derive(Debug, Clone, Default)]
-    pub struct Order(String);
-
-    impl Order {
-        pub fn new() -> Self {
-            Self(String::new())
-        }
-
-        pub fn ascending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}`", field.name()));
-            self
-        }
-
-        pub fn descending(mut self, field: Field) -> Self {
-            if !self.0.is_empty() {
-                self.0.push_str(", ");
-            }
-            self.0.push_str(&format!("`{}` desc", field.name()));
-            self
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Filter(String);
-
-    impl Filter {
-        pub fn is_null(field: Field) -> Self {
-            Self(format!("`{}` is null", field.name()))
-        }
-
-        pub fn is_not_null(field: Field) -> Self {
-            Self(format!("`{}` is not null", field.name()))
-        }
-
-        pub fn equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` = \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` = {value}", field.name()))
-        }
-
-        pub fn not_equal_str(field: Field, value: &str) -> Self {
-            Self(format!("`{}` != \"{}\"", field.name(), escape(value)))
-        }
-
-        pub fn not_equal_num(field: Field, value: f64) -> Self {
-            Self(format!("`{}` != {value}", field.name()))
-        }
-
-        pub fn greater(field: Field, value: f64) -> Self {
-            Self(format!("{} > {value}", field.name()))
-        }
-
-        pub fn greater_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} >= {value}", field.name()))
-        }
-
-        pub fn less(field: Field, value: f64) -> Self {
-            Self(format!("{} < {value}", field.name()))
-        }
-
-        pub fn less_or_equal(field: Field, value: f64) -> Self {
-            Self(format!("{} <= {value}", field.name()))
-        }
-
-        pub fn starts_with(field: Field, value: &str) -> Self {
-            Self(format!(
-                "startswith(`{}`, \"{}\")",
-                field.name(),
-                escape(value)
-            ))
-        }
-
-        pub fn search(field: Field, value: &str) -> Self {
-            Self(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
-        }
-
-        pub fn and(self, other: Self) -> Self {
-            Self(format!("({}) and ({})", self.0, other.0))
-        }
-
-        pub fn or(self, other: Self) -> Self {
-            Self(format!("({}) or ({})", self.0, other.0))
-        }
-
-        pub fn not(self) -> Self {
-            Self(format!("not ({})", self.0))
-        }
-    }
-
     pub async fn get(
         limit: u8,
         offset: u64,
-        order: Order,
-        filter: Option<Filter>,
+        order: Order<Field>,
+        filter: Option<Filter<Field>>,
     ) -> Result<Data, Box<dyn std::error::Error>> {
         let limit = if limit > 100 { 100 } else { limit };
-        let filter = filter.map(|filter| filter.0).unwrap_or(String::new());
+        let filter = filter.map(|filter| filter.inner).unwrap_or(String::new());
         let url = format!("https://data.bl.ch/api/explore/v2.1/catalog/datasets/10500/records?limit={limit}&offset={offset}");
         let url =
-            reqwest::Url::parse_with_params(&url, &[("order_by", order.0), ("where", filter)])?;
+            reqwest::Url::parse_with_params(&url, &[("order_by", order.inner), ("where", filter)])?;
         let response = reqwest::get(url).await?.text().await?;
         let data: Data = serde_json::from_str(&response)?;
         Ok(data)
