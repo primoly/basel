@@ -1,3 +1,4 @@
+#![allow(dead_code, private_bounds)]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::marker::PhantomData;
 use time::macros::format_description;
@@ -97,108 +98,74 @@ pub struct Filter<T: Field> {
 }
 
 impl<T: Field> Filter<T> {
-    pub fn is_null(field: T) -> Self {
+    fn new(inner: String) -> Self {
         Filter {
-            inner: format!("`{}` is null", field.name()),
+            inner,
             phantom: PhantomData,
         }
+    }
+
+    pub fn is_null(field: T) -> Self {
+        Self::new(format!("`{}` is null", field.name()))
     }
 
     pub fn is_not_null(field: T) -> Self {
-        Filter {
-            inner: format!("`{}` is not null", field.name()),
-            phantom: PhantomData,
-        }
+        Self::new(format!("`{}` is not null", field.name()))
     }
 
     pub fn equal_str(field: T, value: &str) -> Self {
-        Filter {
-            inner: format!("`{}` = \"{}\"", field.name(), escape(value)),
-            phantom: PhantomData,
-        }
+        Self::new(format!("`{}` = \"{}\"", field.name(), escape(value)))
     }
 
     pub fn equal_num(field: T, value: f64) -> Self {
-        Filter {
-            inner: format!("`{}` = {value}", field.name()),
-            phantom: PhantomData,
-        }
+        Self::new(format!("`{}` = {value}", field.name()))
     }
 
     pub fn not_equal_str(field: T, value: &str) -> Self {
-        Filter {
-            inner: format!("`{}` != \"{}\"", field.name(), escape(value)),
-            phantom: PhantomData,
-        }
+        Self::new(format!("`{}` != \"{}\"", field.name(), escape(value)))
     }
 
     pub fn not_equal_num(field: T, value: f64) -> Self {
-        Filter {
-            inner: format!("`{}` != {value}", field.name()),
-            phantom: PhantomData,
-        }
+        Self::new(format!("`{}` != {value}", field.name()))
     }
 
     pub fn greater(field: T, value: f64) -> Self {
-        Filter {
-            inner: format!("{} > {value}", field.name()),
-            phantom: PhantomData,
-        }
+        Self::new(format!("{} > {value}", field.name()))
     }
 
     pub fn greater_or_equal(field: T, value: f64) -> Self {
-        Filter {
-            inner: format!("{} >= {value}", field.name()),
-            phantom: PhantomData,
-        }
+        Self::new(format!("{} >= {value}", field.name()))
     }
 
     pub fn less(field: T, value: f64) -> Self {
-        Filter {
-            inner: format!("{} < {value}", field.name()),
-            phantom: PhantomData,
-        }
+        Self::new(format!("{} < {value}", field.name()))
     }
 
     pub fn less_or_equal(field: T, value: f64) -> Self {
-        Filter {
-            inner: format!("{} <= {value}", field.name()),
-            phantom: PhantomData,
-        }
+        Self::new(format!("{} <= {value}", field.name()))
     }
 
     pub fn starts_with(field: T, value: &str) -> Self {
-        Filter {
-            inner: format!("startswith(`{}`, \"{}\")", field.name(), escape(value)),
-            phantom: PhantomData,
-        }
+        Self::new(format!(
+            "startswith(`{}`, \"{}\")",
+            field.name(),
+            escape(value)
+        ))
     }
 
     pub fn search(field: T, value: &str) -> Self {
-        Filter {
-            inner: format!("search(`{}`, \"{}\")", field.name(), escape(value)),
-            phantom: PhantomData,
-        }
+        Self::new(format!("search(`{}`, \"{}\")", field.name(), escape(value)))
     }
 
     pub fn and(self, other: Self) -> Self {
-        Filter {
-            inner: format!("({}) and ({})", self.inner, other.inner),
-            phantom: PhantomData,
-        }
+        Self::new(format!("({}) and ({})", self.inner, other.inner))
     }
 
     pub fn or(self, other: Self) -> Self {
-        Filter {
-            inner: format!("({}) or ({})", self.inner, other.inner),
-            phantom: PhantomData,
-        }
+        Self::new(format!("({}) or ({})", self.inner, other.inner))
     }
 
     pub fn not(self) -> Self {
-        Filter {
-            inner: format!("not ({})", self.inner),
-            phantom: PhantomData,
-        }
+        Self::new(format!("not ({})", self.inner))
     }
 }
